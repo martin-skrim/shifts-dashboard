@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         
-      - name: Insert Secret API URL
+      - name: Подстановка секретного API URL
         run: |
           sed -i "s|{{MY_SECRET_API_URL}}|${{ secrets.MY_SECRET_API_URL }}|g" index.html
           
