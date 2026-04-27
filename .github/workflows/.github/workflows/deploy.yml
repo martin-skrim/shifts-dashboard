@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Запускать сборку при обновлениях в ветке main
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -19,8 +19,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         
-      - name: Подстановка секретного API URL
-        # Этот шаг находит метку и вставляет туда URL из секретов
+      - name: Insert Secret API URL
         run: |
           sed -i "s|{{MY_SECRET_API_URL}}|${{ secrets.MY_SECRET_API_URL }}|g" index.html
           
