@@ -4,204 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мониторинг перерывов | Dark Sheets</title>
+    <!-- Подключаем PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#131314">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #131314;
-            --surface: #1E1F22;
-            --surface-container: #282A2D;
-            --text-main: #E3E3E3;
-            --text-secondary: #8E918F;
-            
-            --primary: #81C995; 
-            --on-primary: #00391B;
-            
-            --working-bg: #0F5223;
-            --working-text: #81C995;
-            
-            --break-bg: #5C1D24;
-            --break-text: #F28B82;
-            --break-border: rgba(242, 139, 130, 0.3);
-            
+            --bg-color: #131314; --surface: #1E1F22; --surface-container: #282A2D;
+            --text-main: #E3E3E3; --text-secondary: #8E918F;
+            --primary: #81C995; --on-primary: #00391B;
+            --working-bg: #0F5223; --working-text: #81C995;
+            --break-bg: #5C1D24; --break-text: #F28B82; --break-border: rgba(242, 139, 130, 0.3);
             --font: 'Roboto', sans-serif;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: var(--font);
-            margin: 0;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1000px;
-        }
+        body { background: var(--bg-color); color: var(--text-main); font-family: var(--font); margin: 0; padding: 24px; display: flex; justify-content: center; overflow-x: hidden;}
+        .container { width: 100%; max-width: 1000px; }
 
         header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            padding: 20px 28px;
-            background-color: var(--surface);
-            border-radius: 28px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            flex-wrap: wrap;
-            gap: 16px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+            padding: 20px 28px; background: var(--surface); border-radius: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 16px;
         }
+        .title-wrapper { display: flex; align-items: center; gap: 16px; }
+        .sheets-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .sheets-icon::after { content: ""; width: 16px; height: 16px; border: 2px solid var(--on-primary); border-radius: 3px; background: linear-gradient(to bottom, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%), linear-gradient(to right, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%); }
+        h1 { margin: 0; font-size: 22px; font-weight: 500; }
 
-        .title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .stats-badge {
+            background: var(--surface-container); padding: 8px 16px; border-radius: 100px;
+            font-size: 14px; color: var(--text-secondary); display: flex; gap: 12px;
         }
+        .stats-badge span { color: var(--text-main); font-weight: 500; }
 
-        .sheets-icon {
-            width: 36px;
-            height: 36px;
-            background-color: var(--primary);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .sheets-icon::after {
-            content: "";
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--on-primary);
-            border-radius: 3px;
-            background: linear-gradient(to bottom, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%),
-                        linear-gradient(to right, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%);
-        }
+        .controls { display: flex; gap: 12px; flex-wrap: wrap; }
+        button { border: none; padding: 10px 16px; border-radius: 100px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        button:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: var(--on-primary); }
+        .btn-primary:hover { background: #9CE0AF; }
+        .btn-secondary { background: var(--surface-container); color: var(--text-main); border: 1px solid var(--text-secondary); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
 
-        h1 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 500;
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: var(--on-primary);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 100px;
-            font-family: var(--font);
-            font-weight: 500;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary:hover { background-color: #9CE0AF; }
-        .btn-primary:active { transform: scale(0.97); }
-
-        .btn-secondary {
-            background-color: var(--surface-container);
-            color: var(--text-main);
-            border: 1px solid var(--text-secondary);
-            padding: 10px 16px;
-            border-radius: 100px;
-            font-family: var(--font);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-secondary:hover { background-color: rgba(255,255,255,0.1); }
-        .btn-secondary:active { transform: scale(0.97); }
-
-        .btn-test {
-            background-color: transparent;
-            color: #8AB4F8;
-            border: 1px solid #8AB4F8;
-            padding: 10px 16px;
-            border-radius: 100px;
-            font-family: var(--font);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-test:hover { background-color: rgba(138, 180, 248, 0.1); }
-
-        .last-update {
-            font-size: 13px;
-            color: var(--text-secondary);
-            width: 100%;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            margin-top: 12px;
-        }
-
-        .card {
-            background-color: var(--surface-container);
-            border-radius: 24px;
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 12px; }
+        .card { background: var(--surface-container); border-radius: 24px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; border: 2px solid transparent; transition: all 0.3s ease; }
         .card-name { font-size: 18px; font-weight: 500; }
+        
+        .status-badge { align-self: flex-start; padding: 6px 14px; border-radius: 100px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .status-badge::before { content: ''; display: block; width: 10px; height: 10px; border-radius: 50%; }
 
-        .status-badge {
-            align-self: flex-start;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .card.working .status-badge { background: var(--working-bg); color: var(--working-text); }
+        .card.working .status-badge::before { background: var(--working-text); box-shadow: 0 0 8px rgba(129, 201, 149, 0.4); }
+        
+        .card.on-break { border-color: var(--break-border); background: rgba(92, 29, 36, 0.2); order: -1; /* ПЕРЕРЫВЫ ВСЕГДА СВЕРХУ */ }
+        .card.on-break .status-badge { background: var(--break-bg); color: var(--break-text); }
+        .card.on-break .status-badge::before { background: var(--break-text); box-shadow: 0 0 8px rgba(242, 139, 130, 0.4); }
+
+        /* Прогресс-бар */
+        .progress-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 100px; height: 8px; margin-top: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--break-text); width: 0%; transition: width 1s linear; }
+        .time-left { font-size: 13px; color: var(--break-text); margin-top: -4px; text-align: right; }
+
+        /* Панель журнала */
+        .log-panel {
+            position: fixed; top: 0; right: -400px; width: 350px; height: 100vh;
+            background: var(--surface); box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+            transition: right 0.3s ease; padding: 24px; box-sizing: border-box; z-index: 1000; overflow-y: auto;
         }
-        .status-badge::before {
-            content: '';
-            display: block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .card.working .status-badge { background-color: var(--working-bg); color: var(--working-text); }
-        .card.working .status-badge::before { background-color: var(--working-text); box-shadow: 0 0 8px rgba(129, 201, 149, 0.4); }
-
-        .card.on-break { border-color: var(--break-border); background-color: rgba(92, 29, 36, 0.2); }
-        .card.on-break .status-badge { background-color: var(--break-bg); color: var(--break-text); }
-        .card.on-break .status-badge::before { background-color: var(--break-text); box-shadow: 0 0 8px rgba(242, 139, 130, 0.4); }
-
-        .loader {
-            text-align: center;
-            margin-top: 60px;
-            color: var(--primary);
-            font-size: 16px;
-            font-weight: 500;
-            display: none;
-        }
+        .log-panel.open { right: 0; }
+        .log-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-container); padding-bottom: 16px; margin-bottom: 16px; }
+        .log-item { padding: 12px 0; border-bottom: 1px solid var(--surface-container); font-size: 14px; }
+        .log-time { color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
+        .close-btn { background: none; border: none; color: var(--text-main); font-size: 24px; padding: 0; }
 
         #action-buttons { display: none; }
     </style>
@@ -215,29 +87,29 @@
                 <h1>Статус смены</h1>
             </div>
             
+            <div class="stats-badge" id="stats-badge">
+                Загрузка...
+            </div>
+
             <div class="controls" id="start-controls">
-                <button id="start-btn" class="btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
-                    </svg>
-                    Включить оповещения
-                </button>
+                <button id="start-btn" class="btn-primary">Включить оповещения</button>
             </div>
 
             <div class="controls" id="action-buttons">
-                <button id="test-btn" class="btn-test">🔔 Тест уведомлений</button>
-                <button id="manual-update-btn" class="btn-secondary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                    </svg>
-                    Обновить
-                </button>
-                <div id="last-update" class="last-update">Ожидание данных...</div>
+                <button id="log-btn" class="btn-secondary">📝 Журнал</button>
             </div>
         </header>
 
-        <div id="loader" class="loader">Синхронизация с Google Таблицей...</div>
         <div id="grid" class="grid"></div>
+    </div>
+
+    <!-- Боковая панель: Журнал -->
+    <div class="log-panel" id="log-panel">
+        <div class="log-header">
+            <h2>Журнал событий</h2>
+            <button class="close-btn" id="close-log">&times;</button>
+        </div>
+        <div id="log-content"></div>
     </div>
 
     <script>
@@ -245,27 +117,22 @@
         
         let previousState = {};
         let audioCtx = null;
-        let isFetching = false;
+        let eventLog = JSON.parse(localStorage.getItem('shift_log')) || [];
 
-        // Инициализация звука
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        // Инициализация PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
 
-        // Синтез звука
-        function playNotificationSound(type) {
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            osc.type = 'sine';
+            const osc = audioCtx.createOscillator(), gainNode = audioCtx.createGain();
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.type = 'sine';
             
             if (type === 'break') {
                 osc.frequency.setValueAtTime(600, audioCtx.currentTime);
@@ -274,126 +141,120 @@
                 osc.frequency.setValueAtTime(400, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
             }
-
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
             gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-
-            osc.start(audioCtx.currentTime);
-            osc.stop(audioCtx.currentTime + 0.5);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
         }
 
-        // Показ уведомления и воспроизведение звука
-        function showNotification(title, body, soundType) {
-            if (Notification.permission === 'granted') {
-                new Notification(title, { 
-                    body: body, 
-                    icon: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg'
-                });
-                playNotificationSound(soundType);
-            } else {
-                console.warn('Нет прав на уведомления!');
-                alert('Уведомление: ' + title + ' - ' + body + '\n(Разрешите уведомления в браузере, чтобы видеть пуши)');
-                playNotificationSound(soundType); // Звук проиграется даже без пуша
-            }
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+            eventLog.unshift({ time, message }); // Добавляем в начало
+            if(eventLog.length > 50) eventLog.pop(); // Храним только 50 последних
+            localStorage.setItem('shift_log', JSON.stringify(eventLog));
+            renderLog();
         }
 
-        // Кнопка "Включить оповещения"
+        function renderLog() {
+            const content = document.getElementById('log-content');
+            content.innerHTML = eventLog.map(item => `
+                <div class="log-item">
+                    <div class="log-time">${item.time}</div>
+                    <div>${item.message}</div>
+                </div>
+            `).join('');
+        }
+
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio();
-            
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    document.getElementById('start-controls').style.display = 'none';
-                    document.getElementById('action-buttons').style.display = 'flex';
-                    document.getElementById('loader').style.display = 'block';
-                    
-                    fetchData();
-                    setInterval(fetchData, 20000); // Каждые 20 сек
-                } else {
-                    alert('Браузер заблокировал уведомления. Пожалуйста, разрешите их в настройках (иконка замочка слева от адресной строки).');
-                }
+            Notification.requestPermission().then(p => {
+                document.getElementById('start-controls').style.display = 'none';
+                document.getElementById('action-buttons').style.display = 'flex';
+                fetchData();
+                setInterval(fetchData, 20000); 
             });
         });
 
-        // Кнопка "Тест"
-        document.getElementById('test-btn').addEventListener('click', () => {
-            initAudio(); // Принудительно будим аудио
-            showNotification('Тестовое уведомление 🔔', 'Пуши и звук работают отлично!', 'work');
-        });
-
-        // Кнопка "Обновить вручную"
-        document.getElementById('manual-update-btn').addEventListener('click', () => {
-            initAudio(); // Принудительно будим аудио
-            fetchData();
-        });
+        document.getElementById('log-btn').onclick = () => document.getElementById('log-panel').classList.add('open');
+        document.getElementById('close-log').onclick = () => document.getElementById('log-panel').classList.remove('open');
 
         async function fetchData() {
-            if (isFetching) return; // Защита от двойного клика
-            isFetching = true;
-            document.getElementById('manual-update-btn').style.opacity = '0.5';
-
             try {
                 const response = await fetch(WEB_APP_URL);
-                const currentData = await response.json();
-                
-                document.getElementById('loader').style.display = 'none';
-                
-                const now = new Date();
-                document.getElementById('last-update').innerText = `Обновлено в ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                
-                processStatuses(currentData);
-                updateUI(currentData);
-            } catch (error) {
-                console.error('Ошибка получения данных:', error);
-                document.getElementById('last-update').innerText = 'Ошибка соединения...';
-            } finally {
-                isFetching = false;
-                document.getElementById('manual-update-btn').style.opacity = '1';
-            }
+                const data = await response.json();
+                processData(data);
+            } catch (error) { console.error('Ошибка:', error); }
         }
 
-        function processStatuses(currentData) {
-            currentData.forEach(employee => {
-                const name = employee.name;
-                const isBreak = employee.break;
+        function processData(data) {
+            let workingCount = 0;
+            let breakCount = 0;
+            const serverTime = data.serverTime; // Текущее время сервера в минутах
 
-                // Уведомляем ТОЛЬКО если статус изменился!
+            data.employees.forEach(emp => {
+                const name = emp.name;
+                const isBreak = emp.status === 'break';
+                
+                isBreak ? breakCount++ : workingCount++;
+
                 if (previousState[name] !== undefined) {
                     const wasBreak = previousState[name];
-
                     if (wasBreak === false && isBreak === true) {
-                        showNotification('Перерыв ☕', `${name} уходит на перерыв`, 'break');
+                        const msg = `☕ ${name} уходит на перерыв (${emp.breakInfo.raw})`;
+                        if (Notification.permission === 'granted') new Notification('Перерыв', { body: msg, icon: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg' });
+                        playSound('break'); addLog(msg);
                     } else if (wasBreak === true && isBreak === false) {
-                        showNotification('За работу 💻', `${name} возвращается с перерыва`, 'work');
+                        const msg = `💻 ${name} возвращается к работе`;
+                        if (Notification.permission === 'granted') new Notification('За работу', { body: msg, icon: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg' });
+                        playSound('work'); addLog(msg);
                     }
                 }
                 previousState[name] = isBreak;
             });
+
+            // Обновляем статистику
+            document.getElementById('stats-badge').innerHTML = `Всего на смене: <span>${workingCount + breakCount}</span> | На перерыве: <span style="color:var(--break-text)">${breakCount}</span>`;
+
+            updateUI(data.employees, serverTime);
         }
 
-        function updateUI(data) {
+        function updateUI(employees, serverTime) {
             const grid = document.getElementById('grid');
             grid.innerHTML = ''; 
             
-            data.forEach(emp => {
-                const isBreak = emp.break;
-                
+            employees.forEach(emp => {
+                const isBreak = emp.status === 'break';
                 const card = document.createElement('div');
                 card.className = `card ${isBreak ? 'on-break' : 'working'}`;
                 
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'card-name';
-                nameDiv.innerText = emp.name;
-                
-                const badge = document.createElement('div');
-                badge.className = 'status-badge';
-                badge.innerText = isBreak ? 'На перерыве' : 'За работой';
+                let innerHTML = `
+                    <div class="card-name">${emp.name}</div>
+                    <div class="status-badge">${isBreak ? 'На перерыве' : 'В работе'}</div>
+                `;
 
-                card.appendChild(nameDiv);
-                card.appendChild(badge);
+                // Рендер прогресс-бара если на перерыве
+                if (isBreak && emp.breakInfo) {
+                    let totalBreakMins = emp.breakInfo.end - emp.breakInfo.start;
+                    let evalTime = serverTime;
+                    if (evalTime < emp.breakInfo.start) evalTime += 1440; // ночной фикс
+                    
+                    let passedMins = evalTime - emp.breakInfo.start;
+                    let leftMins = totalBreakMins - passedMins;
+                    let percent = Math.min((passedMins / totalBreakMins) * 100, 100);
+                    if (leftMins < 0) leftMins = 0;
+
+                    innerHTML += `
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="time-left">Осталось: ${leftMins} мин.</div>
+                    `;
+                }
+
+                card.innerHTML = innerHTML;
                 grid.appendChild(card);
             });
+            renderLog(); // Отрисовываем журнал
         }
     </script>
 </body>
