@@ -2,160 +2,73 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мониторинг перерывов</title>
+    <title>Мониторинг</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root {
-            --bg-color: #131314; --surface: #1E1F22; --surface-container: #282A2D;
-            --text-main: #E3E3E3; --text-secondary: #8E918F; --primary: #81C995; 
-            --on-primary: #00391B; --working-bg: #0F5223; --working-text: #81C995;
-            --break-bg: #5C1D24; --break-text: #F28B82; --break-border: rgba(242, 139, 130, 0.3);
-            font-family: Arial, sans-serif;
-        }
-        body { background: var(--bg-color); color: var(--text-main); margin: 0; padding: 24px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 1000px; }
-        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 20px; background: var(--surface); border-radius: 20px; flex-wrap: wrap; gap: 16px; }
-        h1 { margin: 0; font-size: 22px; color: var(--text-main); }
-        .stats-badge { background: var(--surface-container); padding: 8px 16px; border-radius: 100px; font-size: 14px; color: var(--text-secondary); }
-        .stats-badge span { color: var(--text-main); font-weight: bold; }
-        button { border: none; padding: 10px 16px; border-radius: 100px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: var(--on-primary); }
-        .btn-secondary { background: var(--surface-container); color: var(--text-main); border: 1px solid var(--text-secondary); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
-        .card { background: var(--surface-container); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .card-name { font-size: 18px; font-weight: bold; }
-        .status-badge { align-self: flex-start; padding: 6px 14px; border-radius: 100px; font-size: 14px; font-weight: bold; }
-        .card.working .status-badge { background: var(--working-bg); color: var(--working-text); }
-        .card.on-break { border: 1px solid var(--break-border); background: rgba(92, 29, 36, 0.2); order: -1; }
-        .card.on-break .status-badge { background: var(--break-bg); color: var(--break-text); }
-        .progress-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; margin-top: 8px; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--break-text); width: 0%; transition: 1s linear; }
-        .time-left { font-size: 13px; color: var(--break-text); text-align: right; }
-        .log-panel { position: fixed; top: 0; right: -350px; width: 300px; height: 100vh; background: var(--surface); box-shadow: -4px 0 20px rgba(0,0,0,0.5); transition: right 0.3s; padding: 24px; z-index: 1000; overflow-y: auto; }
-        .log-panel.open { right: 0; }
-        .log-item { padding: 12px 0; border-bottom: 1px solid var(--surface-container); font-size: 14px; }
-        .log-time { color: var(--text-secondary); font-size: 12px; }
-        #action-buttons { display: none; }
+        :root { --bg: #131314; --surface: #1E1F22; --primary: #81C995; --break: #F28B82; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .card { background: var(--surface); padding: 20px; border-radius: 20px; }
+        .on-break { border: 2px solid var(--break); }
+        .progress { height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .bar { height: 100%; background: var(--break); transition: 1s; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Статус смены</h1>
-            <div class="stats-badge" id="stats-badge">Ожидание...</div>
-            <div id="start-controls"><button id="start-btn" class="btn-primary">Включить оповещения</button></div>
-            <div id="action-buttons"><button id="log-btn" class="btn-secondary">📝 Журнал</button></div>
-        </header>
-        <div id="grid" class="grid"></div>
-    </div>
-
-    <div class="log-panel" id="log-panel">
-        <h2>Журнал событий</h2>
-        <button id="close-log" class="btn-secondary">Закрыть</button>
-        <div id="log-content"></div>
-    </div>
+    <button id="start-btn">Включить уведомления</button>
+    <div id="grid" class="grid" style="margin-top:20px"></div>
 
     <script>
-        const WEB_APP_URL = '{{MY_SECRET_API_URL}}'; 
+        const WEB_APP_URL = '{{MY_SECRET_API_URL}}';
         let previousState = {};
-        let audioCtx = null;
-        let eventLog = JSON.parse(localStorage.getItem('shift_log')) || [];
 
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(), gainNode = audioCtx.createGain();
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.type = 'sine';
-            if (type === 'break') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.3); } 
-            else { osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3); }
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        function addLog(message, serverTimeMins) {
-            const timeString = `${Math.floor(serverTimeMins/60).toString().padStart(2,'0')}:${(serverTimeMins%60).toString().padStart(2,'0')}`;
-            eventLog.unshift({ time: timeString, message: message }); 
-            if(eventLog.length > 50) eventLog.pop(); 
-            localStorage.setItem('shift_log', JSON.stringify(eventLog));
-            renderLog();
-        }
-
-        function renderLog() {
-            document.getElementById('log-content').innerHTML = eventLog.map(item => `<div class="log-item"><div class="log-time">${item.time}</div><div>${item.message}</div></div>`).join('');
-        }
-        renderLog();
-
-        document.getElementById('start-btn').addEventListener('click', () => {
-            initAudio();
-            Notification.requestPermission().then(() => {
-                document.getElementById('start-controls').style.display = 'none';
-                document.getElementById('action-buttons').style.display = 'block';
-                fetchData();
-                setInterval(fetchData, 20000); 
-            });
-        });
-
-        document.getElementById('log-btn').onclick = () => document.getElementById('log-panel').classList.add('open');
-        document.getElementById('close-log').onclick = () => document.getElementById('log-panel').classList.remove('open');
+        // Запуск
+        document.getElementById('start-btn').onclick = () => {
+            Notification.requestPermission();
+            fetchData();
+            setInterval(fetchData, 30000); // 30 секунд
+            document.getElementById('start-btn').style.display = 'none';
+        };
 
         async function fetchData() {
             try {
-                const response = await fetch(WEB_APP_URL);
-                const data = await response.json();
-                processData(data);
-            } catch (e) { console.error('Ошибка:', e); }
+                const res = await fetch(WEB_APP_URL);
+                const data = await res.json();
+                render(data);
+            } catch(e) { console.error(e); }
         }
 
-        function processData(data) {
-            let workingCount = 0, breakCount = 0;
-            const serverTime = data.serverTime; 
+        function render(data) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            const serverTime = data.serverTime;
 
             data.employees.forEach(emp => {
-                const isBreak = emp.status === 'break';
-                isBreak ? breakCount++ : workingCount++;
-
-                if (previousState[emp.name] !== undefined) {
-                    const wasBreak = previousState[emp.name];
-                    if (!wasBreak && isBreak) {
-                        const msg = `☕ ${emp.name} ушел(ла) на перерыв`;
-                        new Notification('Перерыв', { body: msg }); playSound('break'); addLog(msg, serverTime);
-                    } else if (wasBreak && !isBreak) {
-                        const msg = `💻 ${emp.name} вернулся(лась)`;
-                        new Notification('За работу', { body: msg }); playSound('work'); addLog(msg, serverTime);
-                    }
+                // Логика уведомлений (сравниваем статус)
+                if (previousState[emp.name] && previousState[emp.name] !== emp.status) {
+                    new Notification(emp.status === 'break' ? 'Перерыв' : 'Возврат', { body: emp.name });
                 }
-                previousState[emp.name] = isBreak;
-            });
+                previousState[emp.name] = emp.status;
 
-            document.getElementById('stats-badge').innerHTML = `На смене: <span>${workingCount + breakCount}</span> | Перерыв: <span style="color:var(--break-text)">${breakCount}</span>`;
-            updateUI(data.employees, serverTime);
-        }
-
-        function updateUI(employees, serverTime) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = ''; 
-            
-            employees.forEach(emp => {
-                const isBreak = emp.status === 'break';
-                let html = `<div class="card-name">${emp.name}</div><div class="status-badge">${isBreak ? 'Перерыв' : 'В работе'}</div>`;
-
-                if (isBreak && emp.breakInfo) {
-                    let total = emp.breakInfo.end - emp.breakInfo.start;
-                    let passed = (serverTime < emp.breakInfo.start ? serverTime + 1440 : serverTime) - emp.breakInfo.start;
-                    html += `<div class="progress-container"><div class="progress-bar" style="width: ${Math.min((passed/total)*100, 100)}%"></div></div><div class="time-left">Осталось: ${Math.max(total - passed, 0)} мин.</div>`;
-                }
-
+                // Рендер карточки
                 const card = document.createElement('div');
-                card.className = `card ${isBreak ? 'on-break' : 'working'}`;
-                card.innerHTML = html;
+                card.className = `card ${emp.status === 'break' ? 'on-break' : ''}`;
+                let progress = '';
+                if(emp.status === 'break' && emp.activeBreak) {
+                    let total = emp.activeBreak.end - emp.activeBreak.start;
+                    let passed = serverTime - emp.activeBreak.start;
+                    progress = `<div class="progress"><div class="bar" style="width:${Math.min((passed/total)*100, 100)}%"></div></div>`;
+                }
+
+                card.innerHTML = `
+                    <h3>${emp.name}</h3>
+                    <p>🕒 ${emp.hours}</p>
+                    <p>☕ ${emp.breaks.join(', ')}</p>
+                    <div style="font-weight:bold; color:${emp.status==='break'? 'var(--break)':'var(--primary)'}">
+                        ${emp.status === 'break' ? 'НА ПЕРЕРЫВЕ' : 'РАБОТАЕТ'}
+                    </div>
+                    ${progress}
+                `;
                 grid.appendChild(card);
             });
         }
