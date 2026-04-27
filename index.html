@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мониторинг перерывов | Dark Sheets</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #131314;
+            --surface: #1E1F22;
+            --surface-container: #282A2D;
+            --text-main: #E3E3E3;
+            --text-secondary: #8E918F;
+            
+            --primary: #81C995; 
+            --on-primary: #00391B;
+            
+            --working-bg: #0F5223;
+            --working-text: #81C995;
+            
+            --break-bg: #5C1D24;
+            --break-text: #F28B82;
+            --break-border: rgba(242, 139, 130, 0.3);
+            
+            --font: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding: 20px 28px;
+            background-color: var(--surface);
+            border-radius: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .sheets-icon {
+            width: 36px;
+            height: 36px;
+            background-color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sheets-icon::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--on-primary);
+            border-radius: 3px;
+            background: linear-gradient(to bottom, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%),
+                        linear-gradient(to right, transparent 45%, var(--on-primary) 45%, var(--on-primary) 55%, transparent 55%);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--on-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-family: var(--font);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover { background-color: #9CE0AF; }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-secondary {
+            background-color: var(--surface-container);
+            color: var(--text-main);
+            border: 1px solid var(--text-secondary);
+            padding: 10px 16px;
+            border-radius: 100px;
+            font-family: var(--font);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-secondary:hover { background-color: rgba(255,255,255,0.1); }
+        .btn-secondary:active { transform: scale(0.97); }
+
+        .btn-test {
+            background-color: transparent;
+            color: #8AB4F8;
+            border: 1px solid #8AB4F8;
+            padding: 10px 16px;
+            border-radius: 100px;
+            font-family: var(--font);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-test:hover { background-color: rgba(138, 180, 248, 0.1); }
+
+        .last-update {
+            font-size: 13px;
+            color: var(--text-secondary);
+            width: 100%;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .card {
+            background-color: var(--surface-container);
+            border-radius: 24px;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .card-name { font-size: 18px; font-weight: 500; }
+
+        .status-badge {
+            align-self: flex-start;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-badge::before {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .card.working .status-badge { background-color: var(--working-bg); color: var(--working-text); }
+        .card.working .status-badge::before { background-color: var(--working-text); box-shadow: 0 0 8px rgba(129, 201, 149, 0.4); }
+
+        .card.on-break { border-color: var(--break-border); background-color: rgba(92, 29, 36, 0.2); }
+        .card.on-break .status-badge { background-color: var(--break-bg); color: var(--break-text); }
+        .card.on-break .status-badge::before { background-color: var(--break-text); box-shadow: 0 0 8px rgba(242, 139, 130, 0.4); }
+
+        .loader {
+            text-align: center;
+            margin-top: 60px;
+            color: var(--primary);
+            font-size: 16px;
+            font-weight: 500;
+            display: none;
+        }
+
+        #action-buttons { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="title-wrapper">
+                <div class="sheets-icon"></div>
+                <h1>Статус смены</h1>
+            </div>
+            
+            <div class="controls" id="start-controls">
+                <button id="start-btn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
+                    </svg>
+                    Включить оповещения
+                </button>
+            </div>
+
+            <div class="controls" id="action-buttons">
+                <button id="test-btn" class="btn-test">🔔 Тест уведомлений</button>
+                <button id="manual-update-btn" class="btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Обновить
+                </button>
+                <div id="last-update" class="last-update">Ожидание данных...</div>
+            </div>
+        </header>
+
+        <div id="loader" class="loader">Синхронизация с Google Таблицей...</div>
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+        cconst WEB_APP_URL = '{{MY_SECRET_API_URL}}'; 
+        
+        let previousState = {};
+        let audioCtx = null;
+        let isFetching = false;
+
+        // Инициализация звука
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Синтез звука
+        function playNotificationSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            
+            if (type === 'break') {
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+            } else {
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+            }
+
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // Показ уведомления и воспроизведение звука
+        function showNotification(title, body, soundType) {
+            if (Notification.permission === 'granted') {
+                new Notification(title, { 
+                    body: body, 
+                    icon: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg'
+                });
+                playNotificationSound(soundType);
+            } else {
+                console.warn('Нет прав на уведомления!');
+                alert('Уведомление: ' + title + ' - ' + body + '\n(Разрешите уведомления в браузере, чтобы видеть пуши)');
+                playNotificationSound(soundType); // Звук проиграется даже без пуша
+            }
+        }
+
+        // Кнопка "Включить оповещения"
+        document.getElementById('start-btn').addEventListener('click', () => {
+            initAudio();
+            
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    document.getElementById('start-controls').style.display = 'none';
+                    document.getElementById('action-buttons').style.display = 'flex';
+                    document.getElementById('loader').style.display = 'block';
+                    
+                    fetchData();
+                    setInterval(fetchData, 20000); // Каждые 20 сек
+                } else {
+                    alert('Браузер заблокировал уведомления. Пожалуйста, разрешите их в настройках (иконка замочка слева от адресной строки).');
+                }
+            });
+        });
+
+        // Кнопка "Тест"
+        document.getElementById('test-btn').addEventListener('click', () => {
+            initAudio(); // Принудительно будим аудио
+            showNotification('Тестовое уведомление 🔔', 'Пуши и звук работают отлично!', 'work');
+        });
+
+        // Кнопка "Обновить вручную"
+        document.getElementById('manual-update-btn').addEventListener('click', () => {
+            initAudio(); // Принудительно будим аудио
+            fetchData();
+        });
+
+        async function fetchData() {
+            if (isFetching) return; // Защита от двойного клика
+            isFetching = true;
+            document.getElementById('manual-update-btn').style.opacity = '0.5';
+
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const currentData = await response.json();
+                
+                document.getElementById('loader').style.display = 'none';
+                
+                const now = new Date();
+                document.getElementById('last-update').innerText = `Обновлено в ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                
+                processStatuses(currentData);
+                updateUI(currentData);
+            } catch (error) {
+                console.error('Ошибка получения данных:', error);
+                document.getElementById('last-update').innerText = 'Ошибка соединения...';
+            } finally {
+                isFetching = false;
+                document.getElementById('manual-update-btn').style.opacity = '1';
+            }
+        }
+
+        function processStatuses(currentData) {
+            currentData.forEach(employee => {
+                const name = employee.name;
+                const isBreak = employee.break;
+
+                // Уведомляем ТОЛЬКО если статус изменился!
+                if (previousState[name] !== undefined) {
+                    const wasBreak = previousState[name];
+
+                    if (wasBreak === false && isBreak === true) {
+                        showNotification('Перерыв ☕', `${name} уходит на перерыв`, 'break');
+                    } else if (wasBreak === true && isBreak === false) {
+                        showNotification('За работу 💻', `${name} возвращается с перерыва`, 'work');
+                    }
+                }
+                previousState[name] = isBreak;
+            });
+        }
+
+        function updateUI(data) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = ''; 
+            
+            data.forEach(emp => {
+                const isBreak = emp.break;
+                
+                const card = document.createElement('div');
+                card.className = `card ${isBreak ? 'on-break' : 'working'}`;
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'card-name';
+                nameDiv.innerText = emp.name;
+                
+                const badge = document.createElement('div');
+                badge.className = 'status-badge';
+                badge.innerText = isBreak ? 'На перерыве' : 'За работой';
+
+                card.appendChild(nameDiv);
+                card.appendChild(badge);
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
