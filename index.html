@@ -147,13 +147,18 @@
             osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
         }
 
-        function addLog(message) {
-            const time = new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
-            eventLog.unshift({ time, message }); // Добавляем в начало
-            if(eventLog.length > 50) eventLog.pop(); // Храним только 50 последних
-            localStorage.setItem('shift_log', JSON.stringify(eventLog));
-            renderLog();
-        }
+        // Новая функция addLog, которая берет время сервера, а не ПК
+function addLog(message, serverTimeMins) {
+    // Переводим минуты от начала дня обратно в формат ЧЧ:ММ
+    const h = Math.floor(serverTimeMins / 60).toString().padStart(2, '0');
+    const m = (serverTimeMins % 60).toString().padStart(2, '0');
+    const timeString = `${h}:${m}`;
+
+    eventLog.unshift({ time: timeString, message: message }); 
+    if(eventLog.length > 50) eventLog.pop(); 
+    localStorage.setItem('shift_log', JSON.stringify(eventLog));
+    renderLog();
+}
 
         function renderLog() {
             const content = document.getElementById('log-content');
