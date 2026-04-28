@@ -731,11 +731,35 @@
     }
     return null;
   }
-  function fmt(min){return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;}
-  // Returns current time in minutes, adjusted to server timezone
+  function fmt(min) {
+    const m = ((Math.round(min) % 1440) + 1440) % 1440;
+    return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+  }
+  // Returns current time in minutes, adjusted to server timezone (= MSK)
   function serverNow() {
     const n = new Date();
     return n.getHours()*60 + n.getMinutes() + (window._tzOffset || 0);
+  }
+
+  // Convert MSK minutes to user's local minutes for display only
+  function toLocalMin(mskMin) {
+    return mskMin - (window._tzOffset || 0);
+  }
+  // Convert a time string "HH:MM – HH:MM" (MSK) to local display string
+  function localTimeStr(str) {
+    if (!str) return str;
+    const m = str.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+    if (!m) return str;
+    const start = +m[1]*60 + +m[2];
+    const end   = +m[3]*60 + +m[4];
+    return fmt(toLocalMin(start)) + ' – ' + fmt(toLocalMin(end));
+  }
+  // Convert a single time "HH:MM" (MSK) to local display string
+  function localSingleTime(str) {
+    if (!str) return str;
+    const m = str.match(/(\d{1,2}):(\d{2})/);
+    if (!m) return str;
+    return fmt(toLocalMin(+m[1]*60 + +m[2]));
   }
 
   function shiftMood(pct) {
@@ -793,7 +817,7 @@
       const active=cur>=s.start&&cur<=s.end;
       return`<div class="tl-seg${active?' active':''}" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%" title="${s.label}"></div>`;
     }).join('');
-    return`<div class="timeline"><div class="tl-label">График перерывов</div><div class="tl-bar">${segHtml}<div class="tl-now" style="left:${nowPct.toFixed(1)}%"></div></div><div class="tl-times"><span>${fmt(wh.start)}</span><span>${fmt(wh.end)}</span></div></div>`;
+    return`<div class="timeline"><div class="tl-label">График перерывов</div><div class="tl-bar">${segHtml}<div class="tl-now" style="left:${nowPct.toFixed(1)}%"></div></div><div class="tl-times"><span>${fmt(toLocalMin(wh.start))}</span><span>${fmt(toLocalMin(wh.end))}</span></div></div>`;
   }
 
   // ── CARD ORDER (drag & drop) ─────────────────────────────
@@ -867,7 +891,7 @@
           </div>
         </div>
         <div class="card-name">${emp.name}</div>
-        <div class="card-hours">${emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+emp.breakTime:''}</div>
+        <div class="card-hours">${localTimeStr(emp.workHours)||emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+localTimeStr(emp.breakTime):''}</div>
         ${sp}
         ${cd?`<div class="countdown${cd.urgent?' urgent':''}" data-emp="${emp.name}"><span>⏱</span><span class="cv">${cd.t}</span></div>`:''}
         ${tl}`;
@@ -952,7 +976,7 @@
       h+=`<div class="dv-emp-th">
         <div style="width:28px;height:28px;border-radius:50%;background:${color}20;border:2px solid ${color}60;color:${color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto 4px">${ini}</div>
         <div class="dv-emp-th-name">${emp.name.split(' ')[0]}</div>
-        <div class="dv-emp-th-hrs">${emp.workHours||''}</div>
+        <div class="dv-emp-th-hrs">${localTimeStr(emp.workHours)||emp.workHours||''}</div>
         <div class="dv-emp-th-dot" style="background:${color}60"></div>
       </div>`;
     });
@@ -964,7 +988,7 @@
     // Time axis
     h+=`<div class="dv-time-axis" style="height:${totalH}px">`;
     for(let m=dayStart;m<=dayEnd;m+=60){
-      h+=`<div class="dv-tick" style="top:${(m-dayStart)*PX}px">${fmt(m)}</div>`;
+      h+=`<div class="dv-tick" style="top:${(m-dayStart)*PX}px">${fmt(toLocalMin(m))}</div>`;
     }
     h+=`</div>`;
 
