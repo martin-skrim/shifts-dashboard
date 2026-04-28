@@ -1,28 +1,34 @@
-const CACHE = 'break-monitor-v2';
-const ASSETS = ['./', './index.html', './manifest.json'];
+// sw.js
+const API = 'https://script.google.com/macros/s/AKfycbyFUAo8Nl4wJFItNbbDICQtmt_XC6vVOecWphF714S_I4deQcCRMnhY-_ALyjuW2Kq1/exec';
+let prevState = {};
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
-});
+async function poll() {
+  try {
+    const r    = await fetch(API + '?_=' + Date.now());
+    const json = await r.json();
+    const emps = json.employees || json;
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
+    emps.forEach(emp => {
+      const was = prevState[emp.name];
+      if (was === false && emp.onBreak) {
+        self.registration.showNotification('☕ Перерыв', {
+          body: emp.name + ' ушёл на перерыв',
+          icon: '/icon-192.png'
+        });
+      }
+      if (was === true && !emp.onBreak) {
+        self.registration.showNotification('✅ Вернулся', {
+          body: emp.name + ' вернулся с перерыва',
+          icon: '/icon-192.png'
+        });
+      }
+      prevState[emp.name] = emp.onBreak;
+    });
+  } catch(e) {}
+}
 
-self.addEventListener('fetch', e => {
-  // Кэшируем только свои ассеты, API-запросы всегда через сеть
-  if (e.request.url.includes('script.google.com')) return;
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    }))
-  );
+// Запускаем поллинг каждые 20 секунд
+self.addEventListener('activate', () => {
+  setInterval(poll, 20000);
+  poll();
 });
