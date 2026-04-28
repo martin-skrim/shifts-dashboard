@@ -864,6 +864,10 @@
   function renderCards() {
     const grid=document.getElementById('grid');
     let list=[...data];
+    // Apply status filter
+    if (filter === 'working') list = list.filter(e => !e.onBreak);
+    if (filter === 'break')   list = list.filter(e =>  e.onBreak);
+    // Apply search
     if (searchQuery) list=list.filter(e=>e.name.toLowerCase().includes(searchQuery));
     list=sortByOrder(list);
     // Within the user order, break-employees float to top unless user has custom order
