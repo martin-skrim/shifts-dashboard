@@ -194,8 +194,19 @@
     [data-theme="light"] .tl-bar { background:rgba(0,0,0,.06); }
     .tl-seg { position:absolute;height:100%;border-radius:3px;background:var(--green);opacity:.45; }
     .tl-seg.active { background:var(--red);opacity:1;box-shadow:0 0 8px var(--red); }
-    .tl-now { position:absolute;width:2px;height:100%;background:#fff;opacity:.7;border-radius:1px; }
-    [data-theme="light"] .tl-now { background:#000; }
+    .tl-now {
+      position:absolute;
+      width:2px;height:calc(100% + 10px);top:-5px;
+      background:#fff;border-radius:2px;z-index:5;
+      box-shadow:0 0 6px rgba(255,255,255,.8);
+    }
+    .tl-now::before {
+      content:'';position:absolute;top:-1px;left:-3px;
+      width:8px;height:8px;background:#fff;border-radius:50%;
+      box-shadow:0 0 8px rgba(255,255,255,.9);
+    }
+    [data-theme="light"] .tl-now,
+    [data-theme="light"] .tl-now::before { background:#1e293b;box-shadow:0 0 4px rgba(0,0,0,.3); }
     .tl-times { display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px; }
 
     /* ── DAY VIEW ────────────────────────────────────── */
@@ -310,6 +321,32 @@
     .toast { background:var(--toast-bg);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:100px;padding:10px 22px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,.4);animation:toastIn .3s ease-out;transition:opacity .3s,transform .3s; }
     .toast.break { border-color:rgba(248,113,113,.4);color:var(--red); }
     .toast.work  { border-color:rgba(74,222,128,.4);color:var(--green); }
+
+
+    /* ── SHIFT PROGRESS (gamification) ── */
+    .shift-progress { margin-top:12px;padding-top:12px;border-top:1px solid var(--border); }
+    .sp-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
+    .sp-mood { font-size:14px; }
+    .sp-label { font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px; }
+    .sp-meta { display:flex;align-items:center;gap:10px; }
+    .sp-pct { font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1; }
+    .sp-remain { font-size:11px;color:var(--text-dim); }
+    .sp-bar-wrap { position:relative;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:visible; }
+    [data-theme="light"] .sp-bar-wrap { background:rgba(0,0,0,.07); }
+    .sp-fill {
+      height:100%;border-radius:4px;transition:width .8s cubic-bezier(.34,1.56,.64,1);
+      background:linear-gradient(90deg,#4ade80,#22d3ee,#fbbf24,#f97316);
+      background-size:400% 100%;
+      background-position:var(--pos,0%) 0;
+    }
+    .sp-marker {
+      position:absolute;top:-3px;width:3px;height:14px;
+      background:#fff;border-radius:2px;
+      box-shadow:0 0 8px rgba(255,255,255,.7);
+      transform:translateX(-50%);transition:left .8s cubic-bezier(.34,1.56,.64,1);
+    }
+    [data-theme="light"] .sp-marker { background:#1e293b;box-shadow:0 0 4px rgba(0,0,0,.3); }
+    .sp-over { font-size:10px;margin-top:5px;text-align:center;font-weight:600;letter-spacing:.3px; }
 
     /* ── Firefox fallback ── */
     @supports not (backdrop-filter: blur(1px)) {
@@ -680,6 +717,49 @@
     return null;
   }
   function fmt(min){return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;}
+  function shiftMood(pct) {
+    if (pct < 0.15) return { emoji:'🌅', text:'Только начали', col:'#60a5fa' };
+    if (pct < 0.35) return { emoji:'⚡', text:'Входим в ритм',  col:'#4ade80' };
+    if (pct < 0.55) return { emoji:'🔥', text:'В потоке',       col:'#34d399' };
+    if (pct < 0.75) return { emoji:'🏃', text:'Финишная прямая',col:'#fbbf24' };
+    if (pct < 0.90) return { emoji:'🚀', text:'Почти финиш!',   col:'#fb923c' };
+    return { emoji:'🎉', text:'Ещё чуть-чуть!', col:'#f87171' };
+  }
+
+  function shiftProgressHTML(emp) {
+    const wh = parseWorkHours(emp.workHours); if (!wh) return '';
+    const n = new Date(), cur = n.getHours()*60 + n.getMinutes();
+    const elapsed = cur - wh.start;
+    const total   = wh.end - wh.start || 1;
+    const pct     = Math.max(0, Math.min(1, elapsed / total));
+    const remain  = Math.max(0, wh.end - cur);
+    const mood    = shiftMood(pct);
+    const pctDisp = Math.round(pct * 100);
+    const bgPos   = (pct * 100).toFixed(1);
+    let remainText;
+    if (remain === 0) { remainText = 'Смена окончена'; }
+    else if (remain < 60) { remainText = `ещё ${remain} мин`; }
+    else {
+      const hh = Math.floor(remain/60), mm = remain%60;
+      remainText = `ещё ${hh}ч${mm?' '+mm+'м':''}`;
+    }
+    return `<div class="shift-progress" data-emp="${emp.name}" data-start="${wh.start}" data-end="${wh.end}">
+      <div class="sp-row">
+        <span class="sp-mood">${mood.emoji}</span>
+        <span class="sp-label">Прогресс смены</span>
+        <div class="sp-meta">
+          <span class="sp-pct" style="color:${mood.col}">${pctDisp}%</span>
+          <span class="sp-remain">${remainText}</span>
+        </div>
+      </div>
+      <div class="sp-bar-wrap">
+        <div class="sp-fill sp-fill-el" style="width:${bgPos}%;--pos:${bgPos}%"></div>
+        <div class="sp-marker sp-marker-el" style="left:${bgPos}%"></div>
+      </div>
+      <div class="sp-over" style="color:${mood.col}">${mood.text}</div>
+    </div>`;
+  }
+
   function timelineHTML(emp) {
     const segs=parseSchedule(emp.breakSchedule); if(!segs.length)return'';
     const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60};
@@ -757,6 +837,7 @@
       el.dataset.name=emp.name;
       el.draggable=true;
       el.style.animationDelay=(i*.05)+'s';
+      const sp=shiftProgressHTML(emp);
       el.innerHTML=`
         <div class="card-header">
           <div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div>
@@ -766,6 +847,7 @@
         </div>
         <div class="card-name">${emp.name}</div>
         <div class="card-hours">${emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+emp.breakTime:''}</div>
+        ${sp}
         ${cd?`<div class="countdown${cd.urgent?' urgent':''}" data-emp="${emp.name}"><span>⏱</span><span class="cv">${cd.t}</span></div>`:''}
         ${tl}`;
       grid.appendChild(el);
@@ -785,6 +867,32 @@
       const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60};
       const cur=new Date().getHours()*60+new Date().getMinutes();
       el.style.left=Math.max(0,Math.min(100,(cur-wh.start)/(wh.end-wh.start||1)*100)).toFixed(1)+'%';
+    });
+    // Update shift progress bars
+    document.querySelectorAll('.shift-progress').forEach(el => {
+      const name = el.dataset.emp;
+      const emp  = data.find(e => e.name === name); if (!emp) return;
+      const start = +el.dataset.start, end = +el.dataset.end;
+      const cur   = new Date().getHours()*60 + new Date().getMinutes();
+      const pct   = Math.max(0, Math.min(1, (cur-start)/(end-start||1)));
+      const bgPos = (pct*100).toFixed(1)+'%';
+      const fill  = el.querySelector('.sp-fill-el');
+      const mark  = el.querySelector('.sp-marker-el');
+      const pctEl = el.querySelector('.sp-pct');
+      const remEl = el.querySelector('.sp-remain');
+      const ovEl  = el.querySelector('.sp-over');
+      if (fill) { fill.style.width = bgPos; fill.style.setProperty('--pos', bgPos); }
+      if (mark)   mark.style.left = bgPos;
+      if (pctEl)  pctEl.textContent = Math.round(pct*100)+'%';
+      const remain = Math.max(0, end-cur);
+      if (remEl) {
+        if (!remain) remEl.textContent = 'Смена окончена';
+        else if (remain<60) remEl.textContent = `ещё ${remain} мин`;
+        else { const hh=Math.floor(remain/60),mm=remain%60; remEl.textContent=`ещё ${hh}ч${mm?' '+mm+'м':''}`; }
+      }
+      const mood = shiftMood(pct);
+      if (pctEl) pctEl.style.color = mood.col;
+      if (ovEl) { ovEl.textContent = mood.text; ovEl.style.color = mood.col; }
     });
     // Update now-line in day view
     const nowLine=document.getElementById('dv-now-el');
