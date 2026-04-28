@@ -89,6 +89,20 @@
     body.fs .stats-row,
     body.fs .toolbar { display:none !important; }
     body.fs .app { padding:8px; }
+    .fs-exit-btn {
+      display:none;
+      position:fixed;top:16px;right:16px;z-index:9999;
+      background:rgba(20,20,30,0.9);
+      -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+      border:1px solid var(--border2);
+      color:var(--text);border-radius:100px;
+      padding:8px 18px;font:13px/1 'Inter',sans-serif;
+      font-weight:500;cursor:pointer;
+      display:none;align-items:center;gap:8px;
+      transition:all .2s;
+    }
+    .fs-exit-btn:hover { background:var(--red-bg);border-color:var(--red);color:var(--red); }
+    body.fs .fs-exit-btn { display:flex; }
 
     /* ── HEADER ── */
     header { background:var(--header-bg);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:var(--r);padding:18px 28px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-bottom:16px;transition:background .3s; }
@@ -431,6 +445,9 @@
 </div>
 
 <div class="toast-wrap" id="toasts"></div>
+<button class="fs-exit-btn" onclick="toggleFullscreen()" title="Выход из полного экрана (Esc или F)">
+  ✕ Выход из полного экрана
+</button>
 
 <script>
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyFUAo8Nl4wJFItNbbDICQtmt_XC6vVOecWphF714S_I4deQcCRMnhY-_ALyjuW2Kq1/exec';
@@ -468,7 +485,8 @@
   function toggleFullscreen() {
     isFullscreen = !isFullscreen;
     document.body.classList.toggle('fs', isFullscreen);
-    document.getElementById('fs-btn').textContent = isFullscreen ? '✕' : '⛶';
+    document.getElementById('fs-btn').textContent = isFullscreen ? '⛶' : '⛶';
+    if (isFullscreen) toast('Нажмите F или Esc для выхода', 'work');
   }
   document.addEventListener('keydown', e => {
     if (document.activeElement.tagName === 'INPUT') return;
