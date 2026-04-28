@@ -659,7 +659,16 @@
       const res = await fetch(WEB_APP_URL+'?_='+Date.now());
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      data = json;
+      // Support both old format (array) and new format {employees:[], t:serverCurMin}
+      if (Array.isArray(json)) {
+        data = json;
+      } else {
+        data = json.employees || [];
+        if (json.t !== undefined) {
+          const localNow = new Date().getHours()*60 + new Date().getMinutes();
+          window._tzOffset = json.t - localNow; // server ahead/behind local in minutes
+        }
+      }
       document.getElementById('loader-wrap').style.display='none';
       document.getElementById('last-upd').textContent='Обновлено в '+new Date().toTimeString().slice(0,5);
       processEvents(); updateStats();
@@ -704,7 +713,7 @@
     return {start:+m[1]*60+ +m[2],end:+m[3]*60+ +m[4]};
   }
   function countdownText(emp) {
-    const n=new Date(), cur=n.getHours()*60+n.getMinutes();
+    const cur=serverNow();
     const segs=parseSchedule(emp.breakSchedule);
     if (emp.onBreak) {
       const a=segs.find(s=>cur>=s.start&&cur<=s.end);
@@ -717,6 +726,12 @@
     return null;
   }
   function fmt(min){return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;}
+  // Returns current time in minutes, adjusted to server timezone
+  function serverNow() {
+    const n = new Date();
+    return n.getHours()*60 + n.getMinutes() + (window._tzOffset || 0);
+  }
+
   function shiftMood(pct) {
     if (pct < 0.15) return { emoji:'🌅', text:'Только начали', col:'#60a5fa' };
     if (pct < 0.35) return { emoji:'⚡', text:'Входим в ритм',  col:'#4ade80' };
@@ -728,7 +743,7 @@
 
   function shiftProgressHTML(emp) {
     const wh = parseWorkHours(emp.workHours); if (!wh) return '';
-    const n = new Date(), cur = n.getHours()*60 + n.getMinutes();
+    const cur = serverNow();
     const elapsed = cur - wh.start;
     const total   = wh.end - wh.start || 1;
     const pct     = Math.max(0, Math.min(1, elapsed / total));
@@ -764,7 +779,7 @@
     const segs=parseSchedule(emp.breakSchedule); if(!segs.length)return'';
     const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60};
     const span=wh.end-wh.start||1;
-    const n=new Date(),cur=n.getHours()*60+n.getMinutes();
+    const cur=serverNow();
     const nowPct=Math.max(0,Math.min(100,(cur-wh.start)/span*100));
     const segHtml=segs.map(s=>{
       const left=Math.max(0,(s.start-wh.start)/span*100);
@@ -865,7 +880,7 @@
       const card=el.closest('.card'); if(!card)return;
       const emp=data.find(e=>e.name===card.dataset.name); if(!emp)return;
       const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60};
-      const cur=new Date().getHours()*60+new Date().getMinutes();
+      const cur=serverNow();
       el.style.left=Math.max(0,Math.min(100,(cur-wh.start)/(wh.end-wh.start||1)*100)).toFixed(1)+'%';
     });
     // Update shift progress bars
@@ -873,7 +888,7 @@
       const name = el.dataset.emp;
       const emp  = data.find(e => e.name === name); if (!emp) return;
       const start = +el.dataset.start, end = +el.dataset.end;
-      const cur   = new Date().getHours()*60 + new Date().getMinutes();
+      const cur   = serverNow();
       const pct   = Math.max(0, Math.min(1, (cur-start)/(end-start||1)));
       const bgPos = (pct*100).toFixed(1)+'%';
       const fill  = el.querySelector('.sp-fill-el');
@@ -897,7 +912,7 @@
     // Update now-line in day view
     const nowLine=document.getElementById('dv-now-el');
     if(nowLine&&window._dvMeta){
-      const{dayStart,PX}=window._dvMeta, cur=new Date().getHours()*60+new Date().getMinutes();
+      const{dayStart,PX}=window._dvMeta, cur=serverNow();
       const top=(cur-dayStart)*PX;
       nowLine.style.top=top+'px';
       const lbl=document.getElementById('dv-now-lbl');
@@ -919,7 +934,7 @@
     window._dvMeta={dayStart,PX};
 
     const totalH=(dayEnd-dayStart)*PX;
-    const n=new Date(), curMin=n.getHours()*60+n.getMinutes();
+    const curMin=serverNow();
 
     let h=`<div class="dv-wrap">`;
 
