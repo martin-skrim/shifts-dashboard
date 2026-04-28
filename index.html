@@ -205,4 +205,565 @@
       background: rgba(248,113,113,0.04);
     }
     .card.on-break:hover { box-shadow: 0 8px 40px rgba(248,113,113,.3); }
-    @keyframes 
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, #1e293b, #334155);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 600; color: var(--text);
+      flex-shrink: 0;
+    }
+    .card.working  .avatar { border-color: rgba(74,222,128,.4); }
+    .card.on-break .avatar { border-color: rgba(248,113,113,.4); }
+    .badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; letter-spacing: .4px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .badge-working { background: var(--green-bg); color: var(--green); border: 1px solid rgba(74,222,128,.2); }
+    .badge-working .dot { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-g 2s infinite; }
+    .badge-break   { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(248,113,113,.2); }
+    .badge-break   .dot { background: var(--red);   box-shadow: 0 0 6px var(--red);   animation: pulse-r 1.4s infinite; }
+    @keyframes pulse-g { 0%,100%{box-shadow:0 0 6px var(--green)} 50%{box-shadow:0 0 2px var(--green)} }
+    @keyframes pulse-r { 0%,100%{transform:scale(1)} 50%{transform:scale(.75)} }
+
+    .card-name  { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+    .card-hours { font-size: 12px; color: var(--text-dim); }
+
+    /* countdown */
+    .countdown {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-mid); margin-top: 8px;
+    }
+    .countdown.urgent { color: var(--yellow); }
+    .countdown .cv { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* timeline */
+    .timeline { margin-top: 14px; }
+    .tl-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .tl-bar { position: relative; height: 6px; background: rgba(255,255,255,.05); border-radius: 3px; }
+    .tl-seg {
+      position: absolute; height: 100%; border-radius: 3px;
+      background: var(--green); opacity: .45; transition: opacity .3s;
+    }
+    .tl-seg.active { background: var(--red); opacity: 1; box-shadow: 0 0 8px var(--red); }
+    .tl-now { position: absolute; width: 2px; height: 100%; background: #fff; opacity: .7; border-radius: 1px; }
+    .tl-times {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--text-dim); margin-top: 4px;
+    }
+
+    /* ── LOADER ── */
+    .loader-wrap { text-align: center; padding: 80px 20px; }
+    .spinner {
+      width: 38px; height: 38px; border: 3px solid var(--border);
+      border-top-color: var(--green); border-radius: 50%;
+      animation: spin .75s linear infinite; margin: 0 auto 16px;
+    }
+
+    /* ── EMPTY ── */
+    .empty { text-align: center; padding: 80px 20px; color: var(--text-dim); grid-column: 1/-1; }
+    .empty .ei { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { font-size: 17px; color: var(--text-mid); margin-bottom: 6px; }
+
+    /* ── NOTIFICATION PANEL ── */
+    .notif-panel {
+      position: fixed; right: 20px; bottom: 20px;
+      width: 320px; max-height: 420px;
+      background: rgba(12,12,20,.92); backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: var(--r);
+      display: flex; flex-direction: column; z-index: 100;
+      transform: translateX(360px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .notif-panel.open { transform: translateX(0); }
+    .np-head {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 600;
+    }
+    .np-list { overflow-y: auto; flex: 1; }
+    .np-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--text-dim); }
+    .np-item {
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+      animation: fadeUp .3s ease-out;
+    }
+    .np-item .ni-name { font-size: 13px; font-weight: 500; }
+    .np-item .ni-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .np-item.break .ni-name { color: var(--red); }
+    .np-item.work  .ni-name { color: var(--green); }
+    .np-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--red); color: #fff;
+      font-size: 10px; font-weight: 700; margin-left: 4px;
+    }
+
+    /* ── TOASTS ── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      z-index: 200; pointer-events: none;
+    }
+    .toast {
+      background: rgba(20,20,30,.95); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 100px;
+      padding: 10px 22px; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+      animation: toastIn .3s ease-out;
+      transition: opacity .3s, transform .3s;
+    }
+    .toast.break { border-color: rgba(248,113,113,.4); color: var(--red); }
+    .toast.work  { border-color: rgba(74,222,128,.4);  color: var(--green); }
+    @keyframes toastIn { from{opacity:0;transform:translateY(18px) scale(.9)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 600px) {
+      .app { padding: 12px; }
+      header { padding: 14px 16px; }
+      .header-clock { font-size: 24px; }
+      .notif-panel { width: 280px; right: 10px; bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
+<div class="glow glow-c"></div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-logo">☕</div>
+    <div class="header-text">
+      <h1>Break Monitor</h1>
+      <p>Мониторинг перерывов сотрудников</p>
+    </div>
+    <div class="header-clock">
+      <div id="clock">--:-- <span class="sec">--</span></div>
+      <div class="date-line" id="date-line"></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="pbar" style="width:100%"></div>
+    </div>
+  </header>
+
+  <!-- STATS (скрыто до запуска) -->
+  <div class="stats-row" id="stats" style="display:none">
+    <div class="stat-chip green"><div class="n" id="s-work">—</div><div class="l">Работают</div></div>
+    <div class="stat-chip red">  <div class="n" id="s-break">—</div><div class="l">На перерыве</div></div>
+    <div class="stat-chip blue"> <div class="n" id="s-total">—</div><div class="l">Всего на смене</div></div>
+  </div>
+
+  <!-- TOOLBAR (скрыто до запуска) -->
+  <div class="toolbar" id="toolbar" style="display:none">
+    <div class="tabs">
+      <button class="tab active" onclick="setFilter('all',this)">Все</button>
+      <button class="tab" onclick="setFilter('working',this)">Работают</button>
+      <button class="tab" onclick="setFilter('break',this)">Перерыв</button>
+    </div>
+    <button class="btn btn-ghost" id="refresh-btn" onclick="manualRefresh()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+      </svg>
+      Обновить
+    </button>
+    <button class="btn btn-blue" onclick="togglePanel()">
+      🔔 <span id="notif-cnt">0</span>
+    </button>
+    <button class="btn btn-ghost" id="snd-btn" onclick="toggleSound()">🔊</button>
+    <button class="btn btn-ghost" onclick="testNotif()">Тест</button>
+    <span class="ts ml-auto" id="last-upd"></span>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboarding">
+    <div class="ob-card">
+      <div class="icon">🟢</div>
+      <h2>Break Monitor</h2>
+      <p>Отслеживайте перерывы сотрудников в реальном времени и получайте мгновенные уведомления о каждом изменении.</p>
+      <div class="ob-feats">
+        <div class="ob-feat"><span>⏱</span><span>Обратный отсчёт до/до конца перерыва</span></div>
+        <div class="ob-feat"><span>📊</span><span>Визуальный таймлайн расписания</span></div>
+        <div class="ob-feat"><span>🔔</span><span>Браузерные и звуковые уведомления</span></div>
+        <div class="ob-feat"><span>📋</span><span>История всех событий смены</span></div>
+      </div>
+      <button class="btn btn-primary" style="margin:0 auto;font-size:15px;padding:13px 32px" onclick="startMonitoring()">
+        ✨ Запустить мониторинг
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main" style="display:none">
+    <div id="loader-wrap" class="loader-wrap">
+      <div class="spinner"></div>
+      <p style="color:var(--text-dim);font-size:14px">Синхронизация с Google Sheets...</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="np">
+  <div class="np-head">
+    <span>История событий</span>
+    <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="clearLog()">Очистить</button>
+  </div>
+  <div class="np-list" id="np-list">
+    <div class="np-empty">Пока тихо…</div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+  // ─────────────────────────────────────────────
+  const WEB_APP_URL = '{{MY_SECRET_API_URL}}';
+  const INTERVAL = 20; // секунды
+
+  let state    = {};
+  let data     = [];
+  let filter   = 'all';
+  let audioCtx = null;
+  let soundOn  = true;
+  let fetching = false;
+  let notifCnt = 0;
+  let logItems = [];
+  let timer    = INTERVAL;
+
+  // ─── AUDIO ───────────────────────────────────
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function beep(type) {
+    if (!soundOn || !audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    const t = audioCtx.currentTime;
+    if (type === 'break') {
+      o.frequency.setValueAtTime(660, t);
+      o.frequency.exponentialRampToValueAtTime(330, t + .4);
+    } else {
+      o.frequency.setValueAtTime(330, t);
+      o.frequency.exponentialRampToValueAtTime(660, t + .25);
+      o.frequency.setValueAtTime(660, t + .3);
+      o.frequency.exponentialRampToValueAtTime(990, t + .5);
+    }
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.1, t + .05);
+    g.gain.exponentialRampToValueAtTime(.001, t + .6);
+    o.start(t); o.stop(t + .65);
+  }
+  function toggleSound() {
+    soundOn = !soundOn;
+    document.getElementById('snd-btn').textContent = soundOn ? '🔊' : '🔇';
+  }
+
+  // ─── NOTIFICATIONS ────────────────────────────
+  function notify(name, body, type) {
+    beep(type);
+    toast(name + ' — ' + body, type);
+    addLog(name, body, type);
+    if (Notification.permission === 'granted') {
+      new Notification(type === 'break' ? '☕ Перерыв' : '✅ Вернулся', {
+        body: name + ' — ' + body,
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg'
+      });
+    }
+  }
+  function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = (type === 'break' ? '☕' : '✅') + ' ' + msg;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = '0'; el.style.transform = 'translateY(10px) scale(.95)';
+      setTimeout(() => el.remove(), 320);
+    }, 4500);
+  }
+  function addLog(name, body, type) {
+    notifCnt++;
+    document.getElementById('notif-cnt').textContent = notifCnt;
+    const list = document.getElementById('np-list');
+    const q = list.querySelector('.np-empty');
+    if (q) q.remove();
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 5);
+    const el = document.createElement('div');
+    el.className = 'np-item ' + type;
+    el.innerHTML = `<div class="ni-name">${type==='break'?'☕':'✅'} ${name}</div>
+                    <div class="ni-meta">${body} · ${ts}</div>`;
+    list.insertBefore(el, list.firstChild);
+    logItems.unshift({name, body, type, ts});
+  }
+  function clearLog() {
+    notifCnt = 0;
+    document.getElementById('notif-cnt').textContent = '0';
+    document.getElementById('np-list').innerHTML = '<div class="np-empty">Пока тихо…</div>';
+    logItems = [];
+  }
+  function togglePanel() {
+    document.getElementById('np').classList.toggle('open');
+  }
+  function testNotif() {
+    initAudio();
+    notify('Тест уведомлений', 'Система работает!', 'work');
+  }
+
+  // ─── CLOCK ───────────────────────────────────
+  const MONTHS = ['января','февраля','марта','апреля','мая','июня',
+                  'июля','августа','сентября','октября','ноября','декабря'];
+  const DAYS   = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  function tickClock() {
+    const n = new Date();
+    const h = n.getHours().toString().padStart(2,'0');
+    const m = n.getMinutes().toString().padStart(2,'0');
+    const s = n.getSeconds().toString().padStart(2,'0');
+    document.getElementById('clock').innerHTML =
+      `${h}:${m} <span class="sec">${s}</span>`;
+    document.getElementById('date-line').textContent =
+      `${DAYS[n.getDay()]}, ${n.getDate()} ${MONTHS[n.getMonth()]}`;
+    tickCountdowns();
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  // ─── PROGRESS BAR ────────────────────────────
+  function tickProgress() {
+    timer--;
+    if (timer <= 0) { timer = INTERVAL; fetchData(); }
+    document.getElementById('pbar').style.width = (timer / INTERVAL * 100) + '%';
+  }
+
+  // ─── START ───────────────────────────────────
+  function startMonitoring() {
+    initAudio();
+    Notification.requestPermission().then(() => {
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      document.getElementById('stats').style.display = 'flex';
+      document.getElementById('toolbar').style.display = 'flex';
+      fetchData();
+      setInterval(tickProgress, 1000);
+    });
+  }
+  function manualRefresh() {
+    timer = INTERVAL;
+    fetchData();
+  }
+
+  // ─── FILTER ──────────────────────────────────
+  function setFilter(f, el) {
+    filter = f;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderCards();
+  }
+
+  // ─── FETCH ───────────────────────────────────
+  async function fetchData() {
+    if (fetching) return;
+    fetching = true;
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spin');
+    try {
+      const res = await fetch(WEB_APP_URL + '?_=' + Date.now());
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      data = json;
+      document.getElementById('loader-wrap').style.display = 'none';
+      const n = new Date();
+      document.getElementById('last-upd').textContent =
+        'Обновлено в ' + n.toTimeString().slice(0,5);
+      processEvents();
+      updateStats();
+      renderCards();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('last-upd').textContent = '⚠ Ошибка соединения';
+    } finally {
+      fetching = false;
+      btn.classList.remove('spin');
+    }
+  }
+
+  // ─── EVENTS ──────────────────────────────────
+  function processEvents() {
+    data.forEach(emp => {
+      const prev = state[emp.name];
+      if (prev !== undefined) {
+        if (!prev && emp.onBreak)
+          notify(emp.name, `Ушёл на перерыв${emp.breakTime ? ' ('+emp.breakTime+')' : ''}`, 'break');
+        else if (prev && !emp.onBreak)
+          notify(emp.name, 'Вернулся с перерыва', 'work');
+      }
+      state[emp.name] = emp.onBreak;
+    });
+  }
+
+  // ─── STATS ───────────────────────────────────
+  function updateStats() {
+    const ob = data.filter(e => e.onBreak).length;
+    document.getElementById('s-work').textContent  = data.length - ob;
+    document.getElementById('s-break').textContent = ob;
+    document.getElementById('s-total').textContent = data.length;
+  }
+
+  // ─── HELPERS ─────────────────────────────────
+  function parseSchedule(arr) {
+    if (!arr) return [];
+    return arr.map(s => {
+      if (!s) return null;
+      const m = s.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      return { start: +m[1]*60 + +m[2], end: +m[3]*60 + +m[4], label: s };
+    }).filter(Boolean);
+  }
+
+  function parseWorkHours(str) {
+    if (!str) return null;
+    const m = str.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    return { start: +m[1]*60 + +m[2], end: +m[3]*60 + +m[4] };
+  }
+
+  function countdownText(emp) {
+    const n = new Date();
+    const cur = n.getHours()*60 + n.getMinutes();
+    const segs = parseSchedule(emp.breakSchedule);
+    if (emp.onBreak) {
+      const active = segs.find(s => cur >= s.start && cur <= s.end);
+      if (active) {
+        const rem = active.end - cur;
+        if (rem <= 0)  return { t: 'Перерыв заканчивается', urgent: true };
+        if (rem <= 3)  return { t: `Осталось ${rem} мин`, urgent: true };
+        return { t: `Конец через ${rem} мин`, urgent: false };
+      }
+    } else {
+      const upcoming = segs.filter(s => s.start > cur).sort((a,b) => a.start - b.start);
+      if (upcoming.length) {
+        const diff = upcoming[0].start - cur;
+        if (diff <= 10) return { t: `Перерыв через ${diff} мин`, urgent: true };
+        if (diff < 60)  return { t: `Перерыв через ${diff} мин`, urgent: false };
+        const hh = Math.floor(diff/60), mm = diff%60;
+        return { t: `Перерыв через ${hh}ч ${mm ? mm+'м' : ''}`, urgent: false };
+      }
+      return { t: 'Перерывов не осталось', urgent: false };
+    }
+    return null;
+  }
+
+  function timelineHTML(emp) {
+    const segs = parseSchedule(emp.breakSchedule);
+    if (!segs.length) return '';
+    const wh = parseWorkHours(emp.workHours) || { start: 8*60, end: 22*60 };
+    const span = wh.end - wh.start || 1;
+    const n = new Date();
+    const cur = n.getHours()*60 + n.getMinutes();
+    const nowPct = Math.max(0, Math.min(100, (cur - wh.start) / span * 100));
+    const segHtml = segs.map(s => {
+      const left  = Math.max(0, (s.start - wh.start) / span * 100);
+      const width = Math.max(1, (s.end - s.start) / span * 100);
+      const active = cur >= s.start && cur <= s.end;
+      return `<div class="tl-seg${active?' active':''}" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%" title="${s.label}"></div>`;
+    }).join('');
+    const sh = Math.floor(wh.start/60), sm = wh.start%60;
+    const eh = Math.floor(wh.end/60),   em = wh.end%60;
+    const fmt = (h,m) => `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    return `<div class="timeline">
+      <div class="tl-label">График перерывов</div>
+      <div class="tl-bar">
+        ${segHtml}
+        <div class="tl-now" style="left:${nowPct.toFixed(1)}%"></div>
+      </div>
+      <div class="tl-times"><span>${fmt(sh,sm)}</span><span>${fmt(eh,em)}</span></div>
+    </div>`;
+  }
+
+  // ─── RENDER ──────────────────────────────────
+  function renderCards() {
+    const grid = document.getElementById('grid');
+    let list = [...data].sort((a,b) => b.onBreak - a.onBreak);
+    if (filter === 'working') list = list.filter(e => !e.onBreak);
+    if (filter === 'break')   list = list.filter(e =>  e.onBreak);
+
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty"><div class="ei">🌙</div><h3>Нет сотрудников</h3><p>Нет сотрудников с выбранным статусом</p></div>';
+      return;
+    }
+    grid.innerHTML = '';
+    list.forEach((emp, i) => {
+      const ob  = emp.onBreak;
+      const ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const cd  = countdownText(emp);
+      const tl  = timelineHTML(emp);
+      const el  = document.createElement('div');
+      el.className = `card ${ob ? 'on-break' : 'working'}`;
+      el.dataset.name = emp.name;
+      el.style.animationDelay = (i * .05) + 's';
+      el.innerHTML = `
+        <div class="card-header">
+          <div class="avatar">${ini}</div>
+          <div class="${ob ? 'badge badge-break' : 'badge badge-working'}">
+            <span class="dot"></span>${ob ? 'Перерыв' : 'За работой'}
+          </div>
+        </div>
+        <div class="card-name">${emp.name}</div>
+        <div class="card-hours">${emp.workHours || ''}${ob && emp.breakTime ? ' · ☕ ' + emp.breakTime : ''}</div>
+        ${cd ? `<div class="countdown${cd.urgent?' urgent':''}" data-emp="${emp.name}">
+          <span>⏱</span><span class="cv">${cd.t}</span></div>` : ''}
+        ${tl}
+      `;
+      grid.appendChild(el);
+    });
+  }
+
+  // Обновление обратных отсчётов каждую секунду (без перерисовки карточек)
+  function tickCountdowns() {
+    document.querySelectorAll('.countdown').forEach(el => {
+      const emp = data.find(e => e.name === el.dataset.emp);
+      if (!emp) return;
+      const cd = countdownText(emp);
+      if (cd) {
+        el.querySelector('.cv').textContent = cd.t;
+        el.classList.toggle('urgent', cd.urgent);
+      }
+    });
+    // Обновление таймлайн-маркера текущего времени
+    document.querySelectorAll('.tl-now').forEach((el, idx) => {
+      const card = el.closest('.card');
+      if (!card) return;
+      const emp = data.find(e => e.name === card.dataset.name);
+      if (!emp) return;
+      const wh = parseWorkHours(emp.workHours) || { start:8*60, end:22*60 };
+      const span = wh.end - wh.start || 1;
+      const n = new Date();
+      const cur = n.getHours()*60 + n.getMinutes();
+      const pct = Math.max(0, Math.min(100, (cur - wh.start) / span * 100));
+      el.style.left = pct.toFixed(1) + '%';
+    });
+  }
+
+  // ─── SERVICE WORKER ──────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
