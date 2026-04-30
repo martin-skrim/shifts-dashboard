@@ -1073,11 +1073,15 @@
       el.style.opacity = '0.65';
       el.style.boxShadow = 'none';
 
-      let r = emp.reason ? emp.reason.trim().toLowerCase() : '';
+let r = emp.reason ? emp.reason.trim() : '';
       let badgeText = 'Выходной';
-      if (r === 'отп') badgeText = 'В отпуске';
-      else if (r === 'б/л' || r === 'б') badgeText = 'Больничный';
-      else if (r && r !== '-' && r !== 'вых' && r !== 'выход') badgeText = r;
+      let rLow = r.toLowerCase();
+
+      if (rLow === 'отп') badgeText = 'В отпуске';
+      else if (rLow === 'б/л' || rLow === 'б') badgeText = 'Больничный';
+      else if (r === 'Ждёт смену') badgeText = '⏳ Ждёт смену';
+      else if (r === 'Смена окончена') badgeText = '🏁 Смена окончена';
+      else if (r && rLow !== '-' && rLow !== 'вых' && rLow !== 'выход') badgeText = r;
 
       el.innerHTML = `
         <div class="card-header">
