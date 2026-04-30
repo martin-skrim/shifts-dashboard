@@ -447,7 +447,17 @@
       isOffline = false; document.getElementById('offline-badge').style.display = 'none';
       document.getElementById('loader-wrap').style.display='none'; document.getElementById('stats').style.display='flex'; document.getElementById('toolbar').style.display='flex';
       
-      processEvents(); updateLocalStates(); updateLunchBuddies();
+      processEvents(); 
+      updateLocalStates(); 
+      updateLunchBuddies();
+      
+      // ИСПРАВЛЕНИЕ: Принудительная отрисовка после загрузки данных
+      if (currentView==='cards') renderCards(); 
+      else if (currentView==='day') renderDayView(); 
+      else if (currentView==='off') renderOffView(); 
+      else if (currentView==='tomorrow') renderTomorrowView(); 
+      else if (currentView==='heatmap') renderHeatmapView();
+      
     } catch(e) { 
       console.error(e); isOffline = true; document.getElementById('offline-badge').style.display = 'inline-block';
     } finally { fetching=false; document.getElementById('refresh-btn').classList.remove('spin'); }
