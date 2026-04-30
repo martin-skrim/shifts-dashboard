@@ -410,9 +410,10 @@
   <!-- TOOLBAR -->
   <div class="toolbar" id="toolbar" style="display:none">
     <!-- View tabs -->
-    <div class="tabs">
+    <div class="tabs" id="view-tabs">
       <button class="tab active" onclick="setView('cards',this)">☰ Карточки</button>
       <button class="tab" onclick="setView('day',this)">📅 На день</button>
+      <button class="tab" onclick="setView('off',this)">🏖️ Выходные</button>
     </div>
     <!-- Filter tabs (only for cards view) -->
     <div class="tabs" id="filter-tabs">
@@ -472,6 +473,8 @@
         <div id="dv-inner"></div>
       </div>
     </div>
+    <!-- Off day view -->
+    <div class="grid" id="off-panel" style="display:none"></div>
   </div>
 
 </div>
@@ -498,6 +501,7 @@
 
   let state       = {};
   let data        = [];
+  let offDayData  = [];
   let filter      = 'all';
   let searchQuery = '';
   let audioCtx    = null;
@@ -626,12 +630,17 @@
   // ── VIEW SWITCH ──────────────────────────────────────────
   function setView(v, el) {
     currentView = v;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-    document.getElementById('grid').style.display     = v==='cards' ? 'grid' : 'none';
-    document.getElementById('day-panel').style.display= v==='day'   ? 'block': 'none';
+    
+    document.getElementById('grid').style.display       = v==='cards' ? 'grid' : 'none';
+    document.getElementById('day-panel').style.display  = v==='day'   ? 'block': 'none';
+    document.getElementById('off-panel').style.display  = v==='off'   ? 'grid' : 'none';
+    
     document.getElementById('filter-tabs').style.display = v==='cards' ? '' : 'none';
+    
     if (v==='day') { renderDayView(); scrollDayToNow(); }
+    if (v==='off') { renderOffView(); }
   }
 
   // ── START ────────────────────────────────────────────────
@@ -654,7 +663,9 @@
     el.classList.add('active'); renderCards();
   }
   document.getElementById('search-input').addEventListener('input', e => {
-    searchQuery = e.target.value.toLowerCase().trim(); renderCards();
+    searchQuery = e.target.value.toLowerCase().trim(); 
+    if (currentView === 'cards') renderCards();
+    else if (currentView === 'off') renderOffView();
   });
 
   // ── FETCH ────────────────────────────────────────────────
@@ -665,21 +676,27 @@
       const res = await fetch(WEB_APP_URL+'?_='+Date.now());
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      // Support both old format (array) and new format {employees:[], t:serverCurMin}
+      
       if (Array.isArray(json)) {
         data = json;
+        offDayData = [];
       } else {
         data = json.employees || [];
+        offDayData = json.offDay || [];
         if (json.t !== undefined) {
           const localNow = new Date().getHours()*60 + new Date().getMinutes();
-          window._tzOffset = json.t - localNow; // server ahead/behind local in minutes
+          window._tzOffset = json.t - localNow;
         }
       }
       document.getElementById('loader-wrap').style.display='none';
       document.getElementById('last-upd').textContent='Обновлено в '+new Date().toTimeString().slice(0,5);
+      
       processEvents(); updateStats();
+      
       if (currentView==='cards') renderCards();
-      else renderDayView();
+      else if (currentView==='day') renderDayView();
+      else if (currentView==='off') renderOffView();
+      
     } catch(e) {
       console.error(e); document.getElementById('last-upd').textContent='⚠ Ошибка соединения';
     } finally { fetching=false; btn.classList.remove('spin'); }
@@ -735,17 +752,13 @@
     const m = ((Math.round(min) % 1440) + 1440) % 1440;
     return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
   }
-  // Returns current time in minutes, adjusted to server timezone (= MSK)
   function serverNow() {
     const n = new Date();
     return n.getHours()*60 + n.getMinutes() + (window._tzOffset || 0);
   }
 
-  // Convert MSK minutes to user's local minutes for display only
-  function toLocalMin(mskMin) {
-    return mskMin - (window._tzOffset || 0);
-  }
-  // Convert a time string "HH:MM – HH:MM" (MSK) to local display string
+  function toLocalMin(mskMin) { return mskMin - (window._tzOffset || 0); }
+  
   function localTimeStr(str) {
     if (!str) return str;
     const m = str.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
@@ -754,7 +767,7 @@
     const end   = +m[3]*60 + +m[4];
     return fmt(toLocalMin(start)) + ' – ' + fmt(toLocalMin(end));
   }
-  // Convert a single time "HH:MM" (MSK) to local display string
+  
   function localSingleTime(str) {
     if (!str) return str;
     const m = str.match(/(\d{1,2}):(\d{2})/);
@@ -849,7 +862,6 @@
       const card=e.target.closest('.card');
       if(!card||card===dragSrc)return;
       const r=card.getBoundingClientRect();
-      // Horizontal grid: compare X midpoint
       const afterX=e.clientX>(r.left+r.width/2);
       grid.insertBefore(dragSrc, afterX ? card.nextSibling : card);
     });
@@ -864,15 +876,14 @@
   function renderCards() {
     const grid=document.getElementById('grid');
     let list=[...data];
-    // Apply status filter
     if (filter === 'working') list = list.filter(e => !e.onBreak);
     if (filter === 'break')   list = list.filter(e =>  e.onBreak);
-    // Apply search
     if (searchQuery) list=list.filter(e=>e.name.toLowerCase().includes(searchQuery));
     list=sortByOrder(list);
-    // Within the user order, break-employees float to top unless user has custom order
+    
     const hasOrder=loadOrder().length>0;
     if(!hasOrder) list.sort((a,b)=>b.onBreak-a.onBreak);
+    
     if(!list.length){
       grid.innerHTML='<div class="empty"><div class="ei">'+(searchQuery?'🔍':'🌙')+'</div><h3>'+(searchQuery?'Не найдено':'Нет сотрудников')+'</h3></div>';
       return;
@@ -917,7 +928,6 @@
       const cur=serverNow();
       el.style.left=Math.max(0,Math.min(100,(cur-wh.start)/(wh.end-wh.start||1)*100)).toFixed(1)+'%';
     });
-    // Update shift progress bars
     document.querySelectorAll('.shift-progress').forEach(el => {
       const name = el.dataset.emp;
       const emp  = data.find(e => e.name === name); if (!emp) return;
@@ -943,7 +953,6 @@
       if (pctEl) pctEl.style.color = mood.col;
       if (ovEl) { ovEl.textContent = mood.text; ovEl.style.color = mood.col; }
     });
-    // Update now-line in day view
     const nowLine=document.getElementById('dv-now-el');
     if(nowLine&&window._dvMeta){
       const{dayStart,PX}=window._dvMeta, cur=serverNow();
@@ -959,7 +968,7 @@
     const inner=document.getElementById('dv-inner');
     if(!data.length){inner.innerHTML='<div class="empty" style="grid-column:unset"><div class="ei">📅</div><h3>Нет данных</h3></div>';return;}
 
-    const PX=1.6; // pixels per minute
+    const PX=1.6;
     let dayStart=24*60, dayEnd=0;
     data.forEach(emp=>{const wh=parseWorkHours(emp.workHours);if(wh){dayStart=Math.min(dayStart,wh.start);dayEnd=Math.max(dayEnd,wh.end);}});
     if(dayStart>=dayEnd){dayStart=8*60;dayEnd=22*60;}
@@ -972,7 +981,6 @@
 
     let h=`<div class="dv-wrap">`;
 
-    // Header row
     h+=`<div class="dv-head"><div class="dv-corner"><span style="font-size:10px;color:var(--text-dim)">МСК</span></div>`;
     data.forEach(emp=>{
       const color=nameToColor(emp.name);
@@ -986,26 +994,21 @@
     });
     h+=`</div>`;
 
-    // Body
     h+=`<div class="dv-body" style="height:${totalH}px">`;
 
-    // Time axis
     h+=`<div class="dv-time-axis" style="height:${totalH}px">`;
     for(let m=dayStart;m<=dayEnd;m+=60){
       h+=`<div class="dv-tick" style="top:${(m-dayStart)*PX}px">${fmt(toLocalMin(m))}</div>`;
     }
     h+=`</div>`;
 
-    // Columns
     h+=`<div class="dv-cols" style="height:${totalH}px">`;
 
-    // Hour & half-hour lines
     for(let m=dayStart;m<=dayEnd;m+=30){
       const isHour=m%60===0;
       h+=`<div class="${isHour?'dv-hline':'dv-hline dv-hline-half'}" style="top:${(m-dayStart)*PX}px"></div>`;
     }
 
-    // Employee columns
     data.forEach(emp=>{
       const wh=parseWorkHours(emp.workHours);
       const segs=parseSchedule(emp.breakSchedule);
@@ -1025,7 +1028,6 @@
       h+=`</div>`;
     });
 
-    // Now line
     if(curMin>=dayStart&&curMin<=dayEnd){
       const top=(curMin-dayStart)*PX;
       h+=`<div class="dv-now" id="dv-now-el" style="top:${top}px">
@@ -1046,6 +1048,49 @@
         outer.scrollTop=Math.max(0,top);
       }
     },80);
+  }
+
+  // ── OFF DAY VIEW (Выходные) ──────────────────────────────
+  function renderOffView() {
+    const panel = document.getElementById('off-panel');
+    let list = [...offDayData];
+    
+    if (searchQuery) list = list.filter(e => e.name.toLowerCase().includes(searchQuery));
+    
+    if (!list.length) {
+      panel.innerHTML = '<div class="empty"><div class="ei">🏖️</div><h3>' + (searchQuery ? 'Не найдено' : 'Никого нет на выходном') + '</h3></div>';
+      return;
+    }
+
+    panel.innerHTML = '';
+    list.forEach((emp, i) => {
+      const ini = emp.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const color = nameToColor(emp.name);
+      const el = document.createElement('div');
+      
+      el.className = 'card';
+      el.style.animationDelay = (i * 0.05) + 's';
+      el.style.opacity = '0.65';
+      el.style.boxShadow = 'none';
+
+      let r = emp.reason ? emp.reason.trim().toLowerCase() : '';
+      let badgeText = 'Выходной';
+      if (r === 'отп') badgeText = 'В отпуске';
+      else if (r === 'б/л' || r === 'б') badgeText = 'Больничный';
+      else if (r && r !== '-' && r !== 'вых' && r !== 'выход') badgeText = r;
+
+      el.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}; filter: grayscale(50%)">${ini}</div>
+          <div class="badge" style="background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);">
+            <span class="dot" style="background:var(--text-dim); box-shadow:none;"></span>${badgeText}
+          </div>
+        </div>
+        <div class="card-name" style="color:var(--text-mid)">${emp.name}</div>
+        <div class="card-hours">Вне смены</div>
+      `;
+      panel.appendChild(el);
+    });
   }
 
   // ── SERVICE WORKER ───────────────────────────────────────
