@@ -71,8 +71,6 @@
     .header-logo { width:46px;height:46px;background:linear-gradient(135deg,#4ade80,#22c55e);border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(74,222,128,.35); }
     .header-text h1 { font-size:19px;font-weight:600;letter-spacing:-.3px; }
     .header-text p  { font-size:12px;color:var(--text-dim);margin-top:2px; }
-    
-    /* Health Score */
     .health-wrap { display:flex; align-items:center; gap:10px; margin-left:auto; margin-right: 20px; padding-right: 20px; border-right: 1px solid var(--border); }
     .health-info { text-align:right; }
     .health-info h3 { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; }
@@ -81,10 +79,7 @@
     .health-bg { fill: none; stroke: var(--surface2); stroke-width: 4; }
     .health-bar { fill: none; stroke: var(--green); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 0; transition: stroke-dashoffset 1s, stroke 0.5s; }
     .health-text { fill: var(--text); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; transform: rotate(90deg) translateY(1px); }
-
-    /* Quote/Informer */
     .quote-wrap { flex:1; text-align:center; font-style:italic; color:var(--text-mid); font-size:14px; min-width: 200px; animation: fadeUp 0.5s;}
-
     .header-clock { margin-left:auto;text-align:right;font-size:32px;font-weight:300;letter-spacing:2px;font-variant-numeric:tabular-nums;line-height:1; }
     .header-clock .sec { font-size:20px;color:var(--text-dim); }
     .header-clock .date-line { font-size:12px;color:var(--text-dim);font-weight:400;margin-top:4px;text-align:right; }
@@ -117,6 +112,7 @@
     .btn-primary { background:linear-gradient(135deg,#4ade80,#22c55e);color:#052e16; }
     .btn-ghost { background:var(--glass-bg);border:1px solid var(--border);color:var(--text); } .btn-ghost:hover { background:var(--surface2); }
     .btn-blue { background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:var(--blue); }
+    .btn-guide { background:rgba(192,132,252,.1); border:1px solid rgba(192,132,252,.25); color:var(--purple); }
     .btn.spin svg { animation:spin .8s linear infinite; }
     .search-wrap { position:relative;display:flex;align-items:center; }
     .search-input { background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:8px 16px 8px 36px;font:13px 'Inter',sans-serif;color:var(--text);outline:none;width:180px;transition:all .2s; }
@@ -193,7 +189,7 @@
     .sp-marker { position:absolute;top:-3px;width:3px;height:14px; background:#fff;border-radius:2px; box-shadow:0 0 8px rgba(255,255,255,.7); transform:translateX(-50%);transition:left .8s; }
     .sp-over { font-size:10px;margin-top:5px;text-align:center;font-weight:600;letter-spacing:.3px; }
 
-    /* DAY VIEW & HEATMAP (Skipped details for brevity, keeping existing) */
+    /* DAY VIEW & HEATMAP */
     #day-panel, #heatmap-panel { display:none; }
     .dv-outer { overflow:auto; max-height:calc(100vh - 280px); border:1px solid var(--border); border-radius:var(--r); background:var(--card-bg); backdrop-filter:blur(12px); }
     .dv-wrap { display:flex;flex-direction:column;min-width:max-content; }
@@ -225,11 +221,42 @@
     
     .toast-wrap { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:200;pointer-events:none; }
     .toast { background:var(--toast-bg);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:100px;padding:10px 22px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,.4);animation:toastIn .3s ease-out;transition:opacity .3s,transform .3s; pointer-events:all; }
-    .toast.break { border-color:rgba(248,113,113,.4);color:var(--red); } .toast.work { border-color:rgba(74,222,128,.4);color:var(--green); }
+    .toast.break { border-color:rgba(248,113,113,.4);color:var(--red); } .toast.work { border-color:rgba(74,222,128,.4);color:var(--green); } .toast.info { border-color:rgba(96,165,250,.4);color:var(--blue); }
 
-    .modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);z-index:999;display:none;align-items:center;justify-content:center; }
-    .modal { background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r);padding:30px;max-width:400px;width:90%;text-align:center;animation:fadeUp .3s ease-out; }
+    .modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);z-index:999;display:none;align-items:center;justify-content:center; padding: 20px;}
+    .modal { background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:30px;max-width:400px;width:100%;text-align:center;animation:fadeUp .3s ease-out; position: relative;}
     .modal h2 { margin-bottom:12px;font-size:20px; } .modal p { color:var(--text-mid);font-size:14px;margin-bottom:24px;line-height:1.5; } .modal .big-time { font-size:32px;font-weight:700;color:var(--green);margin-bottom:24px; }
+    .modal-close { position:absolute; top: 16px; right: 16px; background:var(--surface2); border:none; color:var(--text-dim); width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;}
+    .modal-close:hover { background:var(--border); color:var(--text); }
+
+    /* ── НОВЫЙ ОНБОРДИНГ (HERO SECTION) ── */
+    #onboarding { min-height: 70vh; display: flex; align-items: center; justify-content: center; animation: fadeUp 0.5s ease-out; }
+    .ob-container { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 60px; max-width: 1000px; width: 100%; }
+    .ob-left { flex: 1; text-align: left; }
+    .ob-logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 6px 14px; border-radius: 100px; margin-bottom: 20px; border: 1px solid rgba(74,222,128,0.2); }
+    .ob-left h1 { font-size: 42px; font-weight: 700; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+    .ob-left p { font-size: 16px; color: var(--text-mid); line-height: 1.6; margin-bottom: 32px; max-width: 400px; }
+    .ob-right { flex: 1; }
+    .ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ob-feat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: var(--r-sm); transition: transform 0.2s, border-color 0.2s; }
+    .ob-feat-card:hover { transform: translateY(-3px); border-color: var(--border2); }
+    .ob-feat-card span { font-size: 24px; display: block; margin-bottom: 12px; }
+    .ob-feat-card b { font-size: 15px; display: block; margin-bottom: 6px; color: var(--text); }
+    .ob-feat-card p { font-size: 13px; color: var(--text-dim); line-height: 1.4; margin: 0;}
+    @media (max-width: 800px) { .ob-container { flex-direction: column; text-align: center; } .ob-left { display: flex; flex-direction: column; align-items: center; } .ob-left p { max-width: 100%; } }
+
+    /* ── СПРАВОЧНИК (HELP MODAL) ── */
+    #help-modal .modal { max-width: 700px; text-align: left; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow:hidden;}
+    .help-header { padding: 24px 30px; border-bottom: 1px solid var(--border); background: var(--header-bg); border-radius: var(--r) var(--r) 0 0; }
+    .help-header h2 { margin: 0; display:flex; align-items:center; gap:10px;}
+    .help-body { padding: 30px; overflow-y: auto; flex: 1; }
+    .help-section { margin-bottom: 32px; }
+    .help-section h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
+    .help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .help-item { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); padding: 14px; border-radius: var(--r-sm); border: 1px solid var(--border);}
+    .help-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .help-text b { display: block; font-size: 14px; margin-bottom: 4px; color: var(--text); }
+    .help-text p { font-size: 12px; color: var(--text-mid); line-height: 1.4; margin: 0; }
     
     ::-webkit-scrollbar { width:4px;height:4px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
   </style>
@@ -243,17 +270,15 @@
 
   <div id="alert-banner" class="alert-banner"></div>
 
-  <header id="main-header">
+  <header id="main-header" style="display:none;">
     <div class="header-logo">☕</div>
     <div class="header-text">
       <h1>Break Monitor</h1>
       <p>Мониторинг перерывов сотрудников</p>
     </div>
     
-    <!-- ФИЧА 5: ИНФОРМЕР / ЦИТАТЫ -->
     <div class="quote-wrap" id="quote-text">Отличной смены! 🚀</div>
 
-    <!-- ФИЧА 1: HEALTH SCORE -->
     <div class="health-wrap">
       <div class="health-info">
         <h3>Здоровье смены</h3>
@@ -273,7 +298,6 @@
     <div class="progress-wrap"><div class="progress-bar" id="pbar" style="width:100%"></div></div>
   </header>
 
-  <!-- ФИЧА 3: LUNCH BUDDIES -->
   <div class="buddies-wrap" id="buddies-wrap">
     <div class="buddies-icon">☕</div>
     <div class="buddies-track" id="buddies-track"></div>
@@ -298,7 +322,6 @@
       <button class="tab" onclick="setFilter('working',this)">Работают</button>
       <button class="tab" onclick="setFilter('break',this)">Перерыв</button>
       <button class="tab pulse" onclick="setFilter('next',this)">🏃 На подхвате</button>
-      <!-- ФИЧА 2: УМНАЯ СОРТИРОВКА -->
       <button class="tab time" id="sort-btn" onclick="toggleSort(this)">⏱ По времени</button>
     </div>
     <div class="search-wrap">
@@ -307,19 +330,32 @@
     </div>
     
     <button class="btn btn-ghost" onclick="findMeeting()">🤝 Планерка</button>
-    <button class="btn btn-ghost" id="refresh-btn" onclick="manualRefresh()">Обновить</button>
+    <button class="btn btn-guide" onclick="document.getElementById('help-modal').style.display='flex'">❓ Справочник</button>
+    
+    <button class="btn btn-ghost ml-auto" id="refresh-btn" onclick="manualRefresh()">Обновить</button>
     <button class="btn btn-blue"  onclick="togglePanel()">🔔 <span id="notif-cnt">0</span></button>
     <button class="btn btn-ghost" id="snd-btn"   onclick="toggleSound()">🔊</button>
     <button class="btn btn-ghost" id="theme-btn" onclick="toggleTheme()">🌙</button>
     <button class="btn btn-ghost" id="fs-btn"    onclick="toggleFullscreen()">⛶</button>
   </div>
 
+  <!-- НОВЫЙ ОНБОРДИНГ -->
   <div id="onboarding">
-    <div class="ob-card">
-      <div class="icon">🟢</div>
-      <h2>Break Monitor</h2>
-      <p>Отслеживайте перерывы сотрудников в реальном времени.</p>
-      <button class="btn btn-primary" style="margin:0 auto;font-size:15px;padding:13px 32px" onclick="startMonitoring()">✨ Запустить мониторинг</button>
+    <div class="ob-container">
+      <div class="ob-left">
+        <div class="ob-logo">☕ Break Monitor</div>
+        <h1>Умный контроль<br>смен и перерывов</h1>
+        <p>Превратите Google Таблицу в мощный дашборд. Автоматическая аналитика нагрузки, поиск времени для планерок и режим автопилота для телевизора.</p>
+        <button class="btn btn-primary" style="padding:14px 32px; font-size:16px;" onclick="startMonitoring()">✨ Запустить мониторинг</button>
+      </div>
+      <div class="ob-right">
+        <div class="ob-grid">
+          <div class="ob-feat-card"><span>🤖</span><b>ТВ Автопилот</b><p>Автоматическая прокрутка и смена вкладок для экранов.</p></div>
+          <div class="ob-feat-card"><span>📊</span><b>Аналитика</b><p>Тепловая карта нагрузки и радар рисков.</p></div>
+          <div class="ob-feat-card"><span>🤝</span><b>Планерки</b><p>Умный поиск идеального времени для собраний.</p></div>
+          <div class="ob-feat-card"><span>🏆</span><b>Геймификация</b><p>Ачивки, дни рождения и индекс здоровья смены.</p></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -337,10 +373,106 @@
 <!-- MEETING MODAL -->
 <div class="modal-overlay" id="meeting-modal" onclick="this.style.display='none'">
   <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="document.getElementById('meeting-modal').style.display='none'">✕</button>
     <h2>🤝 Окно для планерки</h2>
     <p id="meeting-desc">Лучшее 15-минутное окно до конца дня, когда максимум людей на линии.</p>
     <div class="big-time" id="meeting-time">--:--</div>
     <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="document.getElementById('meeting-modal').style.display='none'">Отлично</button>
+  </div>
+</div>
+
+<!-- HELP MODAL (СПРАВОЧНИК) -->
+<div class="modal-overlay" id="help-modal" onclick="this.style.display='none'">
+  <div class="modal help-modal" onclick="event.stopPropagation()">
+    <div class="help-header">
+      <h2>📖 Справочник по платформе</h2>
+      <button class="modal-close" style="top:20px; right:20px;" onclick="document.getElementById('help-modal').style.display='none'">✕</button>
+    </div>
+    <div class="help-body">
+      
+      <div class="help-section">
+        <h3>Цвета и статусы (Карточки)</h3>
+        <div class="help-grid">
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--green-bg); color:var(--green); border:1px solid rgba(74,222,128,0.2)">✅</div>
+            <div class="help-text"><b>Зеленый (За работой)</b><p>Сотрудник на линии, перерыв еще не скоро (более 15 минут).</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--yellow-bg); color:var(--yellow); border:1px solid rgba(251,191,36,0.3)">⚠️</div>
+            <div class="help-text"><b>Желтый (Скоро перерыв)</b><p>До ухода на перерыв осталось 15 минут или меньше.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--red-bg); color:var(--red); border:1px solid rgba(248,113,113,0.2)">☕</div>
+            <div class="help-text"><b>Красный (Перерыв)</b><p>Сотрудник сейчас находится на перерыве.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--cyan-bg); color:var(--cyan); border:1px solid rgba(34,211,238,0.3)">🏠</div>
+            <div class="help-text"><b>Бирюзовый (Скоро домой)</b><p>До конца рабочей смены осталось 15 минут или меньше.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--purple-bg); color:var(--purple); border:1px solid rgba(192,132,252,0.3)">📚</div>
+            <div class="help-text"><b>Фиолетовый (Обучение)</b><p>Задается в таблице как "12:00-13:00 (Обучение)".</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--blue-bg); color:var(--blue); border:1px solid rgba(96,165,250,0.3)">⚙️</div>
+            <div class="help-text"><b>Синий (Собрание/Бэкофис)</b><p>Задается в таблице как "12:00-13:00 (Собрание)".</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <h3>Ачивки и Геймификация</h3>
+        <div class="help-grid">
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🐦</div>
+            <div class="help-text"><b>Ранняя пташка</b><p>Дается тем, чья смена сегодня началась раньше всех остальных.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🛡️</div>
+            <div class="help-text"><b>Железный человек</b><p>Выдается за самую продолжительную смену (в часах) за сегодня.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🏁</div>
+            <div class="help-text"><b>Экватор</b><p>Появляется ровно в середине смены (на рубеже 50% прогресс-бара).</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🎂</div>
+            <div class="help-text"><b>День Рождения</b><p>Золотая карточка с хлопушкой. Берет дату из листа "СПЕЦИАЛИСТЫ".</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <h3>Умные инструменты</h3>
+        <div class="help-grid">
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">💯</div>
+            <div class="help-text"><b>Здоровье смены (Круг)</b><p>В шапке. Показывает % людей на линии относительно тех, кто сейчас работает.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🚨</div>
+            <div class="help-text"><b>Радар рисков</b><p>Красная плашка сверху. Появится сама, если в будущем на линии останется &lt; 40% смены.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🤝</div>
+            <div class="help-text"><b>Планерка</b><p>Кнопка в тулбаре. Находит окно 15 мин до конца дня с максимальным кол-вом людей.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">⏱</div>
+            <div class="help-text"><b>Умная сортировка</b><p>Фильтр "По времени" выстраивает карточки в идеальную очередь таймеров.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">🏃</div>
+            <div class="help-text"><b>На подхвате</b><p>Оставляет на экране только тех, кто вернется с перерыва в течение 5 минут.</p></div>
+          </div>
+          <div class="help-item">
+            <div class="help-icon" style="background:var(--surface2)">⛶</div>
+            <div class="help-text"><b>ТВ Автопилот</b><p>Включает полный экран, скроллит вниз-вверх и сам переключает вкладки (F).</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -357,19 +489,17 @@
   let audioCtx = null, soundOn = true, fetching = false, notifCnt = 0, timer = INTERVAL, currentView = 'cards';
   let isFullscreen = false, tvModeTimer = null, tvScrollInt = null, tvViews = ['cards', 'heatmap', 'tomorrow', 'off'], tvIndex = 0;
 
-  // QUOTES
-  const quotes = ["Отличной смены! 🚀", "Улыбнись, ты супер! 😊", "Давайте сделаем этот день! ⚡", "Кофе — спонсор нашей продуктивности ☕", "Работаем в потоке! 🔥"];
+  const quotes = ["Отличной смены! 🚀", "Улыбнись, ты супер! 😊", "Давайте сделаем этот день! ⚡", "Кофе — спонсор продуктивности ☕", "Работаем в потоке! 🔥"];
   let quoteIdx = 0; setInterval(() => { document.getElementById('quote-text').textContent = quotes[quoteIdx]; quoteIdx = (quoteIdx+1)%quotes.length; }, 15000);
 
-  // THEME & SOUND
   function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); document.getElementById('theme-btn').textContent = t === 'dark' ? '🌙' : '☀️'; try{localStorage.setItem('bm-theme',t);}catch(e){} }
   function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
   try { const saved = localStorage.getItem('bm-theme'); if (saved) applyTheme(saved); } catch(e){}
+  
   function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
   function toggleSound() { soundOn = !soundOn; document.getElementById('snd-btn').textContent = soundOn ? '🔊' : '🔇'; }
   function beep(type) { if (!soundOn || !audioCtx) return; const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sine';const t=audioCtx.currentTime; if(type==='break'){o.frequency.setValueAtTime(660,t);o.frequency.exponentialRampToValueAtTime(330,t+.4);}else{o.frequency.setValueAtTime(330,t);o.frequency.exponentialRampToValueAtTime(660,t+.25);o.frequency.setValueAtTime(660,t+.3);o.frequency.exponentialRampToValueAtTime(990,t+.5);} g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.1,t+.05);g.gain.exponentialRampToValueAtTime(.001,t+.6);o.start(t);o.stop(t+.65); }
 
-  // TV MODE
   function toggleFullscreen() {
     isFullscreen = !isFullscreen; document.body.classList.toggle('fs', isFullscreen);
     if (isFullscreen) { if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); toast('Автопилот запущен', 'work'); tvIndex=0; runTvCycle(); } 
@@ -397,7 +527,7 @@
   function toggleSort(el) { sortMode = sortMode==='default' ? 'time' : 'default'; el.classList.toggle('active', sortMode==='time'); renderCards(); }
   document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value.toLowerCase().trim(); if (currentView === 'cards') renderCards(); else if (currentView === 'off') renderOffView(); else if (currentView === 'tomorrow') renderTomorrowView(); });
 
-  function startMonitoring() { initAudio(); Notification.requestPermission().then(() => { document.getElementById('onboarding').style.display='none'; document.getElementById('main').style.display='block'; fetchData(); setInterval(tickProgress,1000); }); }
+  function startMonitoring() { initAudio(); Notification.requestPermission().then(() => { document.getElementById('onboarding').style.display='none'; document.getElementById('main').style.display='block'; document.getElementById('main-header').style.display='flex'; fetchData(); setInterval(tickProgress,1000); }); }
   function manualRefresh() { timer=INTERVAL; fetchData(); }
 
   async function fetchData() {
@@ -417,28 +547,16 @@
 
   function processEvents() { data.forEach(emp => { const prev = state[emp.name]; if (prev!==undefined) { if (!prev && emp.onBreak) notify(emp.name,`Ушёл на перерыв${emp.breakTime?' ('+emp.breakTime+')':''}`, 'break'); else if (prev && !emp.onBreak) notify(emp.name,'Вернулся с перерыва','work'); } state[emp.name]=emp.onBreak; }); }
   
-  // ФИЧА 1: HEALTH SCORE CALCULATION
   function updateStats() {
     const ob = data.filter(e=>e.onBreak).length;
-    document.getElementById('s-work').textContent  = data.length-ob;
-    document.getElementById('s-break').textContent = ob;
-    document.getElementById('s-total').textContent = data.length;
-
+    document.getElementById('s-work').textContent  = data.length-ob; document.getElementById('s-break').textContent = ob; document.getElementById('s-total').textContent = data.length;
     const cur = serverNow();
     let scheduledNow = data.filter(e => { const wh = parseWorkHours(e.workHours); return wh && cur >= wh.start && cur < wh.end; }).length;
-    let activeNow = scheduledNow - data.filter(e => {
-        const wh = parseWorkHours(e.workHours); 
-        return wh && cur >= wh.start && cur < wh.end && e.onBreak;
-    }).length;
-    
+    let activeNow = scheduledNow - data.filter(e => { const wh = parseWorkHours(e.workHours); return wh && cur >= wh.start && cur < wh.end && e.onBreak; }).length;
     let healthPct = scheduledNow ? Math.round((activeNow / scheduledNow) * 100) : 100;
-    document.getElementById('health-val').textContent = healthPct + '%';
-    document.getElementById('health-desc').textContent = `На линии: ${activeNow} / ${scheduledNow}`;
-    const circle = document.getElementById('health-circle');
-    circle.style.strokeDashoffset = 100 - healthPct;
-    if(healthPct >= 80) circle.style.stroke = 'var(--green)';
-    else if(healthPct >= 50) circle.style.stroke = 'var(--yellow)';
-    else circle.style.stroke = 'var(--red)';
+    document.getElementById('health-val').textContent = healthPct + '%'; document.getElementById('health-desc').textContent = `На линии: ${activeNow} / ${scheduledNow}`;
+    const circle = document.getElementById('health-circle'); circle.style.strokeDashoffset = 100 - healthPct;
+    if(healthPct >= 80) circle.style.stroke = 'var(--green)'; else if(healthPct >= 50) circle.style.stroke = 'var(--yellow)'; else circle.style.stroke = 'var(--red)';
   }
 
   function checkBottlenecks() {
@@ -453,27 +571,16 @@
     if (botStart !== null && (botEnd - botStart >= 5)) { banner.innerHTML = `<span>⚠️</span> Внимание: Критическая нехватка людей на линии с <b>${fmt(botStart)}</b> до <b>${fmt(botEnd)}</b> (останется ${minActive} чел.)`; banner.style.display = 'flex'; } else banner.style.display = 'none';
   }
 
-  // ФИЧА 3: LUNCH BUDDIES
   function updateLunchBuddies() {
     const cur = serverNow(); let buddies = [];
     for(let i=0; i<data.length; i++) {
       for(let j=i+1; j<data.length; j++) {
         const s1 = parseSchedule(data[i].breakSchedule), s2 = parseSchedule(data[j].breakSchedule);
-        s1.forEach(b1 => {
-          s2.forEach(b2 => {
-            let start = Math.max(b1.start, b2.start), end = Math.min(b1.end, b2.end);
-            if (end - start >= 10 && end > cur && start < cur + 180) { // Пересечение 10+ минут в ближайшие 3 часа
-              buddies.push(`<span class="buddies-item">☕ <span>${data[i].name.split(' ')[0]}</span> и <span>${data[j].name.split(' ')[0]}</span> (${fmt(start)} – ${fmt(end)})</span>`);
-            }
-          });
-        });
+        s1.forEach(b1 => { s2.forEach(b2 => { let start = Math.max(b1.start, b2.start), end = Math.min(b1.end, b2.end); if (end - start >= 10 && end > cur && start < cur + 180) { buddies.push(`<span class="buddies-item">☕ <span>${data[i].name.split(' ')[0]}</span> и <span>${data[j].name.split(' ')[0]}</span> (${fmt(start)} – ${fmt(end)})</span>`); } }); });
       }
     }
     const wrap = document.getElementById('buddies-wrap');
-    if (buddies.length) {
-      document.getElementById('buddies-track').innerHTML = buddies.join(' • ');
-      wrap.style.display = 'flex';
-    } else { wrap.style.display = 'none'; }
+    if (buddies.length) { document.getElementById('buddies-track').innerHTML = buddies.join(' • '); wrap.style.display = 'flex'; } else { wrap.style.display = 'none'; }
   }
 
   function findMeeting() {
@@ -497,79 +604,32 @@
 
   function countdownText(emp) {
     const cur=serverNow(), segs=parseSchedule(emp.breakSchedule), wh=parseWorkHours(emp.workHours);
-    
-    // ФИЧА 5: Скоро домой (Приоритет)
-    if (wh && !emp.onBreak && (wh.end - cur) <= 15 && (wh.end - cur) > 0) {
-      return { t: `🏠 Домой через ${wh.end - cur} мин`, urgent: false, home: true };
-    }
-
-    if (emp.onBreak) {
-      const a=segs.find(s=>cur>=s.start&&cur<=s.end);
-      if(a){const r=a.end-cur;if(r<=0)return{t:'Заканчивается',urgent:true, timeVal: 0};return{t:`Конец через ${r} мин`,urgent:false, timeVal: r};}
-    } else {
-      const up=segs.filter(s=>s.start>cur).sort((a,b)=>a.start-b.start);
-      if(up.length){
-        const d=up[0].start-cur;
-        if(d<=15) return {t:`Перерыв через ${d} мин`, urgent:true, soon:true, timeVal: d};
-        if(d<60)  return {t:`Перерыв через ${d} мин`, urgent:false, timeVal: d};
-        const hh=Math.floor(d/60),mm=d%60; return {t:`Перерыв через ${hh}ч${mm?' '+mm+'м':''}`,urgent:false, timeVal: d};
-      }
-      return{t:'Перерывов не осталось',urgent:false, timeVal: 9999};
-    }
+    if (wh && !emp.onBreak && (wh.end - cur) <= 15 && (wh.end - cur) > 0) return { t: `🏠 Домой через ${wh.end - cur} мин`, urgent: false, home: true };
+    if (emp.onBreak) { const a=segs.find(s=>cur>=s.start&&cur<=s.end); if(a){const r=a.end-cur;if(r<=0)return{t:'Заканчивается',urgent:true, timeVal: 0};return{t:`Конец через ${r} мин`,urgent:false, timeVal: r};} } 
+    else { const up=segs.filter(s=>s.start>cur).sort((a,b)=>a.start-b.start); if(up.length){ const d=up[0].start-cur; if(d<=15) return {t:`Перерыв через ${d} мин`, urgent:true, soon:true, timeVal: d}; if(d<60) return {t:`Перерыв через ${d} мин`, urgent:false, timeVal: d}; const hh=Math.floor(d/60),mm=d%60; return {t:`Перерыв через ${hh}ч${mm?' '+mm+'м':''}`,urgent:false, timeVal: d}; } return{t:'Перерывов не осталось',urgent:false, timeVal: 9999}; }
     return null;
   }
+  function getNextEventTime(emp) { const cur = serverNow(); if (emp.onBreak) { const a = parseSchedule(emp.breakSchedule).find(s => cur >= s.start && cur <= s.end); return a ? (a.end - cur) : 0; } else { const up = parseSchedule(emp.breakSchedule).filter(s => s.start > cur).sort((a,b)=>a.start-b.start); return up.length ? (up[0].start - cur + 10000) : 99999; } }
 
-  function getNextEventTime(emp) {
-    const cur = serverNow();
-    if (emp.onBreak) {
-      const a = parseSchedule(emp.breakSchedule).find(s => cur >= s.start && cur <= s.end);
-      return a ? (a.end - cur) : 0; // Возвращаются первыми
-    } else {
-      const up = parseSchedule(emp.breakSchedule).filter(s => s.start > cur).sort((a,b)=>a.start-b.start);
-      return up.length ? (up[0].start - cur + 10000) : 99999; // Уходят позже (сдвиг +10000)
-    }
-  }
-
-  function shiftMood(pct) {
-    if (pct < 0.15) return { emoji:'🌅', text:'Только начали', col:'#60a5fa' }; if (pct < 0.35) return { emoji:'⚡', text:'Входим в ритм', col:'#4ade80' }; if (pct < 0.55) return { emoji:'🔥', text:'В потоке', col:'#34d399' };
-    if (pct < 0.75) return { emoji:'🏃', text:'Финишная прямая',col:'#fbbf24' }; if (pct < 0.90) return { emoji:'🚀', text:'Почти финиш!', col:'#fb923c' }; return { emoji:'🎉', text:'Ещё чуть-чуть!', col:'#f87171' };
-  }
-
-  function shiftProgressHTML(emp) {
-    const wh = parseWorkHours(emp.workHours); if (!wh) return ''; const cur = serverNow(), pct = Math.max(0, Math.min(1, (cur-wh.start)/(wh.end-wh.start||1))), remain = Math.max(0, wh.end-cur);
-    const mood = shiftMood(pct), bgPos = (pct*100).toFixed(1); let remT = remain===0?'Смена окончена':(remain<60?`ещё ${remain} мин`:`ещё ${Math.floor(remain/60)}ч${remain%60?' '+(remain%60)+'м':''}`);
-    return `<div class="shift-progress" data-emp="${emp.name}" data-start="${wh.start}" data-end="${wh.end}"><div class="sp-row"><span class="sp-mood">${mood.emoji}</span><span class="sp-label">Прогресс</span><div class="sp-meta"><span class="sp-pct" style="color:${mood.col}">${Math.round(pct*100)}%</span><span class="sp-remain">${remT}</span></div></div><div class="sp-bar-wrap"><div class="sp-fill sp-fill-el" style="width:${bgPos}%;--pos:${bgPos}%"></div><div class="sp-marker sp-marker-el" style="left:${bgPos}%"></div></div><div class="sp-over" style="color:${mood.col}">${mood.text}</div></div>`;
-  }
-  function timelineHTML(emp) {
-    const segs=parseSchedule(emp.breakSchedule); if(!segs.length)return''; const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60}, span=wh.end-wh.start||1, cur=serverNow(), nowPct=Math.max(0,Math.min(100,(cur-wh.start)/span*100));
-    const segHtml=segs.map(s=>{ const left=Math.max(0,(s.start-wh.start)/span*100), width=Math.max(1,(s.end-s.start)/span*100), active=cur>=s.start&&cur<=s.end; return`<div class="tl-seg${active?' active':''}" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%" title="${s.label}"></div>`; }).join('');
-    return`<div class="timeline"><div class="tl-label">График перерывов</div><div class="tl-bar">${segHtml}<div class="tl-now" style="left:${nowPct.toFixed(1)}%"></div></div><div class="tl-times"><span>${fmt(toLocalMin(wh.start))}</span><span>${fmt(toLocalMin(wh.end))}</span></div></div>`;
-  }
+  function shiftMood(pct) { if (pct < 0.15) return { emoji:'🌅', text:'Только начали', col:'#60a5fa' }; if (pct < 0.35) return { emoji:'⚡', text:'Входим в ритм', col:'#4ade80' }; if (pct < 0.55) return { emoji:'🔥', text:'В потоке', col:'#34d399' }; if (pct < 0.75) return { emoji:'🏃', text:'Финишная прямая',col:'#fbbf24' }; if (pct < 0.90) return { emoji:'🚀', text:'Почти финиш!', col:'#fb923c' }; return { emoji:'🎉', text:'Ещё чуть-чуть!', col:'#f87171' }; }
+  function shiftProgressHTML(emp) { const wh = parseWorkHours(emp.workHours); if (!wh) return ''; const cur = serverNow(), pct = Math.max(0, Math.min(1, (cur-wh.start)/(wh.end-wh.start||1))), remain = Math.max(0, wh.end-cur); const mood = shiftMood(pct), bgPos = (pct*100).toFixed(1); let remT = remain===0?'Смена окончена':(remain<60?`ещё ${remain} мин`:`ещё ${Math.floor(remain/60)}ч${remain%60?' '+(remain%60)+'м':''}`); return `<div class="shift-progress" data-emp="${emp.name}" data-start="${wh.start}" data-end="${wh.end}"><div class="sp-row"><span class="sp-mood">${mood.emoji}</span><span class="sp-label">Прогресс</span><div class="sp-meta"><span class="sp-pct" style="color:${mood.col}">${Math.round(pct*100)}%</span><span class="sp-remain">${remT}</span></div></div><div class="sp-bar-wrap"><div class="sp-fill sp-fill-el" style="width:${bgPos}%;--pos:${bgPos}%"></div><div class="sp-marker sp-marker-el" style="left:${bgPos}%"></div></div><div class="sp-over" style="color:${mood.col}">${mood.text}</div></div>`; }
+  function timelineHTML(emp) { const segs=parseSchedule(emp.breakSchedule); if(!segs.length)return''; const wh=parseWorkHours(emp.workHours)||{start:8*60,end:22*60}, span=wh.end-wh.start||1, cur=serverNow(), nowPct=Math.max(0,Math.min(100,(cur-wh.start)/span*100)); const segHtml=segs.map(s=>{ const left=Math.max(0,(s.start-wh.start)/span*100), width=Math.max(1,(s.end-s.start)/span*100), active=cur>=s.start&&cur<=s.end; return`<div class="tl-seg${active?' active':''}" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%" title="${s.label}"></div>`; }).join(''); return`<div class="timeline"><div class="tl-label">График перерывов</div><div class="tl-bar">${segHtml}<div class="tl-now" style="left:${nowPct.toFixed(1)}%"></div></div><div class="tl-times"><span>${fmt(toLocalMin(wh.start))}</span><span>${fmt(toLocalMin(wh.end))}</span></div></div>`; }
 
   function loadOrder() { try{return JSON.parse(localStorage.getItem('bm-order'))||[];}catch(e){return[];} } function saveOrder() { try{localStorage.setItem('bm-order',JSON.stringify([...document.querySelectorAll('#grid .card')].map(c=>c.dataset.name)));}catch(e){} }
   let dragSrc=null, dragEnabled=false;
-  function enableDrag(grid) {
-    grid.addEventListener('dragstart',e=>{ dragSrc=e.target.closest('.card'); if(!dragSrc)return; dragSrc.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
-    grid.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; const card=e.target.closest('.card'); if(!card||card===dragSrc)return; const r=card.getBoundingClientRect(); grid.insertBefore(dragSrc, e.clientX>(r.left+r.width/2) ? card.nextSibling : card); });
-    grid.addEventListener('dragend',()=>{ if(dragSrc){dragSrc.classList.remove('dragging');dragSrc=null;} saveOrder(); });
-  }
+  function enableDrag(grid) { grid.addEventListener('dragstart',e=>{ dragSrc=e.target.closest('.card'); if(!dragSrc)return; dragSrc.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; }); grid.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; const card=e.target.closest('.card'); if(!card||card===dragSrc)return; const r=card.getBoundingClientRect(); grid.insertBefore(dragSrc, e.clientX>(r.left+r.width/2) ? card.nextSibling : card); }); grid.addEventListener('dragend',()=>{ if(dragSrc){dragSrc.classList.remove('dragging');dragSrc=null;} saveOrder(); }); }
 
-  // ── SMART RENDER CARDS ──
+  // SMART RENDER CARDS
   function renderCards() {
     const grid = document.getElementById('grid'); let list = [...data];
     if (filter === 'working') list = list.filter(e => !e.onBreak); if (filter === 'break') list = list.filter(e => e.onBreak);
     if (filter === 'next') list = list.filter(e => { if (!e.onBreak) return false; const cur = serverNow(), a = parseSchedule(e.breakSchedule).find(s => cur >= s.start && cur <= s.end); return a && (a.end - cur <= 5); });
     if (searchQuery) list = list.filter(e=>e.name.toLowerCase().includes(searchQuery));
     
-    let earlyBird = 99999, ironMan = 0;
-    data.forEach(e => { const wh = parseWorkHours(e.workHours); if(wh) { if(wh.start < earlyBird) earlyBird = wh.start; if(wh.end - wh.start > ironMan) ironMan = wh.end - wh.start; } });
+    let earlyBird = 99999, ironMan = 0; data.forEach(e => { const wh = parseWorkHours(e.workHours); if(wh) { if(wh.start < earlyBird) earlyBird = wh.start; if(wh.end - wh.start > ironMan) ironMan = wh.end - wh.start; } });
 
-    // ФИЧА 2: УМНАЯ СОРТИРОВКА
-    if (sortMode === 'time') {
-      list.sort((a,b) => getNextEventTime(a) - getNextEventTime(b));
-    } else {
-      const order=loadOrder(); if(order.length) list.sort((a,b)=>{ const ai=order.indexOf(a.name), bi=order.indexOf(b.name); return (ai===-1?1:ai)-(bi===-1?1:bi); }); else list.sort((a,b)=>b.onBreak-a.onBreak);
-    }
+    if (sortMode === 'time') list.sort((a,b) => getNextEventTime(a) - getNextEventTime(b));
+    else { const order=loadOrder(); if(order.length) list.sort((a,b)=>{ const ai=order.indexOf(a.name), bi=order.indexOf(b.name); return (ai===-1?1:ai)-(bi===-1?1:bi); }); else list.sort((a,b)=>b.onBreak-a.onBreak); }
     
     if(!list.length){ grid.innerHTML=`<div class="empty"><div class="ei">${filter==='next'?'🏃':'🔍'}</div><h3>${filter==='next'?'Никто не возвращается в ближайшие 5 минут':'Не найдено'}</h3></div>`; return; }
     const emptyEl = grid.querySelector('.empty'); if (emptyEl) emptyEl.remove();
@@ -580,38 +640,19 @@
       const ob=emp.onBreak, ini=emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const color=nameToColor(emp.name), cd=countdownText(emp), tl=timelineHTML(emp);
       
-      // ФИЧА 4: КАСТОМНЫЕ СТАТУСЫ
-      let btLow = (emp.breakType || '').toLowerCase();
-      let isTraining = btLow.includes('обуч') || btLow.includes('тренинг');
-      let isMeeting = btLow.includes('собра') || btLow.includes('митинг') || btLow.includes('планерк') || btLow.includes('бэк');
-      
-      const isSoon = !ob && cd && cd.soon;
-      const isHome = !ob && cd && cd.home;
-
-      let cardClass = ob ? (isTraining ? 'custom-purple' : (isMeeting ? 'custom-blue' : 'on-break')) : (isHome ? 'going-home' : (isSoon ? 'soon-break' : 'working'));
-      if (emp.isBirthday) cardClass += ' birthday-card';
-
+      let btLow = (emp.breakType || '').toLowerCase(), isTraining = btLow.includes('обуч') || btLow.includes('тренинг'), isMeeting = btLow.includes('собра') || btLow.includes('митинг') || btLow.includes('планерк') || btLow.includes('бэк');
+      const isSoon = !ob && cd && cd.soon, isHome = !ob && cd && cd.home;
+      let cardClass = ob ? (isTraining ? 'custom-purple' : (isMeeting ? 'custom-blue' : 'on-break')) : (isHome ? 'going-home' : (isSoon ? 'soon-break' : 'working')); if (emp.isBirthday) cardClass += ' birthday-card';
       let badgeClass = ob ? (isTraining ? 'badge-purple' : (isMeeting ? 'badge-blue' : 'badge-break')) : (isHome ? 'badge-home' : (isSoon ? 'badge-soon' : 'badge-working'));
       let badgeText = ob ? (isTraining ? '📚 Обучение' : (isMeeting ? '⚙️ Собрание/Бэкофис' : 'Перерыв')) : (isHome ? 'Скоро домой' : (isSoon ? 'Скоро перерыв' : 'За работой'));
 
-      let achivs = '';
-      if (emp.isBirthday) achivs += '<span class="bday-icon" title="С Днём Рождения!">🎂</span>';
-      const wh = parseWorkHours(emp.workHours);
-      if (wh) {
-        if (wh.start === earlyBird && earlyBird !== 99999) achivs += '<span class="achivs" title="Ранняя пташка">🐦</span>';
-        if ((wh.end - wh.start) === ironMan && ironMan !== 0) achivs += '<span class="achivs" title="Железный человек">🛡️</span>';
-        const pct = (serverNow() - wh.start) / (wh.end - wh.start);
-        if (pct >= 0.48 && pct <= 0.52) achivs += '<span class="achivs" title="Экватор смены!">🏁</span>';
-      }
+      let achivs = ''; if (emp.isBirthday) achivs += '<span class="bday-icon" title="С Днём Рождения!">🎂</span>'; const wh = parseWorkHours(emp.workHours);
+      if (wh) { if (wh.start === earlyBird && earlyBird !== 99999) achivs += '<span class="achivs" title="Ранняя пташка (Начал раньше всех)">🐦</span>'; if ((wh.end - wh.start) === ironMan && ironMan !== 0) achivs += '<span class="achivs" title="Железный человек (Самая длинная смена)">🛡️</span>'; const pct = (serverNow() - wh.start) / (wh.end - wh.start); if (pct >= 0.48 && pct <= 0.52) achivs += '<span class="achivs" title="Экватор смены!">🏁</span>'; }
 
-      let el = existing.get(emp.name);
-      if (!el) { el = document.createElement('div'); el.dataset.name = emp.name; el.draggable = true; el.style.animationDelay = (i*.05)+'s'; } else { existing.delete(emp.name); }
-
+      let el = existing.get(emp.name); if (!el) { el = document.createElement('div'); el.dataset.name = emp.name; el.draggable = true; el.style.animationDelay = (i*.05)+'s'; } else { existing.delete(emp.name); }
       el.className = `card ${cardClass}`;
-      el.innerHTML=`<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div><div class="badge ${badgeClass}"><span class="dot"></span>${badgeText}</div></div><div class="card-name">${emp.name} ${achivs}</div><div class="card-hours">${localTimeStr(emp.workHours)||emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+localTimeStr(emp.breakTime):''}</div>${shiftProgressHTML(emp)}${cd?`<div class="countdown${cd.urgent?' urgent':(cd.home?' home':'')}" data-emp="${emp.name}"><span>${cd.home?'🏃':'⏱'}</span><span class="cv">${cd.t}</span></div>`:''}${tl}`;
-      grid.appendChild(el);
+      el.innerHTML=`<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div><div class="badge ${badgeClass}"><span class="dot"></span>${badgeText}</div></div><div class="card-name">${emp.name} ${achivs}</div><div class="card-hours">${localTimeStr(emp.workHours)||emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+localTimeStr(emp.breakTime):''}</div>${shiftProgressHTML(emp)}${cd?`<div class="countdown${cd.urgent?' urgent':(cd.home?' home':'')}" data-emp="${emp.name}"><span>${cd.home?'🏃':'⏱'}</span><span class="cv">${cd.t}</span></div>`:''}${tl}`; grid.appendChild(el);
     });
-
     existing.forEach(el => el.remove()); if(!dragEnabled){ enableDrag(grid); dragEnabled=true; }
   }
 
@@ -649,26 +690,4 @@
   }
 
   function renderTomorrowView() {
-    const panel = document.getElementById('tomorrow-panel'); let list = [...tomorrowData]; if (searchQuery) list = list.filter(e => e.name.toLowerCase().includes(searchQuery));
-    if (!list.length) { panel.innerHTML = '<div class="empty"><div class="ei">🚀</div><h3>Завтрашний график пуст</h3></div>'; return; }
-    const emptyEl = panel.querySelector('.empty'); if (emptyEl) emptyEl.remove(); const existing = new Map(); Array.from(panel.children).forEach(el => { if (el.dataset.name) existing.set(el.dataset.name, el); });
-    list.forEach((emp, i) => {
-      let el = existing.get(emp.name); if (!el) { el = document.createElement('div'); el.dataset.name = emp.name; el.style.animationDelay = (i*.05)+'s'; } else existing.delete(emp.name);
-      const s = emp.shift.toLowerCase(), isOff = ['в','вых','выход','отп','б/л','б','-',''].includes(s) || !emp.shift; let badge = isOff ? 'Выходной' : 'Смена'; if (s === 'отп') badge = 'В отпуске'; if (s === 'б/л') badge = 'Больничный'; const color = nameToColor(emp.name), ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      el.className = 'card' + (emp.isBirthday ? ' birthday-card' : ''); if (isOff) { el.style.opacity = '0.65'; el.style.boxShadow = 'none'; } else { el.style.opacity = '1'; el.style.boxShadow = ''; }
-      let achivs = emp.isBirthday ? '<span class="bday-icon" title="Завтра День Рождения!">🎂</span>' : '';
-      el.innerHTML = `<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color};${isOff?'filter:grayscale(1)':''}">${ini}</div><div class="badge" style="background:var(--surface2); border:1px solid var(--border)"><span class="dot" style="background:var(--text-dim);box-shadow:none"></span>${badge}</div></div><div class="card-name">${emp.name} ${achivs}</div><div class="card-hours">${isOff ? 'Вне смены' : emp.shift}</div>`; panel.appendChild(el);
-    }); existing.forEach(el => el.remove());
-  }
-
-  function renderHeatmapView() {
-    const p = document.getElementById('heatmap-panel'); if (!data.length) { p.innerHTML = '<div class="empty">Нет данных</div>'; return; }
-    let dayStart=24*60, dayEnd=0; data.forEach(e => { const wh=parseWorkHours(e.workHours); if(wh){ dayStart=Math.min(dayStart,wh.start); dayEnd=Math.max(dayEnd,wh.end); } }); if(dayStart>=dayEnd) { dayStart=8*60; dayEnd=22*60; } dayStart = Math.floor(dayStart/60)*60; dayEnd = Math.ceil(dayEnd/60)*60; const intervals = [];
-    for(let m = dayStart; m <= dayEnd; m += 30) { let activeCount = 0; data.forEach(emp => { const wh = parseWorkHours(emp.workHours), segs = parseSchedule(emp.breakSchedule); if (wh && m >= wh.start && m < wh.end) { const isOnBreak = segs.some(s => m >= s.start && m < s.end); if (!isOnBreak) activeCount++; } }); intervals.push({ time: m, count: activeCount }); }
-    const maxC = Math.max(...intervals.map(i => i.count), 1); let h = '<div class="hm-wrap">'; intervals.forEach(i => { h += `<div class="hm-col"><div class="hm-bar-wrap"><div class="hm-bar" style="height:${(i.count / maxC) * 100}%" title="${fmt(i.time)} — ${i.count} чел."></div></div><div class="hm-lbl">${fmt(i.time)}</div><div class="hm-val">${i.count}</div></div>`; }); p.innerHTML = `<div class="hm-container"><h3>Анализ нагрузки на сегодня (Сотрудники на линии)</h3>${h}</div>`;
-  }
-
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
-</script>
-</body>
-</html>
+    const panel = document.getElementById('tomorrow-panel'); let list = [...tomorrowData]; if (searchQuery)
