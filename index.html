@@ -104,7 +104,7 @@
     .alert-banner { display:none; background:rgba(248,113,113,0.15); border:1px solid var(--red); color:var(--red); padding:12px 18px; border-radius:var(--r-sm); margin-bottom:16px; font-size:14px; font-weight:500; align-items:center; gap:10px; animation: fadeUp 0.4s ease-out; box-shadow: 0 4px 20px rgba(248,113,113,0.1); }
     [data-theme="light"] .alert-banner { background:rgba(220,38,38,0.1); color:#b91c1c; }
 
-    /* HEADER */
+    /* HEADER & STATS */
     header { background:var(--header-bg);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:var(--r);padding:18px 28px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-bottom:16px;transition:background .3s; }
     .header-logo { width:46px;height:46px;background:linear-gradient(135deg,#4ade80,#22c55e);border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(74,222,128,.35); }
     .header-text h1 { font-size:19px;font-weight:600;letter-spacing:-.3px; }
@@ -135,6 +135,7 @@
     .btn-ghost { background:var(--glass-bg);border:1px solid var(--border);color:var(--text); }
     .btn-ghost:hover { background:var(--surface2); }
     .btn-blue { background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:var(--blue); }
+    .btn.spin svg { animation:spin .8s linear infinite; }
     .search-wrap { position:relative;display:flex;align-items:center; }
     .search-input { background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:8px 16px 8px 36px;font:13px 'Inter',sans-serif;color:var(--text);outline:none;width:180px;transition:all .2s; }
     .search-input:focus { border-color:var(--border2);width:220px; }
@@ -143,21 +144,44 @@
 
     /* CARDS */
     .grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px; }
-    .card { background:var(--card-bg);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;transition:transform .25s,border-color .25s,box-shadow .25s;animation:fadeUp .4s ease-out both; cursor:grab; }
+    
+    /* Добавлено свойство transform-origin для красоты */
+    .card { background:var(--card-bg);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;transition:transform .25s,border-color .25s,box-shadow .25s;animation:fadeUp .4s ease-out both; cursor:grab; transform-origin: center; }
     .card:active { cursor:grabbing; }
     .card.dragging { opacity:.5;transform:scale(.97); }
     
     .card.working { border-color:rgba(74,222,128,.15); }
-    .card.working:hover { box-shadow:0 8px 32px var(--green-glow);border-color:rgba(74,222,128,.3); }
-    .card.on-break { border-color:rgba(248,113,113,.3);box-shadow:0 0 24px var(--red-glow); }
-    .card.soon-break { border-color:var(--yellow); box-shadow:0 0 24px var(--yellow-glow); }
+    .card.working:hover { box-shadow:0 8px 32px var(--green-glow);border-color:rgba(74,222,128,.3); transform:translateY(-3px); }
     
-    /* BIRTHDAY CARD STYLING */
-    .card.birthday-card { background: linear-gradient(135deg, rgba(20,20,30,0.9), rgba(251,191,36,0.15)); border-color: rgba(251,191,36,0.5); box-shadow: 0 0 20px rgba(251,191,36,0.2); position: relative; overflow: hidden; }
-    [data-theme="light"] .card.birthday-card { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(251,191,36,0.2)); }
-    .card.birthday-card::before { content: '🎉'; position: absolute; right: -15px; top: -15px; font-size: 70px; opacity: 0.15; transform: rotate(15deg); pointer-events: none; }
+    .card.on-break { border-color:rgba(248,113,113,.3);box-shadow:0 0 24px var(--red-glow); }
+    .card.on-break:hover { box-shadow:0 8px 40px rgba(248,113,113,.3); transform:translateY(-3px); }
+    [data-theme="light"] .card.on-break { background:rgba(220,38,38,0.04); }
+    
+    .card.soon-break { border-color:var(--yellow); box-shadow:0 0 24px var(--yellow-glow); }
+    .card.soon-break:hover { box-shadow:0 8px 40px var(--yellow-glow); transform:translateY(-3px); }
+    [data-theme="light"] .card.soon-break { background:rgba(251,191,36,0.04); }
 
-    .card-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px; position: relative; z-index: 2;}
+    /* BIRTHDAY CARD ANIMATIONS */
+    @keyframes bday-bg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes float-party { 0%,100%{transform:translateY(0) rotate(15deg) scale(1)} 50%{transform:translateY(-10px) rotate(20deg) scale(1.1)} }
+    @keyframes bounce-cake { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+    .card.birthday-card { 
+      background: linear-gradient(135deg, rgba(20,20,30,0.9), rgba(251,191,36,0.2), rgba(236,72,153,0.15)); 
+      background-size: 200% 200%; 
+      animation: fadeUp .4s ease-out both, bday-bg 6s ease infinite !important; 
+      border-color: rgba(251,191,36,0.5); 
+      box-shadow: 0 0 20px rgba(251,191,36,0.2); 
+      position: relative; overflow: hidden; 
+    }
+    [data-theme="light"] .card.birthday-card { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(251,191,36,0.3), rgba(236,72,153,0.2)); }
+    .card.birthday-card::before { 
+      content: '🎉'; position: absolute; right: -15px; top: -15px; font-size: 80px; opacity: 0.15; 
+      animation: float-party 4s ease-in-out infinite; pointer-events: none; z-index:0;
+    }
+    .bday-icon { display:inline-block; animation:bounce-cake 2s infinite; font-size:16px; margin-left:4px; }
+
+    .card-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px; position:relative; z-index:2; }
     .avatar { width:42px;height:42px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0; }
     .badge { display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.4px; }
     .dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
@@ -280,7 +304,6 @@
 
 <div class="app">
 
-  <!-- ALERT BANNER -->
   <div id="alert-banner" class="alert-banner"></div>
 
   <header id="main-header">
@@ -314,16 +337,14 @@
       <button class="tab active" onclick="setFilter('all',this)">Все</button>
       <button class="tab" onclick="setFilter('working',this)">Работают</button>
       <button class="tab" onclick="setFilter('break',this)">Перерыв</button>
-      <button class="tab pulse" onclick="setFilter('next',this)">🏃 На подхвате</button> <!-- ФИЧА 5 -->
+      <button class="tab pulse" onclick="setFilter('next',this)">🏃 На подхвате</button>
     </div>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input class="search-input" id="search-input" type="search" placeholder="Поиск...">
     </div>
     
-    <!-- ФИЧА 4: КНОПКА ПЛАНЕРКИ -->
     <button class="btn btn-ghost" onclick="findMeeting()">🤝 Планерка</button>
-    
     <button class="btn btn-ghost" id="refresh-btn" onclick="manualRefresh()">Обновить</button>
     <button class="btn btn-blue"  onclick="togglePanel()">🔔 <span id="notif-cnt">0</span></button>
     <button class="btn btn-ghost" id="snd-btn"   onclick="toggleSound()">🔊</button>
@@ -409,14 +430,14 @@
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.1,t+.05); g.gain.exponentialRampToValueAtTime(.001,t+.6); o.start(t); o.stop(t+.65);
   }
 
-  // ── ФИЧА 2: АВТОПИЛОТ (TV MODE) ──
+  // AUTOPILOT (TV MODE)
   function toggleFullscreen() {
     isFullscreen = !isFullscreen;
     document.body.classList.toggle('fs', isFullscreen);
     if (isFullscreen) {
       if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
       toast('Автопилот запущен (прокрутка каждые 15 сек)', 'work');
-      tvIndex = 0; runTvCycle(); // Start carousel
+      tvIndex = 0; runTvCycle();
     } else {
       if(document.exitFullscreen) document.exitFullscreen();
       clearTimeout(tvModeTimer); clearInterval(tvScrollInt);
@@ -434,18 +455,13 @@
     const el = document.querySelector(`.tab[onclick*="setView('${v}'"]`) || document.querySelector('.tab');
     setView(v, el); window.scrollTo(0,0);
     
-    // Smooth scroll config (15 sec total)
-    let duration = 15000;
-    let start = Date.now();
-    
+    let duration = 15000, start = Date.now();
     clearInterval(tvScrollInt);
     tvScrollInt = setInterval(() => {
       if(!isFullscreen) { clearInterval(tvScrollInt); return; }
-      let elToScroll = document.documentElement;
-      let maxScroll = elToScroll.scrollHeight - window.innerHeight;
-      
+      let maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if(maxScroll > 0) {
-        let progress = (Date.now() - start) / (duration - 2000); // leave 2 sec at bottom
+        let progress = (Date.now() - start) / (duration - 2000);
         if (progress <= 1) window.scrollTo(0, maxScroll * progress);
       }
     }, 50);
@@ -536,7 +552,7 @@
       document.getElementById('stats').style.display='flex';
       document.getElementById('toolbar').style.display='flex';
       
-      processEvents(); updateStats(); checkBottlenecks(); // Проверка риска после обновления
+      processEvents(); updateStats(); checkBottlenecks();
       
       if (currentView==='cards') renderCards();
       else if (currentView==='day') renderDayView();
@@ -564,15 +580,12 @@
     document.getElementById('s-total').textContent = data.length;
   }
 
-  // ── ФИЧА 1: РАДАР РИСКОВ (Bottlenecks) ──
+  // BOTTLENECK RADAR
   function checkBottlenecks() {
     if (!data.length) return;
-    const cur = serverNow();
-    let dayEnd = Math.max(...data.map(e => parseWorkHours(e.workHours)?.end || 0));
+    const cur = serverNow(); let dayEnd = Math.max(...data.map(e => parseWorkHours(e.workHours)?.end || 0));
     const banner = document.getElementById('alert-banner');
-    
     if (cur >= dayEnd) { banner.style.display = 'none'; return; }
-
     let botStart = null, botEnd = null, minActive = 999;
     
     for (let m = cur; m <= dayEnd; m++) {
@@ -580,61 +593,44 @@
       data.forEach(emp => {
         const wh = parseWorkHours(emp.workHours);
         if (wh && m >= wh.start && m < wh.end) {
-          totalAtM++;
-          const segs = parseSchedule(emp.breakSchedule);
+          totalAtM++; const segs = parseSchedule(emp.breakSchedule);
           if (!segs.some(s => m >= s.start && m < s.end)) active++;
         }
       });
-      // Триггер: если на смене больше 2 человек, а на линии осталось 40% или меньше
       if (totalAtM > 2 && active <= Math.floor(totalAtM * 0.4)) {
         if (botStart === null) botStart = m;
-        botEnd = m;
-        minActive = Math.min(minActive, active);
+        botEnd = m; minActive = Math.min(minActive, active);
       }
     }
-
     if (botStart !== null && (botEnd - botStart >= 5)) {
       banner.innerHTML = `<span>⚠️</span> Внимание: Критическая нехватка людей на линии с <b>${fmt(botStart)}</b> до <b>${fmt(botEnd)}</b> (останется ${minActive} чел.)`;
       banner.style.display = 'flex';
-    } else {
-      banner.style.display = 'none';
-    }
+    } else banner.style.display = 'none';
   }
 
-  // ── ФИЧА 4: ПЛАНЕРКА (Meeting Finder) ──
+  // MEETING FINDER
   function findMeeting() {
     if (!data.length) return toast('Нет работающих сотрудников', 'break');
-    const cur = serverNow();
-    let dayEnd = Math.max(...data.map(e => parseWorkHours(e.workHours)?.end || 0));
+    const cur = serverNow(), dayEnd = Math.max(...data.map(e => parseWorkHours(e.workHours)?.end || 0));
     if (cur >= dayEnd - 15) return toast('Смены подходят к концу, нет времени', 'break');
+    let maxAvail = -1, bestSlot = null;
 
-    let maxAvail = -1;
-    let bestSlot = null;
-
-    // Шагаем по 5 минут до конца дня
     for (let m = cur; m <= dayEnd - 15; m += 5) {
       let availCount = 0;
       data.forEach(e => {
-        const wh = parseWorkHours(e.workHours);
-        const segs = parseSchedule(e.breakSchedule);
-        // Проверяем, что сотрудник на смене все эти 15 минут
+        const wh = parseWorkHours(e.workHours), segs = parseSchedule(e.breakSchedule);
         if (wh && m >= wh.start && (m+15) <= wh.end) {
-          // Проверяем, нет ли пересечения с перерывом в этом окне
-          const hasBreak = segs.some(s => s.end > m && s.start < m+15);
-          if (!hasBreak) availCount++;
+          if (!segs.some(s => s.end > m && s.start < m+15)) availCount++;
         }
       });
       if (availCount > maxAvail) { maxAvail = availCount; bestSlot = m; }
-      if (maxAvail === data.length) break; // Идеальное окно найдено
+      if (maxAvail === data.length) break;
     }
-
     if (bestSlot !== null) {
       document.getElementById('meeting-time').textContent = `${fmt(bestSlot)} – ${fmt(bestSlot+15)}`;
       document.getElementById('meeting-desc').textContent = `В это время на линии будут: ${maxAvail} чел. (максимум до конца дня).`;
       document.getElementById('meeting-modal').style.display = 'flex';
-    } else {
-      toast('Не удалось найти время', 'break');
-    }
+    } else toast('Не удалось найти время', 'break');
   }
 
   // PARSERS
@@ -694,69 +690,98 @@
       <div class="tl-times"><span>${fmt(toLocalMin(wh.start))}</span><span>${fmt(toLocalMin(wh.end))}</span></div></div>`;
   }
 
-  // RENDER CARDS
+  // DRAG & DROP
+  function loadOrder() { try{return JSON.parse(localStorage.getItem('bm-order'))||[];}catch(e){return[];} }
+  function saveOrder() { try{localStorage.setItem('bm-order',JSON.stringify([...document.querySelectorAll('#grid .card')].map(c=>c.dataset.name)));}catch(e){} }
+  let dragSrc=null;
+  function enableDrag(grid) {
+    grid.addEventListener('dragstart',e=>{ dragSrc=e.target.closest('.card'); if(!dragSrc)return; dragSrc.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    grid.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; const card=e.target.closest('.card'); if(!card||card===dragSrc)return;
+      const r=card.getBoundingClientRect(); grid.insertBefore(dragSrc, e.clientX>(r.left+r.width/2) ? card.nextSibling : card); });
+    grid.addEventListener('dragend',()=>{ if(dragSrc){dragSrc.classList.remove('dragging');dragSrc=null;} saveOrder(); });
+  }
+
+  // ── SMART RENDER CARDS (NO JUMPING) ──
+  let dragEnabled=false;
   function renderCards() {
-    const grid=document.getElementById('grid');
-    let list=[...data];
+    const grid = document.getElementById('grid');
+    let list = [...data];
     
-    // ФИЧА 5: ФИЛЬТР "НА ПОДХВАТЕ"
     if (filter === 'working') list = list.filter(e => !e.onBreak);
     if (filter === 'break')   list = list.filter(e =>  e.onBreak);
     if (filter === 'next') {
       list = list.filter(e => {
         if (!e.onBreak) return false;
         const cur = serverNow(), a = parseSchedule(e.breakSchedule).find(s => cur >= s.start && cur <= s.end);
-        return a && (a.end - cur <= 5); // возвращается через 5 мин или меньше
+        return a && (a.end - cur <= 5);
       });
     }
     
-    if (searchQuery) list=list.filter(e=>e.name.toLowerCase().includes(searchQuery));
+    if (searchQuery) list = list.filter(e=>e.name.toLowerCase().includes(searchQuery));
     
     let earlyBird = 99999, ironMan = 0;
     data.forEach(e => { const wh = parseWorkHours(e.workHours); if(wh) { if(wh.start < earlyBird) earlyBird = wh.start; if(wh.end - wh.start > ironMan) ironMan = wh.end - wh.start; } });
 
-    list.sort((a,b)=>b.onBreak-a.onBreak);
+    const order=loadOrder();
+    if(order.length) list.sort((a,b)=>{ const ai=order.indexOf(a.name), bi=order.indexOf(b.name); return (ai===-1?1:ai)-(bi===-1?1:bi); });
+    else list.sort((a,b)=>b.onBreak-a.onBreak);
     
-    if(!list.length){ grid.innerHTML=`<div class="empty"><div class="ei">${filter==='next'?'🏃':'🔍'}</div><h3>${filter==='next'?'Никто не возвращается':'Не найдено'}</h3></div>`; return; }
-    grid.innerHTML='';
+    if(!list.length){ grid.innerHTML=`<div class="empty"><div class="ei">${filter==='next'?'🏃':'🔍'}</div><h3>${filter==='next'?'Никто не возвращается в ближайшие 5 минут':'Не найдено'}</h3></div>`; return; }
     
+    const emptyEl = grid.querySelector('.empty'); if (emptyEl) emptyEl.remove();
+
+    // Map existing cards to update them instead of re-creating
+    const existing = new Map();
+    Array.from(grid.children).forEach(el => { if (el.dataset.name) existing.set(el.dataset.name, el); });
+
     list.forEach((emp,i)=>{
       const ob=emp.onBreak, ini=emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const color=nameToColor(emp.name), cd=countdownText(emp), tl=timelineHTML(emp);
       
       const isSoon = !ob && cd && cd.soon;
       let cardClass = ob ? 'on-break' : (isSoon ? 'soon-break' : 'working');
-      
-      // ФИЧА 3: ДНИ РОЖДЕНИЯ
       if (emp.isBirthday) cardClass += ' birthday-card';
 
       const badgeClass = ob ? 'badge-break' : (isSoon ? 'badge-soon' : 'badge-working');
       const badgeText = ob ? 'Перерыв' : (isSoon ? 'Скоро перерыв' : 'За работой');
 
       let achivs = '';
-      if (emp.isBirthday) achivs += '<span title="С Днём Рождения!">🎂</span>';
+      if (emp.isBirthday) achivs += '<span class="bday-icon" title="С Днём Рождения!">🎂</span>';
       const wh = parseWorkHours(emp.workHours);
       if (wh) {
-        if (wh.start === earlyBird && earlyBird !== 99999) achivs += '<span title="Ранняя пташка (Начал раньше всех)">🐦</span>';
-        if ((wh.end - wh.start) === ironMan && ironMan !== 0) achivs += '<span title="Железный человек (Самая длинная смена)">🛡️</span>';
+        if (wh.start === earlyBird && earlyBird !== 99999) achivs += '<span class="achivs" title="Ранняя пташка (Начал раньше всех)">🐦</span>';
+        if ((wh.end - wh.start) === ironMan && ironMan !== 0) achivs += '<span class="achivs" title="Железный человек (Самая длинная смена)">🛡️</span>';
         const pct = (serverNow() - wh.start) / (wh.end - wh.start);
-        if (pct >= 0.48 && pct <= 0.52) achivs += '<span title="Экватор смены!">🏁</span>';
+        if (pct >= 0.48 && pct <= 0.52) achivs += '<span class="achivs" title="Экватор смены!">🏁</span>';
       }
 
-      const el=document.createElement('div');
-      el.className=`card ${cardClass}`; el.dataset.name=emp.name; el.style.animationDelay=(i*.05)+'s';
+      let el = existing.get(emp.name);
+      if (!el) {
+        el = document.createElement('div');
+        el.dataset.name = emp.name;
+        el.draggable = true;
+        el.style.animationDelay = (i*.05)+'s';
+      } else {
+        existing.delete(emp.name);
+      }
+
+      el.className = `card ${cardClass}`;
       el.innerHTML=`
         <div class="card-header">
           <div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div>
           <div class="badge ${badgeClass}"><span class="dot"></span>${badgeText}</div>
         </div>
-        <div class="card-name">${emp.name} <span class="achivs">${achivs}</span></div>
+        <div class="card-name">${emp.name} ${achivs}</div>
         <div class="card-hours">${localTimeStr(emp.workHours)||emp.workHours||''}${ob&&emp.breakTime?' · ☕ '+localTimeStr(emp.breakTime):''}</div>
         ${shiftProgressHTML(emp)}
         ${cd?`<div class="countdown${cd.urgent?' urgent':''}" data-emp="${emp.name}"><span>⏱</span><span class="cv">${cd.t}</span></div>`:''}
         ${tl}`;
-      grid.appendChild(el);
+        
+      grid.appendChild(el); // Keeps DOM order accurate for Drag & Drop
     });
+
+    existing.forEach(el => el.remove()); // Remove leftovers
+    if(!dragEnabled){ enableDrag(grid); dragEnabled=true; }
   }
 
   function tickCountdowns() {
@@ -772,7 +797,7 @@
     const nowLine=document.getElementById('dv-now-el'); if(nowLine&&window._dvMeta){ const{dayStart,PX}=window._dvMeta, cur=serverNow(); nowLine.style.top=(cur-dayStart)*PX+'px'; const lbl=document.getElementById('dv-now-lbl'); if(lbl)lbl.textContent=fmt(cur); }
   }
 
-  // ── DAY VIEW ──
+  // ── SMART RENDER DAY VIEW ──
   function renderDayView() {
     const inner=document.getElementById('dv-inner'); if(!data.length){inner.innerHTML='<div class="empty"><h3>Нет данных</h3></div>';return;}
     const PX=1.6; let dayStart=24*60, dayEnd=0;
@@ -792,14 +817,20 @@
   }
   function scrollDayToNow() { setTimeout(()=>{ const outer=document.querySelector('.dv-outer'), nowEl=document.getElementById('dv-now-el'); if(outer&&nowEl) outer.scrollTop=Math.max(0,nowEl.offsetTop - outer.clientHeight/2 + 32); },80); }
 
-  // ── OFF DAY ──
+  // ── SMART RENDER OFF DAY ──
   function renderOffView() {
     const panel = document.getElementById('off-panel');
     let list = [...offDayData]; if (searchQuery) list = list.filter(e => e.name.toLowerCase().includes(searchQuery));
     if (!list.length) { panel.innerHTML = '<div class="empty"><div class="ei">🏖️</div><h3>Никого нет</h3></div>'; return; }
-    panel.innerHTML = '';
+    
+    const emptyEl = panel.querySelector('.empty'); if (emptyEl) emptyEl.remove();
+    const existing = new Map(); Array.from(panel.children).forEach(el => { if (el.dataset.name) existing.set(el.dataset.name, el); });
+
     list.forEach((emp, i) => {
-      const el = document.createElement('div'); el.className = 'card' + (emp.isBirthday ? ' birthday-card' : ''); el.style.opacity = '0.7'; el.style.boxShadow = 'none';
+      let el = existing.get(emp.name);
+      if (!el) { el = document.createElement('div'); el.dataset.name = emp.name; el.style.animationDelay = (i*.05)+'s'; } else existing.delete(emp.name);
+      
+      el.className = 'card' + (emp.isBirthday ? ' birthday-card' : ''); el.style.opacity = '0.7'; el.style.boxShadow = 'none';
       let r = emp.reason ? emp.reason.trim() : '', b = 'Выходной', rLow = r.toLowerCase();
       if (rLow === 'отп') b = 'В отпуске'; else if (rLow === 'б/л' || rLow === 'б') b = 'Больничный'; else if (r === 'Ждёт смену' || r === 'Смена окончена') b = r; else if (r && rLow !== '-' && rLow !== 'вых' && rLow !== 'выход') b = r;
       let hrs = localTimeStr(emp.hours) || emp.hours || '—', nxt = emp.next || '—', hoursHtml = '';
@@ -807,28 +838,37 @@
       else if (r === 'Смена окончена') hoursHtml = `<div style="margin-top:8px">Смена сегодня: <strong style="color:var(--text)">${hrs}</strong></div><div style="margin-top:4px">След. смена: <strong style="color:var(--text)">${nxt}</strong></div>`;
       else hoursHtml = `<div style="margin-top:8px">График: <strong style="color:var(--text)">${hrs}</strong></div><div style="margin-top:4px">След. смена: <strong style="color:var(--text)">${nxt}</strong></div>`;
       const color = nameToColor(emp.name), ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      let achivs = emp.isBirthday ? '<span class="achivs" title="С Днём Рождения!">🎂</span>' : '';
+      let achivs = emp.isBirthday ? '<span class="bday-icon" title="С Днём Рождения!">🎂</span>' : '';
       el.innerHTML = `<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color};filter:grayscale(1)">${ini}</div><div class="badge" style="background:var(--surface2); border:1px solid var(--border)"><span class="dot" style="background:var(--text-dim);box-shadow:none"></span>${b}</div></div><div class="card-name">${emp.name} ${achivs}</div><div class="card-hours" style="line-height:1.4">${hoursHtml}</div>`;
       panel.appendChild(el);
     });
+    existing.forEach(el => el.remove());
   }
 
-  // ── TOMORROW ──
+  // ── SMART RENDER TOMORROW ──
   function renderTomorrowView() {
     const panel = document.getElementById('tomorrow-panel');
     let list = [...tomorrowData]; if (searchQuery) list = list.filter(e => e.name.toLowerCase().includes(searchQuery));
     if (!list.length) { panel.innerHTML = '<div class="empty"><div class="ei">🚀</div><h3>Завтрашний график пуст</h3></div>'; return; }
-    panel.innerHTML = '';
+    
+    const emptyEl = panel.querySelector('.empty'); if (emptyEl) emptyEl.remove();
+    const existing = new Map(); Array.from(panel.children).forEach(el => { if (el.dataset.name) existing.set(el.dataset.name, el); });
+
     list.forEach((emp, i) => {
+      let el = existing.get(emp.name);
+      if (!el) { el = document.createElement('div'); el.dataset.name = emp.name; el.style.animationDelay = (i*.05)+'s'; } else existing.delete(emp.name);
+
       const s = emp.shift.toLowerCase(), isOff = ['в','вых','выход','отп','б/л','б','-',''].includes(s) || !emp.shift;
       let badge = isOff ? 'Выходной' : 'Смена'; if (s === 'отп') badge = 'В отпуске'; if (s === 'б/л') badge = 'Больничный';
-      const el = document.createElement('div'), color = nameToColor(emp.name), ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      el.className = 'card' + (emp.isBirthday ? ' birthday-card' : ''); el.style.animationDelay = (i * 0.05) + 's';
-      if (isOff) { el.style.opacity = '0.65'; el.style.boxShadow = 'none'; }
-      let achivs = emp.isBirthday ? '<span class="achivs" title="Завтра День Рождения!">🎂</span>' : '';
+      const color = nameToColor(emp.name), ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      
+      el.className = 'card' + (emp.isBirthday ? ' birthday-card' : '');
+      if (isOff) { el.style.opacity = '0.65'; el.style.boxShadow = 'none'; } else { el.style.opacity = '1'; el.style.boxShadow = ''; }
+      let achivs = emp.isBirthday ? '<span class="bday-icon" title="Завтра День Рождения!">🎂</span>' : '';
       el.innerHTML = `<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color};${isOff?'filter:grayscale(1)':''}">${ini}</div><div class="badge" style="background:var(--surface2); border:1px solid var(--border)"><span class="dot" style="background:var(--text-dim);box-shadow:none"></span>${badge}</div></div><div class="card-name">${emp.name} ${achivs}</div><div class="card-hours">${isOff ? 'Вне смены' : emp.shift}</div>`;
       panel.appendChild(el);
     });
+    existing.forEach(el => el.remove());
   }
 
   // ── HEATMAP ──
