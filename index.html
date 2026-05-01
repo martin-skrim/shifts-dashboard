@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080810">
   <title>Break Monitor Enterprise</title>
-  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ══════════════════════════════════════════════
@@ -37,7 +36,6 @@
       --cyan: #0891b2; --cyan-bg: rgba(8,145,178,0.08); --cyan-glow: rgba(8,145,178,0.15);
       --text: #1e293b; --text-mid: #475569; --text-dim: #94a3b8; --input-bg: rgba(0,0,0,0.04);
     }
-    
     *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
     body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; transition:background .3s,color .3s; }
     
@@ -114,7 +112,7 @@
     .stat-chip .n { font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums; } .stat-chip .l { font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;margin-top:4px; }
     .stat-chip.green .n { color:var(--green); } .stat-chip.red .n { color:var(--red); } .stat-chip.blue .n { color:var(--blue); }
 
-    /* ── TOOLBAR ── */
+    /* TOOLBAR */
     .toolbar { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px; }
     .tabs { display:flex;gap:3px;background:var(--glass-bg); backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:100px;padding:4px; overflow-x:auto;}
     .tab { padding:6px 16px;border-radius:100px;font:12px/1 'Inter',sans-serif;font-weight:500;color:var(--text-dim);cursor:pointer;background:none;border:none;transition:all .2s; white-space:nowrap; }
@@ -123,12 +121,17 @@
     .btn { padding:9px 18px;border-radius:100px;font:13px/1 'Inter',sans-serif;font-weight:500;cursor:pointer;border:none;display:flex;align-items:center;gap:7px;transition:all .2s;white-space:nowrap; }
     .btn:active { transform:scale(.96); } .btn-primary { background:linear-gradient(135deg,#4ade80,#22c55e);color:#052e16; } .btn-primary:hover { box-shadow: 0 0 16px rgba(74,222,128,0.4); }
     .btn-ghost { background:var(--glass-bg);border:1px solid var(--border);color:var(--text); } .btn-ghost:hover { background:var(--surface2); }
-    .btn-blue { background:var(--blue-bg);border:1px solid rgba(96,165,250,.25);color:var(--blue); } .btn-guide { background:rgba(192,132,252,.1); border:1px solid rgba(192,132,252,.25); color:var(--purple); }
+    .btn-blue { background:var(--blue-bg);border:1px solid rgba(96,165,250,.25);color:var(--blue); } 
+    .btn-guide { background:rgba(192,132,252,.1); border:1px solid rgba(192,132,252,.25); color:var(--purple); }
+    .btn-audit { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); color:var(--red); transition: 0.3s; }
+    .btn-audit.alert { background:var(--red); color:#fff; box-shadow:0 0 16px var(--red-glow); animation:pulse-audit 1s infinite;}
+    @keyframes pulse-audit { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
     .btn.spin svg { animation:spin .8s linear infinite; }
     .search-wrap { position:relative;display:flex;align-items:center; } .search-input { background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:8px 16px 8px 36px;font:13px 'Inter',sans-serif;color:var(--text);outline:none;width:180px;transition:all .2s; } .search-input:focus { border-color:var(--border2);width:220px; } .search-icon { position:absolute;left:12px;color:var(--text-dim);font-size:14px; }
     .ml-auto { margin-left:auto; }
 
-    /* ── CARDS ── */
+    /* CARDS */
     .grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px; }
     .card { background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1), border-color .3s, box-shadow .3s; animation:fadeUp .5s cubic-bezier(0.16, 1, 0.3, 1) both; cursor:pointer; transform-origin: center; }
     
@@ -139,6 +142,7 @@
     .card.custom-blue { border-color:var(--blue); box-shadow:0 0 24px var(--blue-glow); } .card.custom-blue:hover { box-shadow:0 8px 40px rgba(96,165,250,0.35); transform:translateY(-4px); }
     .card.going-home { border-color:var(--cyan); box-shadow:0 0 24px var(--cyan-glow); } .card.going-home:hover { box-shadow:0 8px 40px rgba(34,211,238,0.35); transform:translateY(-4px); }
     
+    /* Birthday Theme */
     @keyframes bday-bg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     @keyframes float-party { 0%,100%{transform:translateY(0) rotate(15deg) scale(1)} 50%{transform:translateY(-10px) rotate(20deg) scale(1.1)} }
     @keyframes bounce-cake { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
@@ -163,14 +167,15 @@
     .countdown  { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid);margin-top:8px; position:relative; z-index:2;}
     .countdown.urgent { color:var(--yellow); } .countdown.home { color:var(--cyan); font-weight:600; } .countdown .cv { font-weight:600;font-variant-numeric:tabular-nums; }
 
+    /* TIMELINE & SP */
     .timeline { margin-top:14px; position:relative; z-index:2;} .tl-label { font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px; } .tl-bar { position:relative;height:6px;background:rgba(255,255,255,.05);border-radius:3px; } .tl-seg { position:absolute;height:100%;border-radius:3px;background:var(--green);opacity:.45; } .tl-seg.active { background:var(--red);opacity:1;box-shadow:0 0 8px var(--red); } .tl-now { position:absolute; width:2px;height:calc(100% + 10px);top:-5px; background:#fff;border-radius:2px;z-index:5; box-shadow:0 0 6px rgba(255,255,255,.8); } .tl-now::before { content:'';position:absolute;top:-1px;left:-3px; width:8px;height:8px;background:#fff;border-radius:50%; box-shadow:0 0 8px rgba(255,255,255,.9); } .tl-times { display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px; }
     .shift-progress { margin-top:12px;padding-top:12px;border-top:1px solid var(--border); position:relative; z-index:2;} .sp-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; } .sp-mood { font-size:14px; } .sp-label { font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px; } .sp-meta { display:flex;align-items:center;gap:10px; } .sp-pct { font-size:13px;font-weight:700;font-variant-numeric:tabular-nums; } .sp-remain { font-size:11px;color:var(--text-dim); } .sp-bar-wrap { position:relative;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:visible; } .sp-fill { height:100%;border-radius:4px;transition:width .8s; background:linear-gradient(90deg,#4ade80,#22d3ee,#fbbf24,#f97316); } .sp-marker { position:absolute;top:-3px;width:3px;height:14px; background:#fff;border-radius:2px; box-shadow:0 0 8px rgba(255,255,255,.7); transform:translateX(-50%);transition:left .8s; } .sp-over { font-size:10px;margin-top:5px;text-align:center;font-weight:600;letter-spacing:.3px; }
 
-    /* ── SIMULATOR ── */
+    /* SIMULATOR */
     .sim-panel { display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--glass-bg); backdrop-filter:blur(20px); border:1px solid var(--cyan); padding:16px 24px; border-radius:100px; z-index:1000; align-items:center; gap:20px; box-shadow: 0 10px 40px rgba(34,211,238,0.2); animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); width:90%; max-width:600px;}
     .sim-time { font-size:24px; font-weight:700; color:var(--cyan); font-variant-numeric:tabular-nums; } .sim-slider { flex:1; -webkit-appearance: none; height: 6px; border-radius: 3px; background: var(--surface2); outline: none; } .sim-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--cyan); cursor: pointer; box-shadow: 0 0 10px var(--cyan); }
 
-    /* ── DAY VIEW ── */
+    /* DAY VIEW */
     #day-panel, #heatmap-panel, #directory-panel { display:none; }
     .dv-outer { overflow:auto; max-height:calc(100vh - 280px); border:1px solid var(--border); border-radius:var(--r); background:var(--card-bg); backdrop-filter:blur(12px); box-shadow: inset 0 0 20px rgba(0,0,0,0.1);}
     .dv-wrap { display:flex;flex-direction:column;min-width:max-content; }
@@ -192,14 +197,14 @@
     .dv-break.active { background:rgba(248,113,113,0.35); border-color:rgba(248,113,113,.7); box-shadow:0 0 10px rgba(248,113,113,.25); }
     .dv-now { position:absolute;left:0;right:0;height:2px; background:#ef4444;z-index:10;pointer-events:none; } .dv-now::before { content:'';position:absolute;left:-4px;top:-4px; width:10px;height:10px;background:#ef4444;border-radius:50%; }
 
-    /* ── HEATMAP ── */
+    /* HEATMAP */
     .hm-container { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--r); padding:24px; } .hm-container h3 { margin-bottom: 20px; font-size: 16px; font-weight: 600; color:var(--text); }
     .hm-wrap { display: flex; gap: 6px; align-items: flex-end; height: 220px; padding-top: 20px; overflow-x: auto; padding-bottom:10px;} .hm-col { flex: 1; min-width: 32px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
     .hm-bar-wrap { height: 140px; width: 100%; display: flex; align-items: flex-end; background: var(--surface2); border-radius: 4px; margin-bottom: 8px; position: relative;}
     .hm-bar { width: 100%; background: linear-gradient(0deg, var(--blue), var(--green)); border-radius: 4px; transition: height 0.5s; cursor:pointer;} .hm-bar:hover { filter: brightness(1.2); }
     .hm-lbl { font-size: 10px; color: var(--text-dim); } .hm-val { font-size: 13px; font-weight: 700; margin-top: 4px; color:var(--text); }
 
-    /* ── MODALS & OVERLAYS ── */
+    /* MODALS & OVERLAYS */
     .loader-wrap { text-align:center;padding:80px 20px; } .spinner { width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 16px; }
     .empty { text-align:center;padding:80px 20px;color:var(--text-dim);grid-column:1/-1; } .empty .ei { font-size:48px;margin-bottom:12px; } .empty h3 { font-size:17px;color:var(--text-mid);margin-bottom:6px; }
 
@@ -219,6 +224,7 @@
     
     .modal h2 { margin-bottom:12px;font-size:20px; text-align:center;} .modal p { color:var(--text-mid);font-size:14px;margin-bottom:24px;line-height:1.5; text-align:center;} .modal .big-time { font-size:32px;font-weight:700;color:var(--green);margin-bottom:24px; text-align:center;}
     
+    /* Profile Specifics */
     .prof-header { display:flex; align-items:center; gap:16px; margin-bottom: 24px; } 
     .prof-avatar { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; flex-shrink:0;} 
     .prof-name { font-size:20px; font-weight:700; margin-bottom:4px; } .prof-status { font-size:13px; color:var(--text-dim); } 
@@ -226,7 +232,14 @@
     .prof-week { flex:1; overflow-y:auto; padding-right:8px; } .prof-week h3 { font-size:14px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); } 
     .week-item { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); font-size:14px; } .week-item:last-child { border:none; } .week-date { color:var(--text-mid); font-weight:500;} .week-shift { font-weight:600; background:var(--surface2); padding: 4px 10px; border-radius: 100px;} .week-shift.off { color:var(--red); background:var(--red-bg);}
 
-    /* ── Справочник Modal ── */
+    /* Audit Specifics */
+    .audit-modal { max-width: 600px; }
+    .audit-list { display:flex; flex-direction:column; gap:12px; max-height: 50vh; overflow-y: auto; padding-right: 10px;}
+    .audit-item { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); padding: 16px; border-radius: var(--r-sm); text-align:left; }
+    .audit-item h4 { font-size:15px; color:var(--red); margin-bottom:6px; }
+    .audit-item p { font-size:13px; color:var(--text); margin:0; line-height:1.5; text-align:left; }
+
+    /* Guide Specifics */
     .help-modal { max-width: 700px; padding: 0; }
     .help-header { padding: 24px 30px; border-bottom: 1px solid var(--border); background: var(--header-bg); border-radius: var(--r) var(--r) 0 0; }
     .help-header h2 { margin: 0; display:flex; align-items:center; gap:10px; text-align:left;}
@@ -315,6 +328,7 @@
     </div>
     <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="search-input" type="search" placeholder="Поиск..."></div>
     
+    <button class="btn btn-audit" id="audit-btn" onclick="openAudit()">🚨 Аудит</button>
     <button class="btn btn-ghost" onclick="findMeeting()">🤝 Планерка</button>
     <button class="btn btn-ghost" onclick="generatePrintView()">🖨️ Печать</button>
     <button class="btn btn-ghost" onclick="toggleSim()">⏳ Симуляция</button>
@@ -335,19 +349,20 @@
     <button class="btn btn-primary" onclick="toggleSim()">Выйти</button>
   </div>
 
+  <!-- ONBOARDING HERO -->
   <div id="onboarding">
     <div class="ob-container">
       <div class="ob-left">
         <div class="ob-logo">☕ Break Monitor</div>
         <h1>Умный контроль<br>смен и перерывов</h1>
-        <p>Интеллектуальная панель управления вашим отделом. Автоматическая аналитика нагрузки, поиск времени для планерок и режим автопилота.</p>
+        <p>Интеллектуальная панель управления вашим отделом. Автоматический аудит расписания, аналитика нагрузки, поиск времени для планерок и режим автопилота.</p>
         <button class="btn btn-primary" style="padding:14px 32px; font-size:16px;" onclick="startMonitoring()">✨ Запустить систему</button>
       </div>
       <div class="ob-right">
         <div class="ob-grid">
+          <div class="ob-feat-card"><span>🚨</span><b>Авто-Аудитор</b><p>Система сама найдет ошибки в графике перерывов.</p></div>
           <div class="ob-feat-card"><span>🤖</span><b>ТВ Автопилот</b><p>Автоматическая прокрутка и смена вкладок для экранов.</p></div>
           <div class="ob-feat-card"><span>🗣️</span><b>Голос и Печать</b><p>Ассистент событий и генерация утренней сводки.</p></div>
-          <div class="ob-feat-card"><span>🤝</span><b>Планерки</b><p>Умный поиск идеального времени для собраний.</p></div>
           <div class="ob-feat-card"><span>🔮</span><b>Симмулятор</b><p>Машина времени для оценки загруженности линии в будущем.</p></div>
         </div>
       </div>
@@ -374,6 +389,17 @@
     <p id="meeting-desc">Лучшее 15-минутное окно до конца дня, когда максимум людей на линии.</p>
     <div class="big-time" id="meeting-time">--:--</div>
     <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="document.getElementById('meeting-modal').classList.remove('active')">Отлично</button>
+  </div>
+</div>
+
+<!-- AUDIT MODAL -->
+<div class="modal-overlay" id="audit-modal" onclick="this.classList.remove('active')">
+  <div class="modal audit-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="document.getElementById('audit-modal').classList.remove('active')">✕</button>
+    <h2>🚨 Аудит расписания на сегодня</h2>
+    <p style="margin-bottom:16px;">Система проверила график и выявила следующие проблемы с перекрытиями перерывов:</p>
+    <div id="audit-list" class="audit-list"></div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;" onclick="document.getElementById('audit-modal').classList.remove('active')">Понятно</button>
   </div>
 </div>
 
@@ -427,8 +453,8 @@
       <div class="help-section">
         <h3>Умные инструменты</h3>
         <div class="help-grid">
+          <div class="help-item"><div class="help-icon" style="background:var(--surface2)">🚨</div><div class="help-text"><b>Авто-Аудитор</b><p>Анализирует график и агрессивно сообщает о пересечениях перерывов.</p></div></div>
           <div class="help-item"><div class="help-icon" style="background:var(--surface2)">💯</div><div class="help-text"><b>Здоровье смены</b><p>В шапке. Показывает % людей на линии от всех работающих.</p></div></div>
-          <div class="help-item"><div class="help-icon" style="background:var(--surface2)">🚨</div><div class="help-text"><b>Радар рисков</b><p>Красная плашка. Появится сама, если на линии останется &lt; 40%.</p></div></div>
           <div class="help-item"><div class="help-icon" style="background:var(--surface2)">🤝</div><div class="help-text"><b>Планерка</b><p>Находит идеальное окно 15 мин до конца дня.</p></div></div>
           <div class="help-item"><div class="help-icon" style="background:var(--surface2)">⏱</div><div class="help-text"><b>Умная сортировка</b><p>Фильтр выстраивает карточки в идеальную очередь таймеров.</p></div></div>
           <div class="help-item"><div class="help-icon" style="background:var(--surface2)">🏃</div><div class="help-text"><b>На подхвате</b><p>Показывает только тех, кто вернется в течение 5 минут.</p></div></div>
@@ -448,21 +474,15 @@
   const WEB_APP_URL = '{{MY_SECRET_API_URL}}'; 
   const INTERVAL    = 20;
 
-  // ARRAYS
-  let masterData = []; 
-  let activeData = []; 
-  let offData = [];    
-  let state = {};
-
+  let masterData = [], activeData = [], offData = [], state = {};
   let filter = 'all', sortMode = 'default', searchQuery = '';
   let audioCtx = null, soundOn = false, ttsOn = false, fetching = false, notifCnt = 0, timer = INTERVAL, currentView = 'cards';
   let isFullscreen = false, tvModeTimer = null, tvScrollInt = null, tvViews = ['cards', 'heatmap', 'tomorrow', 'off'], tvIndex = 0;
-  let isOffline = false, isSimulating = false, simTime = 720;
-  let isDragging = false; 
+  let isOffline = false, isSimulating = false, simTime = 720, isDragging = false; 
+  let auditIssues = [];
 
   const synth = window.speechSynthesis;
 
-  // THEMES & DATES
   function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); document.getElementById('theme-btn').textContent = t === 'dark' ? '🌙' : '☀️'; try{localStorage.setItem('bm-theme',t);}catch(e){} }
   function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
   try { const saved = localStorage.getItem('bm-theme'); if (saved) applyTheme(saved); } catch(e){}
@@ -478,18 +498,12 @@
   const quotes = ["Отличной смены! 🚀", "Улыбнись, ты супер! 😊", "Сделай этот день! ⚡", "Кофе — спонсор продуктивности ☕", "Работаем в потоке! 🔥"];
   let quoteIdx = 0; setInterval(() => { if(!checkSeasonal()) { document.getElementById('quote-text').textContent = quotes[quoteIdx]; quoteIdx = (quoteIdx+1)%quotes.length; } }, 15000);
 
-  // SOUND & TTS
-  function initAudio() { 
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
-    if (audioCtx.state === 'suspended') audioCtx.resume(); 
-    soundOn = true; document.getElementById('snd-btn').textContent = '🔊';
-  }
-  function toggleSound() { soundOn = !soundOn; document.getElementById('snd-btn').textContent = soundOn ? '🔊' : '🔇'; if(soundOn) initAudio(); }
+  function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); soundOn = true; let b = document.getElementById('snd-btn'); if(b) b.textContent = '🔊'; }
+  function toggleSound() { soundOn = !soundOn; let b = document.getElementById('snd-btn'); if(b) b.textContent = soundOn ? '🔊' : '🔇'; if(soundOn) initAudio(); }
   function toggleTTS() { ttsOn = !ttsOn; document.getElementById('tts-btn').textContent = ttsOn ? '🗣️' : '🔇'; if(ttsOn) toast('Голосовой ассистент включен', 'info'); }
   function speak(text) { if (!ttsOn || isSimulating) return; const u = new SpeechSynthesisUtterance(text); u.lang = 'ru-RU'; u.rate = 1.1; synth.speak(u); }
   function beep(type) { if (!soundOn || !audioCtx || isSimulating) return; const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sine';const t=audioCtx.currentTime; if(type==='break'){o.frequency.setValueAtTime(660,t);o.frequency.exponentialRampToValueAtTime(330,t+.4);}else{o.frequency.setValueAtTime(330,t);o.frequency.exponentialRampToValueAtTime(660,t+.25);o.frequency.setValueAtTime(660,t+.3);o.frequency.exponentialRampToValueAtTime(990,t+.5);} g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.1,t+.05);g.gain.exponentialRampToValueAtTime(.001,t+.6);o.start(t);o.stop(t+.65); }
 
-  // TV MODE & WIDGET
   function toggleFullscreen() {
     isFullscreen = !isFullscreen; document.body.classList.toggle('fs', isFullscreen);
     if (isFullscreen) { if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); toast('Автопилот запущен', 'work'); tvIndex=0; runTvCycle(); } 
@@ -505,9 +519,9 @@
     clearTimeout(tvModeTimer); tvModeTimer = setTimeout(() => { clearInterval(tvScrollInt); if(isFullscreen) { tvIndex = (tvIndex + 1) % tvViews.length; runTvCycle(); } }, duration);
   }
 
-  function notify(name, body, type, verbal) { 
+  function notify(name, body, type) { 
     if(isSimulating) return;
-    beep(type); toast(name + ' — ' + body, type); speak(verbal);
+    beep(type); toast(name + ' — ' + body, type);
     notifCnt++; document.getElementById('notif-cnt').textContent = notifCnt; const list = document.getElementById('np-list'); const q = list.querySelector('.np-empty'); if (q) q.remove(); const ts = new Date().toTimeString().slice(0,5); const el = document.createElement('div'); el.className = 'np-item ' + type; el.innerHTML = `<div class="ni-name">${type==='break'?'☕':'✅'} ${name}</div><div class="ni-meta">${body} · ${ts}</div>`; list.insertBefore(el, list.firstChild); if (Notification.permission === 'granted') new Notification(type === 'break' ? '☕ Перерыв' : '✅ Вернулся', { body: name + ' — ' + body }); 
   }
   function toast(msg, type) { const el = document.createElement('div'); el.className = 'toast ' + type; el.innerHTML = (type==='break'?'☕':(type==='work'?'✅':'ℹ️')) + ' ' + msg; document.getElementById('toasts').appendChild(el); setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(10px) scale(.95)'; setTimeout(()=>el.remove(),320); }, 4500); }
@@ -525,7 +539,6 @@
     updateLocalStates(); 
   }
   setInterval(tickClock, 1000); checkSeasonal();
-  
   function tickProgress() { if (isSimulating) return; timer--; if (timer <= 0) { timer = INTERVAL; fetchData(); } document.getElementById('pbar').style.width = (timer/INTERVAL*100)+'%'; }
 
   function setView(v, el) { currentView = v; el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); document.getElementById('grid').style.display = v==='cards' ? 'grid' : 'none'; document.getElementById('day-panel').style.display = v==='day' ? 'block': 'none'; document.getElementById('off-panel').style.display = v==='off' ? 'grid' : 'none'; document.getElementById('tomorrow-panel').style.display = v==='tomorrow'? 'grid' : 'none'; document.getElementById('heatmap-panel').style.display = v==='heatmap' ? 'block' : 'none'; document.getElementById('directory-panel').style.display = v==='directory' ? 'grid' : 'none'; document.getElementById('filter-tabs').style.display = v==='cards' ? 'flex' : 'none'; if (v==='day') { renderDayView(); scrollDayToNow(); } if (v==='off') renderOffView(); if (v==='tomorrow') renderTomorrowView(); if (v==='heatmap') renderHeatmapView(); if (v==='directory') renderDirectory(); }
@@ -544,7 +557,6 @@
   }
   function manualRefresh() { timer=INTERVAL; fetchData(); }
 
-  // ── CORE DATA ENGINE ──
   async function fetchData() {
     if(fetching || isSimulating) return; fetching=true; document.getElementById('refresh-btn').classList.add('spin');
     try {
@@ -557,6 +569,7 @@
       isOffline = false; document.getElementById('offline-badge').style.display = 'none';
       document.getElementById('loader-wrap').style.display='none'; document.getElementById('stats').style.display='flex'; document.getElementById('toolbar').style.display='flex';
       
+      runAudit(); // Аудит расписания
       updateLocalStates(); updateLunchBuddies();
       
       if (currentView==='cards') renderCards(); else if (currentView==='day') renderDayView(); else if (currentView==='off') renderOffView(); else if (currentView==='tomorrow') renderTomorrowView(); else if (currentView==='heatmap') renderHeatmapView(); else if (currentView==='directory') renderDirectory();
@@ -566,6 +579,79 @@
     } finally { fetching=false; document.getElementById('refresh-btn').classList.remove('spin'); }
   }
 
+  // ── ФИЧА 1: АВТО-АУДИТОР ──
+  function runAudit() {
+    let workingToday = masterData.filter(e => e.isWorkingToday);
+    if (!workingToday.length) return;
+    
+    let dayStart=24*60, dayEnd=0; 
+    workingToday.forEach(e => { const wh=parseWorkHours(e.workHours); if(wh){ dayStart=Math.min(dayStart,wh.start); dayEnd=Math.max(dayEnd,wh.end); } });
+    
+    auditIssues = [];
+    let currentIssue = null;
+
+    for (let m = dayStart; m <= dayEnd; m++) {
+      let totalAtM = 0;
+      let breakers = [];
+      
+      workingToday.forEach(emp => {
+        const wh = parseWorkHours(emp.workHours); 
+        if (wh && m >= wh.start && m < wh.end) { 
+          totalAtM++; 
+          const segs = parseSchedule(emp.breakSchedule); 
+          if (segs.some(s => m >= s.start && m < s.end)) breakers.push(emp.name.split(' ')[0]); 
+        } 
+      });
+
+      let active = totalAtM - breakers.length;
+      
+      // Логика ругательства: Если на перерыве >= 2 человек И на линии осталось <= 1
+      if (breakers.length >= 2 && active <= 1 && totalAtM >= 3) {
+        if (!currentIssue) {
+          currentIssue = { start: m, end: m, breakers: [...new Set(breakers)], minActive: active };
+        } else {
+          currentIssue.end = m;
+          currentIssue.breakers = [...new Set([...currentIssue.breakers, ...breakers])];
+          currentIssue.minActive = Math.min(currentIssue.minActive, active);
+        }
+      } else {
+        if (currentIssue) {
+          if (currentIssue.end - currentIssue.start >= 5) auditIssues.push(currentIssue); // Записываем, если проблема длится дольше 5 минут
+          currentIssue = null;
+        }
+      }
+    }
+
+    const btn = document.getElementById('audit-btn');
+    if (auditIssues.length > 0) {
+      btn.classList.add('alert');
+      btn.textContent = `🚨 Аудит (${auditIssues.length})`;
+    } else {
+      btn.classList.remove('alert');
+      btn.textContent = `✅ Аудит`;
+    }
+  }
+
+  function openAudit() {
+    const list = document.getElementById('audit-list');
+    if (auditIssues.length === 0) {
+      list.innerHTML = '<div class="audit-item" style="background:rgba(74,222,128,0.1); border-color:var(--green)"><h4 style="color:var(--green)">✅ Всё идеально</h4><p>График составлен грамотно. На протяжении дня нет критических пересечений перерывов.</p></div>';
+    } else {
+      let h = '';
+      auditIssues.forEach(issue => {
+        h += `
+          <div class="audit-item">
+            <h4>🤬 Катастрофа с ${fmt(issue.start)} до ${fmt(issue.end)}!</h4>
+            <p>На перерыв ушли сразу несколько человек: <b>${issue.breakers.join(', ')}</b>. На линии останется всего <b>${issue.minActive}</b> чел. Расписание нужно срочно менять!</p>
+          </div>
+        `;
+      });
+      list.innerHTML = h;
+    }
+    document.getElementById('audit-modal').classList.add('active');
+  }
+
+  // ── UPDATE LOCAL STATES & VOICE ──
   function updateLocalStates() {
     if (!masterData.length) return;
     const cur = serverNow(); let stateChanged = false;
@@ -599,11 +685,14 @@
       state[clone.name] = clone.onBreak;
     });
 
-    let activeCount = activeData.filter(e=>!e.onBreak).length;
-    pendingNotifs.forEach(n => {
-       if(n.onBreak) notify(n.name, `Ушёл на перерыв ${n.breakTime}`, 'break', `${n.name} уходит на перерыв. На линии ${activeCount} человек.`);
-       else notify(n.name, `Вернулся`, 'work', `${n.name} возвращается к работе.`);
-    });
+    // Отправка уведомлений и голоса после полного пересчета (чтобы знать точное число activeCount)
+    if (pendingNotifs.length > 0) {
+      let activeCount = activeData.filter(e => !e.onBreak).length;
+      pendingNotifs.forEach(n => {
+         if(n.onBreak) notify(n.name, `Ушёл на перерыв ${n.breakTime}`, 'break', `${n.name.split(' ')[0]} уходит на перерыв. На линии ${activeCount} человек.`);
+         else notify(n.name, `Вернулся`, 'work', `${n.name.split(' ')[0]} возвращается к работе.`);
+      });
+    }
 
     updateStats(); checkBottlenecks();
     
@@ -613,6 +702,7 @@
       if (currentView === 'heatmap') renderHeatmapView(); 
       if (currentView === 'off') renderOffView();
       if (currentView === 'tomorrow') renderTomorrowView();
+      if (currentView === 'directory') renderDirectory();
     }
     if (currentView === 'cards') tickCountdowns();
   }
@@ -806,7 +896,6 @@
     const maxC = Math.max(...intervals.map(i => i.count), 1); let h = '<div class="hm-wrap">'; intervals.forEach(i => { h += `<div class="hm-col"><div class="hm-bar-wrap"><div class="hm-bar" style="height:${(i.count / maxC) * 100}%" title="${fmt(i.time)} — ${i.count} чел."></div></div><div class="hm-lbl">${fmt(i.time)}</div><div class="hm-val">${i.count}</div></div>`; }); p.innerHTML = `<div class="hm-container"><h3>Анализ нагрузки на сегодня (Сотрудники на линии)</h3>${h}</div>`;
   }
 
-  // ── ПЕРЕРАБОТАННЫЙ СПРАВОЧНИК ──
   function renderDirectory() {
     const panel = document.getElementById('directory-panel'); let list = [...masterData]; if (searchQuery) list = list.filter(e => e.name.toLowerCase().includes(searchQuery));
     if (!list.length) { panel.innerHTML = '<div class="empty"><h3>Никого нет</h3></div>'; return; }
@@ -817,36 +906,12 @@
       el.className = 'card' + (emp.isBirthday ? ' birthday-card' : '');
       const color = nameToColor(emp.name), ini = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); let achivs = emp.isBirthday ? '<span class="bday-icon" title="С Днём Рождения!">🎂</span>' : '';
       
-      // Аналитика
       let shiftsCount = 0; let totalMins = 0;
-      if(emp.week) {
-          emp.week.forEach(w => {
-              let wh = parseWorkHours(w.shift);
-              if(wh) { shiftsCount++; let d = wh.end - wh.start; if(d < 0) d += 1440; totalMins += d; }
-          });
-      }
+      if(emp.week) { emp.week.forEach(w => { let wh = parseWorkHours(w.shift); if(wh) { shiftsCount++; let d = wh.end - wh.start; if(d < 0) d += 1440; totalMins += d; } }); }
       let weeklyHours = Math.floor(totalMins/60);
       let statusText = emp.isWorkingToday ? `<span style="color:var(--green)">На смене (${localTimeStr(emp.workHours)||emp.workHours})</span>` : `<span style="color:var(--text-dim)">Выходной</span>`;
       
-      el.innerHTML = `
-        <div class="card-header">
-          <div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div>
-          <div class="badge" style="background:var(--surface2); border:1px solid var(--border)"><span class="dot" style="background:var(--text-dim);box-shadow:none"></span>Сотрудник</div>
-        </div>
-        <div class="card-name">${emp.name} ${achivs}</div>
-        <div style="font-size:12px; margin-bottom:12px;">${statusText}</div>
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-          <div style="flex:1; background:var(--surface); padding:8px; border-radius:8px; text-align:center;">
-             <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Смен (7 дн)</div>
-             <div style="font-size:16px; font-weight:700; color:var(--text);">${shiftsCount}</div>
-          </div>
-          <div style="flex:1; background:var(--surface); padding:8px; border-radius:8px; text-align:center;">
-             <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Часов (7 дн)</div>
-             <div style="font-size:16px; font-weight:700; color:var(--text);">${weeklyHours}</div>
-          </div>
-        </div>
-        <button class="btn btn-ghost" style="width:100%; justify-content:center; font-size:12px; padding:8px;" onclick="handleCardClick('${emp.name}')">Открыть профиль</button>
-      `; 
+      el.innerHTML = `<div class="card-header"><div class="avatar" style="background:${color}20;border-color:${color}60;color:${color}">${ini}</div><div class="badge" style="background:var(--surface2); border:1px solid var(--border)"><span class="dot" style="background:var(--text-dim);box-shadow:none"></span>Сотрудник</div></div><div class="card-name">${emp.name} ${achivs}</div><div style="font-size:12px; margin-bottom:12px;">${statusText}</div><div style="display:flex; gap:8px; margin-bottom:12px;"><div style="flex:1; background:var(--surface); padding:8px; border-radius:8px; text-align:center;"><div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Смен (7 дн)</div><div style="font-size:16px; font-weight:700; color:var(--text);">${shiftsCount}</div></div><div style="flex:1; background:var(--surface); padding:8px; border-radius:8px; text-align:center;"><div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Часов (7 дн)</div><div style="font-size:16px; font-weight:700; color:var(--text);">${weeklyHours}</div></div></div><button class="btn btn-ghost" style="width:100%; justify-content:center; font-size:12px; padding:8px;" onclick="handleCardClick('${emp.name}')">Открыть профиль</button>`; 
       panel.appendChild(el);
     }); existing.forEach(el => el.remove());
   }
