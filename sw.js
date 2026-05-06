@@ -1,4 +1,4 @@
-// sw.js — PWA-кэш статики
+// sw.js — кэш статики для PWA
 
 const CACHE_NAME = 'shifts-dashboard-v1';
 
@@ -20,7 +20,9 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k === CACHE_NAME ? null : caches.delete(k))))
+      Promise.all(
+        keys.map(k => (k === CACHE_NAME ? null : caches.delete(k)))
+      )
     )
   );
 });
@@ -28,10 +30,8 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req);
-    })
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });
