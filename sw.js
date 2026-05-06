@@ -1,37 +1,34 @@
-// sw.js — кэш статики для PWA
+// sw.js
+const API = 'https://script.google.com/macros/s/AKfycbyFUAo8Nl4wJFItNbbDICQtmt_XC6vVOecWphF714S_I4deQcCRMnhY-_ALyjuW2Kq1/exec';
+let prevState = {};
 
-const CACHE_NAME = 'shifts-dashboard-v1';
+async function poll() {
+  try {
+    const r    = await fetch(API + '?_=' + Date.now());
+    const json = await r.json();
+    const emps = json.employees || json;
 
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/sw.js',
-  '/icon-192.png',
-  '/icon-512.png'
-];
+    emps.forEach(emp => {
+      const was = prevState[emp.name];
+      if (was === false && emp.onBreak) {
+        self.registration.showNotification('☕ Перерыв', {
+          body: emp.name + ' ушёл на перерыв',
+          icon: '/icon-192.png'
+        });
+      }
+      if (was === true && !emp.onBreak) {
+        self.registration.showNotification('✅ Вернулся', {
+          body: emp.name + ' вернулся с перерыва',
+          icon: '/icon-192.png'
+        });
+      }
+      prevState[emp.name] = emp.onBreak;
+    });
+  } catch(e) {}
+}
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(k => (k === CACHE_NAME ? null : caches.delete(k)))
-      )
-    )
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-
-  event.respondWith(
-    caches.match(req).then(cached => cached || fetch(req))
-  );
+// Запускаем поллинг каждые 20 секунд
+self.addEventListener('activate', () => {
+  setInterval(poll, 20000);
+  poll();
 });
