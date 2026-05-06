@@ -1,20 +1,7 @@
 {
-  "name": "Break Monitor Enterprise",
+  "name": "Мониторинг Смен",
   "short_name": "Смены",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#080810",
-  "theme_color": "#080810",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "icons": [{"src": "https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg", "sizes": "192x192", "type": "image/svg+xml"}]
 }
