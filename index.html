@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080810">
-  <title>Break Monitor Enterprise</title>
+  <title>Break Monitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
   
   <style>
     /* =========================================
@@ -817,16 +818,19 @@
   // ==========================================
   // ВНИМАНИЕ: ЗАМЕНИТЬ URL
   // ==========================================
-  const WEB_APP_URL = '{{MY_SECRET_API_URL}}'; 
-  const INTERVAL    = 20;
+  <script>
+  // URL веб-приложения Apps Script — будет подставлен GitHub Actions
+  const WEB_APP_URL = '{{MY_SECRET_API_URL}}';
 
+  const INTERVAL = 20; // секунд между авто-обновлениями
   let masterData = [], activeData = [], offData = [], state = {};
   let filter = 'all', sortMode = 'default', searchQuery = '', currentDept = 'all';
-  let audioCtx = null, soundOn = false, ttsOn = false, fetching = false, notifCnt = 0, timer = INTERVAL, currentView = 'cards';
-  let isFullscreen = false, tvModeTimer = null, tvScrollInt = null, tvViews = ['cards', 'day', 'analytics', 'awards', 'directory'], tvIndex = 0;
-  let isOffline = false, isSimulating = false, simTime = 720, isDragging = false; 
+  let audioCtx = null, soundOn = false, ttsOn = false, fetching = false, notifCnt = 0, timer = INTERVAL;
+  let currentView = 'cards';
+  let isFullscreen = false, tvModeTimer = null, tvScrollInt = null;
+  let tvViews = ['cards', 'day', 'analytics', 'awards', 'directory'], tvIndex = 0;
+  let isOffline = false, isSimulating = false, simTime = 720, isDragging = false;
   let auditIssues = [];
-
   const synth = window.speechSynthesis;
 
   // ── THEMES ──
@@ -978,46 +982,53 @@
   function manualRefresh() { timer=INTERVAL; fetchData(); }
 
   async function fetchData() {
-    if(fetching || isSimulating) return; 
-    fetching=true; 
-    document.getElementById('refresh-btn').classList.add('spin');
-    
-    try {
-      let url = WEB_APP_URL.includes('{{') ? 'https://script.google.com/macros/s/AKfycbyFUAo8Nl4wJFItNbbDICQtmt_XC6vVOecWphF714S_I4deQcCRMnhY-_ALyjuW2Kq1/exec' : WEB_APP_URL;
-      const res = await fetch(url+'?_='+Date.now()); 
-      const json = await res.json();
-      
-      masterData = json.masterData || [];
-      if (json.t !== undefined) window._tzOffset = json.t - (new Date().getHours()*60 + new Date().getMinutes());
-      
-      isOffline = false; document.getElementById('offline-badge').style.display = 'none';
-      document.getElementById('loader-wrap').style.display='none'; 
-      document.getElementById('stats').style.display='flex'; 
-      document.getElementById('toolbar').style.display='flex';
-      
-      buildDeptTabs();
-      runAudit(); 
-      updateLocalStates(); 
-      updateLunchBuddies();
-      
-      // Initial Render
-      if (currentView==='cards') renderCards(); 
-      else if (currentView==='day') renderDayView(); 
-      else if (currentView==='directory') renderDirectory(); 
-      else if (currentView==='analytics') renderAnalytics(); 
-      else if (currentView==='awards') renderAwards(); 
-      else if (currentView==='tomorrow') renderTomorrowView(); 
-      else if (currentView==='off') renderOffView(); 
-    } catch(e) { 
-      console.error(e); 
-      isOffline = true; 
-      document.getElementById('offline-badge').style.display = 'inline-block';
-      updateLocalStates(); 
-    } finally { 
-      fetching=false; 
-      document.getElementById('refresh-btn').classList.remove('spin'); 
+  if (fetching || isSimulating) return;
+  fetching = true;
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('spin');
+
+  try {
+    const res  = await fetch(WEB_APP_URL + '?_=' + Date.now());
+    const json = await res.json();
+
+    masterData = json.masterData || [];
+
+    // tzOffset от сервера: разница между серверным временем (минуты) и локальным
+    if (json.t !== undefined) {
+      window.tzOffset =
+        json.t - (new Date().getHours() * 60 + new Date().getMinutes());
     }
+
+    isOffline = false;
+    document.getElementById('offline-badge').style.display = 'none';
+    document.getElementById('loader-wrap').style.display  = 'none';
+    document.getElementById('stats').style.display        = 'flex';
+    document.getElementById('toolbar').style.display      = 'flex';
+
+    buildDeptTabs();
+    runAudit();
+    updateLocalStates();
+    updateLunchBuddies();
+
+    // Первичная отрисовка текущего view
+    if (currentView === 'cards')       renderCards();
+    else if (currentView === 'day')    renderDayView();
+    else if (currentView === 'directory') renderDirectory();
+    else if (currentView === 'analytics') renderAnalytics();
+    else if (currentView === 'awards') renderAwards();
+    else if (currentView === 'tomorrow') renderTomorrowView();
+    else if (currentView === 'off')   renderOffView();
+
+  } catch (e) {
+    console.error(e);
+    isOffline = true;
+    document.getElementById('offline-badge').style.display = 'inline-block';
+    updateLocalStates(); // чтобы статы/состояния частично обновились
+  } finally {
+    fetching = false;
+    if (refreshBtn) refreshBtn.classList.remove('spin');
   }
+}
 
   // ── LOGIC ENGINE ──
   function updateLocalStates() {
