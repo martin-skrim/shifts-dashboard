@@ -1133,205 +1133,209 @@
     }
 
     function buildCard(emp, nowMin) {
-      const work = parseRange(emp.workHours);
-      const onShift = work && nowMin >= work.start && nowMin <= work.end;
-      let shiftProgress = null;
-      let nowPos = null;
+  const work = parseRange(emp.workHours);
+  const onShift = work && nowMin >= work.start && nowMin <= work.end;
 
-      if (work) {
-        const total = work.end - work.start;
-        if (total > 0) {
-          const clamped = Math.max(work.start, Math.min(work.end, nowMin));
-          const done = clamped - work.start;
-          shiftProgress = Math.round(done / total * 100);
-          nowPos = ((clamped - work.start) / total) * 100;
-        }
-      }
+  let shiftProgress = null;
+  let nowPos = null;
 
-      let onBreak = false;
-      let nextBreak = null;
-      let activeBreakLabel = '';
-      const breaks = [];
-      (emp.breakSchedule || []).forEach(b => {
-        const r = parseRange(b);
-        if (!r) return;
-        breaks.push({label:b, start:r.start, end:r.end});
-      });
-
-      breaks.sort((a,b) => a.start - b.start);
-
-      breaks.forEach(br => {
-        if (nowMin >= br.start && nowMin <= br.end) {
-          onBreak = true;
-          activeBreakLabel = br.label;
-        } else if (nowMin < br.start && !nextBreak) {
-          nextBreak = br;
-        }
-      });
-
-      const card = document.createElement('article');
-      card.className = 'card';
-
-      const headerRow = document.createElement('div');
-      headerRow.className = 'card-header-row';
-
-      const avatar = document.createElement('div');
-      avatar.className = 'avatar';
-      const initials = emp.name.split(' ').map(p => p[0]).join('').slice(0,2);
-      avatar.textContent = initials;
-
-      const main = document.createElement('div');
-      main.className = 'card-main';
-
-      const nameEl = document.createElement('div');
-      nameEl.className = 'card-name';
-      nameEl.textContent = emp.name;
-
-      const deptEl = document.createElement('div');
-      deptEl.className = 'card-dept';
-      deptEl.textContent = emp.department || 'Без отдела';
-
-      main.appendChild(nameEl);
-      main.appendChild(deptEl);
-
-      const badges = document.createElement('div');
-      badges.className = 'card-badges';
-
-      const pillStatus = document.createElement('div');
-      pillStatus.className = 'pill';
-
-      const dot = document.createElement('span');
-      dot.className = 'pill-dot';
-
-      if (!emp.isWorkingToday || !work) {
-        pillStatus.classList.add('pill--off');
-        dot.style.background = '#06b6d4';
-        pillStatus.textContent = 'Выходной';
-        pillStatus.prepend(dot);
-      } else if (onBreak) {
-        pillStatus.classList.add('pill--break');
-        dot.style.background = '#ef4444';
-        pillStatus.textContent = 'На перерыве';
-        pillStatus.prepend(dot);
-      } else if (nextBreak && nextBreak.start - nowMin <= 30) {
-        pillStatus.classList.add('pill--soon');
-        dot.style.background = '#f59e0b';
-        pillStatus.textContent = 'Скоро перерыв';
-        pillStatus.prepend(dot);
-      } else {
-        pillStatus.classList.add('pill--working');
-        dot.style.background = '#22c55e';
-        pillStatus.textContent = 'В работе';
-        pillStatus.prepend(dot);
-      }
-
-      badges.appendChild(pillStatus);
-
-      if (emp.isBirthday) {
-        const pillB = document.createElement('div');
-        pillB.className = 'pill';
-        pillB.innerHTML = '🎂 День рождения';
-        badges.appendChild(pillB);
-      }
-
-      if (emp.tomorrow) {
-        const pillT = document.createElement('div');
-        pillT.className = 'pill';
-        pillT.textContent = 'Завтра: ' + emp.tomorrow;
-        badges.appendChild(pillT);
-      }
-
-      headerRow.appendChild(avatar);
-      headerRow.appendChild(main);
-      headerRow.appendChild(badges);
-
-      const rowHours = document.createElement('div');
-      rowHours.className = 'row-hours';
-      const shiftLabel = document.createElement('div');
-      shiftLabel.textContent = emp.shiftLabel || emp.workHours || '—';
-      const nextShift = document.createElement('div');
-      nextShift.textContent = emp.next || '';
-
-      rowHours.appendChild(shiftLabel);
-      rowHours.appendChild(nextShift);
-
-      const rowBreaks = document.createElement('div');
-      rowBreaks.className = 'row-breaks';
-      if (breaks.length) {
-        const label = document.createElement('span');
-        label.textContent = 'Перерывы:';
-        rowBreaks.appendChild(label);
-        breaks.forEach(br => {
-          const tag = document.createElement('span');
-          tag.className = 'break-tag';
-          tag.textContent = br.label;
-          rowBreaks.appendChild(tag);
-        });
-      }
-
-      const progressWrap = document.createElement('div');
-      progressWrap.className = 'progress-wrap';
-
-      const progressTop = document.createElement('div');
-      progressTop.className = 'progress-top';
-
-      const left = document.createElement('span');
-      const right = document.createElement('span');
-
-      if (!work) {
-        left.textContent = 'Смена: нет';
-        right.textContent = '';
-      } else {
-        const total = work.end - work.start;
-        const done = Math.max(0, Math.min(total, nowMin - work.start));
-        const remain = total - done;
-        left.textContent = 'Прогресс смены';
-        right.textContent = (shiftProgress ?? 0) + '% • '
-          + (remain > 0
-              ? Math.floor(remain / 60) + 'ч ' + (remain % 60) + 'м до конца'
-              : 'смена завершена');
-      }
-
-      progressTop.appendChild(left);
-      progressTop.appendChild(right);
-
-      const bar = document.createElement('div');
-      bar.className = 'progress-bar';
-
-      const fill = document.createElement('div');
-      fill.className = 'progress-fill';
-
-      const marker = document.createElement('div');
-      marker.className = 'progress-now';
-
-      if (!work) {
-        fill.style.width = '0%';
-        marker.style.left = '0%';
-      } else {
-        const total = work.end - work.start;
-        const clamped = Math.max(work.start, Math.min(work.end, nowMin));
-        const done = clamped - work.start;
-        const p = total > 0 ? (done / total) * 100 : 0;
-        fill.style.width = p + '%';
-        marker.style.left = p + '%';
-      }
-
-      bar.appendChild(fill);
-      bar.appendChild(marker);
-
-      progressWrap.appendChild(progressTop);
-      progressWrap.appendChild(bar);
-
-      const card = document.createElement('article');
-      card.className = 'card';
-
-      card.appendChild(headerRow);
-      card.appendChild(rowHours);
-      if (breaks.length) card.appendChild(rowBreaks);
-      card.appendChild(progressWrap);
-
-      return card;
+  if (work) {
+    const total = work.end - work.start;
+    if (total > 0) {
+      const clamped = Math.max(work.start, Math.min(work.end, nowMin));
+      const done = clamped - work.start;
+      shiftProgress = Math.round(done / total * 100);
+      nowPos = ((clamped - work.start) / total) * 100;
     }
+  }
+
+  let onBreak = false;
+  let nextBreak = null;
+  let activeBreakLabel = '';
+  const breaks = [];
+
+  (emp.breakSchedule || []).forEach(b => {
+    const r = parseRange(b);
+    if (!r) return;
+    breaks.push({ label: b, start: r.start, end: r.end });
+  });
+
+  breaks.sort((a, b) => a.start - b.start);
+
+  breaks.forEach(br => {
+    if (nowMin >= br.start && nowMin <= br.end) {
+      onBreak = true;
+      activeBreakLabel = br.label;
+    } else if (nowMin < br.start && !nextBreak) {
+      nextBreak = br;
+    }
+  });
+
+  // один раз создаём card, без повторного const card
+  const card = document.createElement('article');
+  card.className = 'card';
+
+  const headerRow = document.createElement('div');
+  headerRow.className = 'card-header-row';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  const initials = emp.name.split(' ')
+    .map(p => p[0])
+    .join('')
+    .slice(0, 2);
+  avatar.textContent = initials;
+
+  const main = document.createElement('div');
+  main.className = 'card-main';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'card-name';
+  nameEl.textContent = emp.name;
+
+  const deptEl = document.createElement('div');
+  deptEl.className = 'card-dept';
+  deptEl.textContent = emp.department || 'Без отдела';
+
+  main.appendChild(nameEl);
+  main.appendChild(deptEl);
+
+  const badges = document.createElement('div');
+  badges.className = 'card-badges';
+
+  const pillStatus = document.createElement('div');
+  pillStatus.className = 'pill';
+
+  const dot = document.createElement('span');
+  dot.className = 'pill-dot';
+
+  if (!emp.isWorkingToday || !work) {
+    pillStatus.classList.add('pill--off');
+    dot.style.background = '#06b6d4';
+    pillStatus.textContent = 'Выходной';
+    pillStatus.prepend(dot);
+  } else if (onBreak) {
+    pillStatus.classList.add('pill--break');
+    dot.style.background = '#ef4444';
+    pillStatus.textContent = 'На перерыве';
+    pillStatus.prepend(dot);
+  } else if (nextBreak && nextBreak.start - nowMin <= 30) {
+    pillStatus.classList.add('pill--soon');
+    dot.style.background = '#f59e0b';
+    pillStatus.textContent = 'Скоро перерыв';
+    pillStatus.prepend(dot);
+  } else {
+    pillStatus.classList.add('pill--working');
+    dot.style.background = '#22c55e';
+    pillStatus.textContent = 'В работе';
+    pillStatus.prepend(dot);
+  }
+
+  badges.appendChild(pillStatus);
+
+  if (emp.isBirthday) {
+    const pillB = document.createElement('div');
+    pillB.className = 'pill';
+    pillB.innerHTML = '🎂 День рождения';
+    badges.appendChild(pillB);
+  }
+
+  if (emp.tomorrow) {
+    const pillT = document.createElement('div');
+    pillT.className = 'pill';
+    pillT.textContent = 'Завтра: ' + emp.tomorrow;
+    badges.appendChild(pillT);
+  }
+
+  headerRow.appendChild(avatar);
+  headerRow.appendChild(main);
+  headerRow.appendChild(badges);
+
+  const rowHours = document.createElement('div');
+  rowHours.className = 'row-hours';
+  const shiftLabel = document.createElement('div');
+  shiftLabel.textContent = emp.shiftLabel || emp.workHours || '—';
+  const nextShift = document.createElement('div');
+  nextShift.textContent = emp.next || '';
+
+  rowHours.appendChild(shiftLabel);
+  rowHours.appendChild(nextShift);
+
+  const rowBreaks = document.createElement('div');
+  rowBreaks.className = 'row-breaks';
+  if (breaks.length) {
+    const label = document.createElement('span');
+    label.textContent = 'Перерывы:';
+    rowBreaks.appendChild(label);
+    breaks.forEach(br => {
+      const tag = document.createElement('span');
+      tag.className = 'break-tag';
+      tag.textContent = br.label;
+      rowBreaks.appendChild(tag);
+    });
+  }
+
+  const progressWrap = document.createElement('div');
+  progressWrap.className = 'progress-wrap';
+
+  const progressTop = document.createElement('div');
+  progressTop.className = 'progress-top';
+
+  const left = document.createElement('span');
+  const right = document.createElement('span');
+
+  if (!work) {
+    left.textContent = 'Смена: нет';
+    right.textContent = '';
+  } else {
+    const total = work.end - work.start;
+    const done = Math.max(0, Math.min(total, nowMin - work.start));
+    const remain = total - done;
+    left.textContent = 'Прогресс смены';
+    right.textContent =
+      (shiftProgress ?? 0) + '% • ' +
+      (remain > 0
+        ? Math.floor(remain / 60) + 'ч ' + (remain % 60) + 'м до конца'
+        : 'смена завершена');
+  }
+
+  progressTop.appendChild(left);
+  progressTop.appendChild(right);
+
+  const bar = document.createElement('div');
+  bar.className = 'progress-bar';
+
+  const fill = document.createElement('div');
+  fill.className = 'progress-fill';
+
+  const marker = document.createElement('div');
+  marker.className = 'progress-now';
+
+  if (!work) {
+    fill.style.width = '0%';
+    marker.style.left = '0%';
+  } else {
+    const total = work.end - work.start;
+    const clamped = Math.max(work.start, Math.min(work.end, nowMin));
+    const done = clamped - work.start;
+    const p = total > 0 ? (done / total) * 100 : 0;
+    fill.style.width = p + '%';
+    marker.style.left = p + '%';
+  }
+
+  bar.appendChild(fill);
+  bar.appendChild(marker);
+
+  progressWrap.appendChild(progressTop);
+  progressWrap.appendChild(bar);
+
+  card.appendChild(headerRow);
+  card.appendChild(rowHours);
+  if (breaks.length) card.appendChild(rowBreaks);
+  card.appendChild(progressWrap);
+
+  return card;
+}
 
     // === RENDERS ===
     function renderCards() {
