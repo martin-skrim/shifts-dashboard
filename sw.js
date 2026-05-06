@@ -1,34 +1,44 @@
-// sw.js
-const API = 'https://script.google.com/macros/s/AKfycbyFUAo8Nl4wJFItNbbDICQtmt_XC6vVOecWphF714S_I4deQcCRMnhY-_ALyjuW2Kq1/exec';
-let prevState = {};
+// sw.js — PWA-кэш для статики дашборда
 
-async function poll() {
-  try {
-    const r    = await fetch(API + '?_=' + Date.now());
-    const json = await r.json();
-    const emps = json.employees || json;
+const CACHE_NAME = 'shifts-dashboard-v1';
 
-    emps.forEach(emp => {
-      const was = prevState[emp.name];
-      if (was === false && emp.onBreak) {
-        self.registration.showNotification('☕ Перерыв', {
-          body: emp.name + ' ушёл на перерыв',
-          icon: '/icon-192.png'
-        });
-      }
-      if (was === true && !emp.onBreak) {
-        self.registration.showNotification('✅ Вернулся', {
-          body: emp.name + ' вернулся с перерыва',
-          icon: '/icon-192.png'
-        });
-      }
-      prevState[emp.name] = emp.onBreak;
-    });
-  } catch(e) {}
-}
+const ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/sw.js',
+  // Добавь сюда иконки, если они лежат в корне:
+  // '/icon-192.png',
+  // '/icon-512.png'
+];
 
-// Запускаем поллинг каждые 20 секунд
-self.addEventListener('activate', () => {
-  setInterval(poll, 20000);
-  poll();
+// Установка: кладём статику в кэш
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+});
+
+// Активация: чистим старые кэши
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(k => (k === CACHE_NAME ? null : caches.delete(k)))
+      )
+    )
+  );
+});
+
+// Обслуживание fetch: сначала смотрим кэш, затем сеть
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+      return fetch(request);
+    })
+  );
 });
