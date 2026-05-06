@@ -1,4 +1,4 @@
-// sw.js — PWA-кэш для статики дашборда
+// sw.js — PWA-кэш статики
 
 const CACHE_NAME = 'shifts-dashboard-v1';
 
@@ -7,38 +7,31 @@ const ASSETS = [
   '/index.html',
   '/manifest.json',
   '/sw.js',
-  // Добавь сюда иконки, если они лежат в корне:
-  // '/icon-192.png',
-  // '/icon-512.png'
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
-// Установка: кладём статику в кэш
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
 });
 
-// Активация: чистим старые кэши
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.map(k => (k === CACHE_NAME ? null : caches.delete(k)))
-      )
+      Promise.all(keys.map(k => (k === CACHE_NAME ? null : caches.delete(k))))
     )
   );
 });
 
-// Обслуживание fetch: сначала смотрим кэш, затем сеть
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
-
+  const req = event.request;
+  if (req.method !== 'GET') return;
   event.respondWith(
-    caches.match(request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
-      return fetch(request);
+      return fetch(req);
     })
   );
 });
