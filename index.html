@@ -4,26 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления сменами</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 3px;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
@@ -37,7 +25,13 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight">ShiftFlow</h1>
-                    <p class="text-xs text-slate-400">Голосовая поддержка • Мониторинг</p>
+                    <p class="text-xs text-slate-400 flex items-center gap-1">
+                        Голосовая поддержка • 
+                        <span class="text-emerald-400 font-medium flex items-center gap-0.5">
+                            <i data-lucide="globe" class="w-3 h-3 inline"></i> 
+                            Время местное (ПК)
+                        </span>
+                    </p>
                 </div>
             </div>
 
@@ -92,7 +86,6 @@
                     </span>
                 </div>
                 <div id="active-breaks-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-grow pr-1">
-                    <!-- Dynamic Items -->
                     <div class="text-sm text-slate-500 text-center py-8">Все на рабочих местах</div>
                 </div>
             </div>
@@ -102,13 +95,14 @@
         <div class="lg:col-span-8 flex flex-col gap-6">
             
             <!-- Tab Controls -->
-            <div class="flex border-b border-slate-800 gap-2">
-                <button onclick="switchTab('tab-status')" id="btn-tab-status" class="px-4 py-2 text-sm font-medium border-b-2 border-emerald-500 text-emerald-400 transition">Текущие статусы</button>
-                <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">График на месяц</button>
-                <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Список специалистов</button>
+            <div class="flex border-b border-slate-800 gap-2 overflow-x-auto custom-scrollbar">
+                <button onclick="switchTab('tab-status')" id="btn-tab-status" class="px-4 py-2 text-sm font-medium border-b-2 border-emerald-500 text-emerald-400 transition whitespace-nowrap">На смене сегодня</button>
+                <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Сегодня выходной</button>
+                <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">График на месяц</button>
+                <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Список специалистов</button>
             </div>
 
-            <!-- Tab: Statuses -->
+            <!-- Tab: Statuses (Active Shift) -->
             <div id="tab-status" class="tab-content block">
                 <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden backdrop-blur-sm">
                     <div class="overflow-x-auto custom-scrollbar">
@@ -116,12 +110,35 @@
                             <thead>
                                 <tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
                                     <th class="px-6 py-4">Сотрудник</th>
-                                    <th class="px-6 py-4">Часы работы</th>
-                                    <th class="px-6 py-4">Текущий статус</th>
-                                    <th class="px-6 py-4">Интервалы перерывов</th>
+                                    <th class="px-6 py-4">Часы работы (местные)</th>
+                                    <th class="px-6 py-4">Статус</th>
+                                    <th class="px-6 py-4">Перерывы (местные)</th>
                                 </tr>
                             </thead>
                             <tbody id="status-table-body" class="divide-y divide-slate-800/50 text-sm">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Weekend / Off-shift -->
+            <div id="tab-weekend" class="tab-content hidden">
+                <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden backdrop-blur-sm">
+                    <div class="p-4 border-b border-slate-800 bg-slate-900/20">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Вне сегодняшней смены</h3>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    <th class="px-6 py-4">Сотрудник</th>
+                                    <th class="px-6 py-4">Логин</th>
+                                    <th class="px-6 py-4">График по умолчанию</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weekend-table-body" class="divide-y divide-slate-800/50 text-sm">
                                 <!-- Dynamic rows -->
                             </tbody>
                         </table>
@@ -133,11 +150,11 @@
             <div id="tab-schedule" class="tab-content hidden">
                 <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-sm font-semibold text-slate-200">График работы на текущий месяц</h3>
-                        <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20" id="current-month-label">Май 2026</span>
+                        <h3 class="text-sm font-semibold text-slate-200">Смены по московскому времени (MSK)</h3>
+                        <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20" id="current-month-label">Загрузка...</span>
                     </div>
                     <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-lg">
-                        <table class="w-full text-left border-collapse" id="schedule-table">
+                        <table class="w-full text-left border-collapse id-table" id="schedule-table">
                             <!-- Populated by JS -->
                         </table>
                     </div>
@@ -169,18 +186,15 @@
     <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             <p>© ShiftFlow • Панель мониторинга смен голосовой поддержки</p>
-            <p id="sync-status" class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-600 inline-block"></span> Ожидание инициализации</p>
+            <p id="sync-status" class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-600 inline-block"></span> Ожидание...</p>
         </div>
     </footer>
 
-    <!-- JS Logic -->
     <script>
-        // Config and State
         const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
         const GID_STATUS = '1638344831';
         const SHEET_NAME_SPECS = 'СПЕЦИАЛИСТЫ';
 
-        // Direct export URLs
         const URL_STATUS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_STATUS}`;
         const URL_SPECS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME_SPECS)}`;
 
@@ -190,16 +204,14 @@
             scheduleData: [],
             specsData: [],
             isAudioEnabled: false,
-            announcedBreaks: new Set() // Track announced breaks: format "Name-BreakStart" or "Name-BreakEnd"
+            announcedBreaks: new Set()
         };
 
-        // Initialize UI Elements
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             updateClock();
             setInterval(updateClock, 1000);
             
-            // Audio toggle setup
             const audioBtn = document.getElementById('audio-toggle');
             audioBtn.addEventListener('click', () => {
                 state.isAudioEnabled = !state.isAudioEnabled;
@@ -210,7 +222,6 @@
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
                     text.innerText = 'Звук включен';
-                    // Trigger silent voice to gain browser trust
                     speak("Звуковое оповещение активировано", true);
                 } else {
                     icon.setAttribute('data-lucide', 'volume-x');
@@ -220,26 +231,48 @@
                 lucide.createIcons();
             });
 
-            // Initial fetch and automatic updates
             fetchData();
-            setInterval(fetchData, 30000); // refresh every 30 seconds
+            setInterval(fetchData, 30000);
         });
 
         function updateClock() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
-            const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-            
-            document.getElementById('live-time').innerText = timeStr;
-            document.getElementById('live-date').innerText = dateStr;
+            document.getElementById('live-time').innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
+            document.getElementById('live-date').innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
-            // Run fast real-time status check every second based on loaded state
             if (state.statusData.length > 0) {
                 evaluateRealtimeStatus();
             }
         }
 
-        // CSV Parser utility
+        // Helper to interpret MSK time (UTC+3) string and convert to local PC Date object
+        function parseMskTimeToLocal(timeStr) {
+            if (!timeStr) return null;
+            const cleanTime = timeStr.trim();
+            const parts = cleanTime.split(':');
+            if (parts.length < 2) return null;
+            
+            const now = new Date();
+            // Get current year, month, date in Moscow context
+            const mskFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const [{ value: month },,{ value: day },,{ value: year }] = mskFormatter.formatToParts(now);
+
+            // Construct ISO-8601 representation with MSK Offset (+03:00)
+            const isoStr = `${year}-${month}-${day}T${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00+03:00`;
+            return new Date(isoStr);
+        }
+
+        function formatMskRangeToLocal(rangeStr) {
+            if (!rangeStr || (!rangeStr.includes('–') && !rangeStr.includes('-'))) return '—';
+            const parts = rangeStr.split(/[-–—]/);
+            const startLocal = parseMskTimeToLocal(parts[0].trim());
+            const endLocal = parseMskTimeToLocal(parts[1].trim());
+            if (!startLocal || !endLocal) return rangeStr;
+            
+            const formatTime = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            return `${formatTime(startLocal)} – ${formatTime(endLocal)}`;
+        }
+
         function parseCSV(text) {
             let lines = [];
             let row = [""];
@@ -271,7 +304,6 @@
             syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
             
             try {
-                // Fetch sheets in parallel
                 const [statusRes, specsRes] = await Promise.all([
                     fetch(URL_STATUS).then(r => r.text()),
                     fetch(URL_SPECS).then(r => r.text())
@@ -280,18 +312,15 @@
                 processStatusSheet(parseCSV(statusRes));
                 processSpecsSheet(parseCSV(specsRes));
 
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Данные обновлены в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
-                
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
                 renderUI();
             } catch (err) {
                 console.error(err);
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка синхронизации`;
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
             }
         }
 
         function processStatusSheet(grid) {
-            // Process Breaks: rows 4 to 11 (0-indexed: index 3 to 10)
-            // Name: col F (idx 5), Login: col G/H (idx 6), WorkHours: col I (idx 8), Breaks: col J to N (idx 9 to 13)
             let parsedStatus = [];
             for (let r = 3; r <= 10; r++) {
                 if (!grid[r] || !grid[r][5]) continue; 
@@ -301,22 +330,19 @@
                 
                 let breaks = [];
                 for (let c = 9; c <= 13; c++) {
-                    if (grid[r][c] && grid[r][c].trim().includes('–')) {
+                    if (grid[r][c] && (grid[r][c].includes('–') || grid[r][c].includes('-'))) {
                         breaks.push(grid[r][c].trim());
                     }
                 }
-                
                 parsedStatus.push({ name, login, hours, breaks });
             }
             state.statusData = parsedStatus;
 
-            // Process Schedule: row index 2 contains headers (T3:AX3 -> columns 19 to 49)
-            // Rows 3 to 10 contain schedules matching the names
             if (grid[2]) {
                 state.scheduleHeader = grid[2].slice(19, 50).map(d => d.trim()).filter(Boolean);
                 let schedList = [];
                 for (let r = 3; r <= 10; r++) {
-                    if (!grid[r] || !grid[r][18]) continue; // Name column S is index 18
+                    if (!grid[r] || !grid[r][18]) continue;
                     let name = grid[r][18].trim();
                     let shifts = grid[r].slice(19, 50).map(s => s.trim());
                     schedList.push({ name, shifts });
@@ -326,12 +352,11 @@
         }
 
         function processSpecsSheet(grid) {
-            // A2:A10 Group, B2:B10 Name, C2:C10 Login, D2:D10 Type, E2:E10 WorkHours, F2:F10 Birthday
             let specs = [];
             for (let r = 1; r < grid.length; r++) {
-                if (!grid[r] || grid[r].length < 6 || !grid[r][1]) continue;
+                if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
                 specs.push({
-                    group: grid[r][0] ? grid[r][0].trim() : '',
+                    group: grid[r][0] ? grid[r][0].trim() : 'Без группы',
                     name: grid[r][1].trim(),
                     login: grid[r][2] ? grid[r][2].trim() : '',
                     type: grid[r][3] ? grid[r][3].trim() : '',
@@ -346,108 +371,131 @@
             if (!state.isAudioEnabled) return;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ru-RU';
-            if (silent) {
-                utterance.volume = 0;
-            }
+            if (silent) utterance.volume = 0;
             window.speechSynthesis.speak(utterance);
         }
 
-        function parseTime(timeStr) {
-            const parts = timeStr.split(':');
-            const d = new Date();
-            d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
-            return d;
+        function checkWorkingToday(personName) {
+            // Get today's date formatted to match headers "DD.MM.YYYY" in MSK
+            const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(new Date());
+
+            const scheduleIdx = state.scheduleHeader.indexOf(mskTodayStr);
+            if (scheduleIdx === -1) return true; // Fallback if column not found
+
+            const personSched = state.scheduleData.find(p => p.name === personName);
+            if (!personSched) return false;
+
+            const shiftToday = personSched.shifts[scheduleIdx];
+            return shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых");
         }
 
         function evaluateRealtimeStatus() {
             const now = new Date();
             let stats = { active: 0, onBreak: 0, offline: 0 };
             let activeBreaksMarkup = '';
-            let tableRowsMarkup = '';
+            let activeTableMarkup = '';
+            let weekendTableMarkup = '';
 
             state.statusData.forEach(person => {
+                const isScheduledToday = checkWorkingToday(person.name);
+
+                if (!isScheduledToday) {
+                    // Populate off-duty (weekend) tab
+                    weekendTableMarkup += `
+                        <tr class="hover:bg-slate-900/10 transition">
+                            <td class="px-6 py-4 font-semibold text-slate-400">${person.name}</td>
+                            <td class="px-6 py-4 text-slate-500 text-xs">${person.login}</td>
+                            <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-slate-900 text-slate-500 border border-slate-800">Выходной</span></td>
+                        </tr>
+                    `;
+                    return; // Skip from active calculations
+                }
+
                 let status = 'Офлайн';
                 let currentBreakRange = null;
-
-                // Parse shift times (format "09:00 – 21:00")
                 let worksToday = false;
                 let startWork = null, endWork = null;
-                if (person.hours && person.hours.includes('–')) {
+
+                if (person.hours && (person.hours.includes('–') || person.hours.includes('-'))) {
                     worksToday = true;
-                    const hoursParts = person.hours.split('–');
-                    startWork = parseTime(hoursParts[0].trim());
-                    endWork = parseTime(hoursParts[1].trim());
+                    const hoursParts = person.hours.split(/[-–—]/);
+                    startWork = parseMskTimeToLocal(hoursParts[0].trim());
+                    endWork = parseMskTimeToLocal(hoursParts[1].trim());
                     
-                    // Handle night shift cross over if any
                     if (endWork < startWork) {
                         endWork.setDate(endWork.getDate() + 1);
                     }
                 }
 
+                // Check active status
                 if (worksToday && now >= startWork && now <= endWork) {
                     status = 'В строю';
                 }
 
-                // Check breaks
+                // Parse breaks
                 person.breaks.forEach(br => {
-                    const brParts = br.split('–');
-                    const brStart = parseTime(brParts[0].trim());
-                    const brEnd = parseTime(brParts[1].trim());
+                    const brParts = br.split(/[-–—]/);
+                    const brStart = parseMskTimeToLocal(brParts[0].trim());
+                    const brEnd = parseMskTimeToLocal(brParts[1].trim());
+
+                    if (!brStart || !brEnd) return;
 
                     if (now >= brStart && now <= brEnd) {
                         status = 'Перерыв';
                         currentBreakRange = { start: brStart, end: brEnd, text: br };
                     }
 
-                    // Voice announcement logic
+                    // Voice triggers
                     const startDiff = Math.abs(now - brStart);
                     const endDiff = Math.abs(now - brEnd);
-
                     const breakStartKey = `${person.name}-start-${brParts[0].trim()}`;
                     const breakEndKey = `${person.name}-end-${brParts[1].trim()}`;
 
-                    // Trigger alert within a 45 second window of actual limit
-                    if (startDiff < 45000 && !state.announcedBreaks.has(breakStartKey)) {
+                    if (startDiff < 30000 && !state.announcedBreaks.has(breakStartKey)) {
                         state.announcedBreaks.add(breakStartKey);
-                        speak(`${person.name}, время вашего перерыва по графику.`);
+                        speak(`${person.name}, время начала вашего перерыва.`);
                     }
-                    if (endDiff < 45000 && !state.announcedBreaks.has(breakEndKey)) {
+                    if (endDiff < 30000 && !state.announcedBreaks.has(breakEndKey)) {
                         state.announcedBreaks.add(breakEndKey);
-                        speak(`${person.name}, перерыв окончен. Пора возвращаться на линию.`);
+                        speak(`${person.name}, перерыв завершён. Ожидаем вас на линии.`);
                     }
                 });
 
-                // Increment Counters
                 if (status === 'В строю') stats.active++;
                 else if (status === 'Перерыв') stats.onBreak++;
                 else stats.offline++;
 
-                // Build Status table row
-                let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400">Вне смены</span>`;
+                let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
                 if (status === 'В строю') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
                 } else if (status === 'Перерыв') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
                 }
 
-                let breakListHTML = person.breaks.map(br => {
+                const localShiftHours = formatMskRangeToLocal(person.hours);
+                const breakListHTML = person.breaks.map(br => {
+                    const localBreakRange = formatMskRangeToLocal(br);
                     const isCurrent = currentBreakRange && currentBreakRange.text === br;
-                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">${br}</span>`;
+                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">${localBreakRange}</span>`;
                 }).join(' ');
 
-                tableRowsMarkup += `
+                activeTableMarkup += `
                     <tr class="hover:bg-slate-900/30 transition">
                         <td class="px-6 py-4">
                             <div class="font-semibold text-slate-200">${person.name}</div>
                             <div class="text-xs text-slate-500">${person.login}</div>
                         </td>
-                        <td class="px-6 py-4 font-mono text-slate-300 text-xs">${person.hours || '—'}</td>
+                        <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
                         <td class="px-6 py-4">${statusBadge}</td>
                         <td class="px-6 py-4"><div class="flex flex-wrap gap-1.5">${breakListHTML || '<span class="text-slate-600 text-xs">Нет перерывов</span>'}</div></td>
                     </tr>
                 `;
 
-                // Add to Active Breaks panel if active
                 if (status === 'Перерыв' && currentBreakRange) {
                     const totalDuration = currentBreakRange.end - currentBreakRange.start;
                     const elapsed = now - currentBreakRange.start;
@@ -459,7 +507,7 @@
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <h4 class="font-semibold text-slate-200 text-sm">${person.name}</h4>
-                                    <p class="text-xs text-slate-400 font-mono">${currentBreakRange.text}</p>
+                                    <p class="text-xs text-slate-400 font-mono">${formatMskRangeToLocal(currentBreakRange.text)}</p>
                                 </div>
                                 <span class="text-xs text-amber-400 font-medium">Осталось ~${remainingMins}м</span>
                             </div>
@@ -471,12 +519,12 @@
                 }
             });
 
-            // Populate Metrics
+            // Populate side panel counter
             document.getElementById('stat-active').innerText = stats.active;
             document.getElementById('stat-break').innerText = stats.onBreak;
             document.getElementById('stat-offline').innerText = stats.offline;
 
-            // Render Break List
+            // Render Break Progress Cards
             const activeListContainer = document.getElementById('active-breaks-list');
             if (activeBreaksMarkup === '') {
                 activeListContainer.innerHTML = `
@@ -490,8 +538,9 @@
                 activeListContainer.innerHTML = activeBreaksMarkup;
             }
 
-            // Render table content
-            document.getElementById('status-table-body').innerHTML = tableRowsMarkup;
+            // Fill Tables
+            document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
+            document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
         }
 
         function renderUI() {
@@ -503,25 +552,22 @@
         function renderMonthlySchedule() {
             if (state.scheduleHeader.length === 0) return;
 
-            // Render dynamic header
             let tableHeader = `<tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">`;
             tableHeader += `<th class="px-4 py-3 sticky left-0 bg-slate-900/90 min-w-[150px]">Специалист</th>`;
             
             state.scheduleHeader.forEach(day => {
-                // Formatting date string for grid columns
                 const cleanDay = day.split('.')[0] || day;
                 tableHeader += `<th class="px-3 py-3 text-center min-w-[80px] font-mono">${cleanDay}</th>`;
             });
             tableHeader += `</tr>`;
 
-            // Render body
             let tableBody = `<tbody class="divide-y divide-slate-800/50 text-xs">`;
             state.scheduleData.forEach(person => {
                 tableBody += `<tr class="hover:bg-slate-900/20 transition">`;
                 tableBody += `<td class="px-4 py-3 sticky left-0 bg-slate-900/90 font-medium text-slate-300 border-r border-slate-800/80">${person.name}</td>`;
                 
                 person.shifts.forEach(shift => {
-                    const isOff = !shift || shift.trim() === "";
+                    const isOff = !shift || shift.trim() === "" || shift.includes("Вых");
                     const displayShift = isOff ? 'Вых' : shift;
                     tableBody += `
                         <td class="px-2 py-3 text-center font-mono ${isOff ? 'text-slate-600 bg-slate-950/20' : 'text-emerald-400 bg-emerald-500/5'}">
@@ -534,7 +580,6 @@
 
             document.getElementById('schedule-table').innerHTML = tableHeader + tableBody;
 
-            // Month Label guess based on header format "01.05.2026"
             if (state.scheduleHeader[0]) {
                 const parts = state.scheduleHeader[0].split('.');
                 if (parts[1]) {
@@ -549,16 +594,28 @@
         }
 
         function renderSpecialistsAndBirthdays() {
-            // Group specialists by 'group' field
+            // Group specialists cleanly (avoiding duplications)
             const groups = {};
             state.specsData.forEach(spec => {
-                const g = spec.group || 'Без группы';
-                if (!groups[g]) groups[g] = [];
-                groups[g].push(spec);
+                const groupKey = spec.group.trim();
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                }
+                // Avoid redundant additions of the same name and login
+                if (!groups[groupKey].some(item => item.name === spec.name)) {
+                    groups[groupKey].push(spec);
+                }
             });
 
             let groupsMarkup = '';
-            Object.keys(groups).sort().forEach(gKey => {
+            // Sort keys so Group 1, 2, 3, TL appear sequentially
+            const sortedKeys = Object.keys(groups).sort((a, b) => {
+                if (a === 'TL') return 1;
+                if (b === 'TL') return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedKeys.forEach(gKey => {
                 groupsMarkup += `
                     <div class="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
                         <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Группа ${gKey}</h4>
@@ -576,11 +633,11 @@
             });
             document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
 
-            // Birthdays processing
+            // Render upcoming birthdays
             let bdayMarkup = '';
             const today = new Date();
             const currentDay = today.getDate();
-            const currentMonth = today.getMonth() + 1; // 1-indexed
+            const currentMonth = today.getMonth() + 1;
 
             state.specsData.forEach(spec => {
                 if (!spec.birthday) return;
@@ -589,7 +646,6 @@
                 const bMonth = parseInt(bparts[1], 10);
 
                 if (isNaN(bDay) || isNaN(bMonth)) return;
-
                 const isToday = (bDay === currentDay && bMonth === currentMonth);
                 
                 bdayMarkup += `
@@ -602,11 +658,10 @@
                     </div>
                 `;
             });
-            document.getElementById('birthdays-list').innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Дни рождения не указаны</div>`;
+            document.getElementById('birthdays-list').innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
             lucide.createIcons();
         }
 
-        // Tab Switch logic
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
@@ -615,8 +670,7 @@
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById(tabId).classList.add('block');
 
-            // Toggle active classes on tabs
-            const tabs = ['tab-status', 'tab-schedule', 'tab-specialists'];
+            const tabs = ['tab-status', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`btn-${t}`);
                 if (t === tabId) {
