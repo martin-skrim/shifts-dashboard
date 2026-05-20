@@ -20,6 +20,7 @@
             border: 1px solid rgba(51, 65, 85, 0.3);
             backdrop-filter: blur(8px);
         }
+        /* Box breathing pulse animation */
         @keyframes breathe {
             0% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
             25% { transform: scale(1.3); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
@@ -96,7 +97,7 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats, Active & Queue (4 Cols) -->
+        <!-- Left Panel: Stats, Active, Queue & Activity (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- Specialist Personal Profile Card -->
@@ -554,74 +555,87 @@
     </div>
 
     <script>
-        // --- 1. Global Navigation and system variables ---
-        const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
-        const GID_STATUS = '1638344831';
-        const SHEET_NAME_SPECS = 'СПЕЦИАЛИСТЫ';
-
-        const URL_STATUS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_STATUS}`;
-        const URL_SPECS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(SHEET_NAME_SPECS)}`;
-
-        let state = {
-            statusData: [],
-            scheduleHeader: [],
-            scheduleData: [],
-            specsData: [],
-            isAudioEnabled: false,
-            announcedEvents: new Set(),
-            cachedVoice: null,
-            
-            isTLMode: false,
-            tlPinHash: "7777",   
-            localOverrides: {},  
-            delayedAgents: {},   
-            bc: null,
-            pendingAction: null,
-            
-            moodVotes: {},
-            waveNode: null,
-            waveContext: null,
-            isWavePlaying: false,
-
-            callsCount: 0, 
-            callsGoal: 300,
-            activityLog: [],
-            swapOffers: [],
-
-            breathInterval: null,
-            slaLoadSignals: {}, 
-            dayPromo: "PROMO2026",
-            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий.",
-
-            currentUser: null 
-        };
-
-        // --- 2. Global System Functions (Hoisted) ---
+        // --- 1. Global Clock, Worker, and Sync Logic ---
         
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
-            });
-            const target = document.getElementById(tabId);
-            if (target) {
-                target.classList.remove('hidden');
-                target.classList.add('block');
-            }
-
-            const tabs = ['tab-status', 'tab-coordination', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                if (btn) {
-                    if (t === tabId) {
-                        btn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap bg-slate-900 text-slate-100 shadow-sm border border-slate-800/50";
-                    } else {
-                        btn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200";
+        function initBackgroundWorker() {
+            const workerCode = `
+                self.onmessage = function(e) {
+                    if (e.data === 'start') {
+                        setInterval(() => { self.postMessage('tick'); }, 1000);
                     }
-                }
-            });
-        };
+                };
+            `;
+            try {
+                const blob = new Blob([workerCode], {type: 'application/javascript'});
+                const worker = new Worker(URL.createObjectURL(blob));
+                worker.onmessage = function() {
+                    updateClock();
+                };
+                worker.postMessage('start');
+            } catch (e) {
+                console.warn("Фоновый Worker не поддерживается.");
+            }
+        }
 
+        function updateClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('live-time');
+            const dateEl = document.getElementById('live-date');
+            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (state.statusData.length > 0) {
+                evaluateRealtimeStatus();
+            }
+        }
+
+        function initBroadcastChannel() {
+            if ('BroadcastChannel' in window) {
+                state.bc = new BroadcastChannel('shiftflow_coordination_channel');
+                state.bc.onmessage = (e) => {
+                    if (!e.data) return;
+                    if (e.data.type === 'sync') {
+                        state.localOverrides = e.data.localOverrides;
+                        state.delayedAgents = e.data.delayedAgents;
+                        evaluateRealtimeStatus();
+                    } else if (e.data.type === 'mood') {
+                        state.moodVotes = e.data.moodVotes;
+                        calculateMoodUI();
+                    } else if (e.data.type === 'gift') {
+                        handleIncomingGift(e.data);
+                    } else if (e.data.type === 'calls') {
+                        state.callsCount = e.data.count;
+                        updateCallsCounterUI();
+                    } else if (e.data.type === 'swap_offers_sync') {
+                        state.swapOffers = e.data.offers;
+                        renderSwapOffersList();
+                    } else if (e.data.type === 'forced_break_array_mutation') {
+                        state.statusData = e.data.statusData;
+                        evaluateRealtimeStatus();
+                    } else if (e.data.type === 'cheat_sync') {
+                        state.dayPromo = e.data.promo;
+                        state.dayAnnounce = e.data.announce;
+                        updateCheatSheetUI();
+                    } else if (e.data.type === 'sla_sync') {
+                        state.slaLoadSignals = e.data.signals;
+                        evaluateSlaStorm();
+                    }
+                };
+            }
+        }
+
+        function broadcastSync() {
+            if (state.bc) {
+                state.bc.postMessage({
+                    type: 'sync',
+                    localOverrides: state.localOverrides,
+                    delayedAgents: state.delayedAgents
+                });
+            }
+        }
+
+        // --- 2. Voice Selection and Audio Engine ---
+        
         function selectBestRussianVoice() {
             if (typeof speechSynthesis === 'undefined') return;
             const voices = speechSynthesis.getVoices();
@@ -673,194 +687,54 @@
             }
         }
 
-        function parseMskTimeToLocal(timeStr) {
-            if (!timeStr) return null;
-            const cleanTime = timeStr.trim();
-            const parts = cleanTime.split(':');
-            if (parts.length < 2) return null;
-            
-            const now = new Date();
-            const mskFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
-            const formattingParts = mskFormatter.formatToParts(now);
-            
-            let month = '01', day = '01', year = '1970';
-            for (let part of formattingParts) {
-                if (part.type === 'month') month = part.value;
-                if (part.type === 'day') day = part.value;
-                if (part.type === 'year') year = part.value;
+        // --- 3. Sheet Data Fetching and Parser ---
+        
+        async function fetchData() {
+            const syncElement = document.getElementById('sync-status');
+            const offlineBanner = document.getElementById('offline-banner');
+
+            if (syncElement) {
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
             }
-
-            const isoStr = `${year}-${month}-${day}T${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00+03:00`;
-            return new Date(isoStr);
-        }
-
-        function formatMskRangeToLocal(rangeStr) {
-            if (!rangeStr || (!rangeStr.includes('–') && !rangeStr.includes('-'))) return '—';
-            const parts = rangeStr.split(/[-–—]/);
-            const startLocal = parseMskTimeToLocal(parts[0].trim());
-            const endLocal = parseMskTimeToLocal(parts[1].trim());
-            if (!startLocal || !endLocal) return rangeStr;
             
-            const formatTime = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-            return `${formatTime(startLocal)} – ${formatTime(endLocal)}`;
-        }
+            try {
+                const [statusRes, specsRes] = await Promise.all([
+                    fetch(URL_STATUS).then(r => r.text()),
+                    fetch(URL_SPECS).then(r => r.text())
+                ]);
 
-        function normalizeDateStr(str) {
-            if (!str) return '';
-            const clean = str.trim().replace(/\//g, '.');
-            const parts = clean.split('.');
-            if (parts.length < 3) return clean;
-            
-            const d = parseInt(parts[0], 10);
-            const m = parseInt(parts[1], 10);
-            const y = parseInt(parts[2], 10);
-            
-            if (isNaN(d) || isNaN(m) || isNaN(y)) return clean;
-            return `${d}.${m}.${y}`; 
-        }
+                localStorage.setItem('shiftflow_cache_status', statusRes);
+                localStorage.setItem('shiftflow_cache_specs', specsRes);
 
-        function getTodayShiftHours(personName, fallbackHours) {
-            if (state.scheduleHeader.length === 0) return fallbackHours;
-            
-            const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
-                timeZone: 'Europe/Moscow',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            }).format(new Date());
+                processStatusSheet(parseCSV(statusRes));
+                processSpecsSheet(parseCSV(specsRes));
 
-            const normalizedToday = normalizeDateStr(mskTodayStr);
-            const scheduleIdx = state.scheduleHeader.findIndex(h => normalizeDateStr(h) === normalizedToday);
-            
-            if (scheduleIdx === -1) return fallbackHours;
+                if (offlineBanner) offlineBanner.classList.add('hidden');
+                if (syncElement) {
+                    syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
+                }
+                renderUI();
+            } catch (err) {
+                console.error("Ошибка сети. Загрузка кэша.", err);
+                
+                const cachedStatus = localStorage.getItem('shiftflow_cache_status');
+                const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
 
-            const personSched = state.scheduleData.find(p => p.name === personName);
-            if (!personSched) return fallbackHours;
-
-            const shiftToday = personSched.shifts[scheduleIdx];
-            if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
-                return shiftToday.trim();
-            }
-            return null;
-        }
-
-        function parseCSV(text) {
-            let lines = [];
-            let row = [""];
-            let inQuotes = false;
-            for (let i = 0; i < text.length; i++) {
-                let c = text[i];
-                let next = text[i+1];
-                if (c === '"') {
-                    if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; }
-                    else { inQuotes = !inQuotes; }
-                } else if (c === ',' && !inQuotes) {
-                    row.push('');
-                } else if ((c === '\r' || c === '\n') && !inQuotes) {
-                    if (c === '\r' && next === '\n') { i++; }
-                    lines.push(row);
-                    row = [""];
+                if (cachedStatus && cachedSpecs) {
+                    processStatusSheet(parseCSV(cachedStatus));
+                    processSpecsSheet(parseCSV(cachedSpecs));
+                    if (offlineBanner) offlineBanner.classList.remove('hidden');
+                    renderUI();
                 } else {
-                    row[row.length - 1] += c;
-                }
-            }
-            if (row.length > 1 || row[0] !== "") {
-                lines.push(row);
-            }
-            return lines;
-        }
-
-        function processStatusSheet(grid) {
-            if (!grid || grid.length < 4) return;
-            let parsedStatus = [];
-            for (let r = 3; r <= 10; r++) {
-                if (!grid[r] || grid[r].length < 6 || !grid[r][5]) continue; 
-                let name = grid[r][5].trim();
-                let login = grid[r][6] ? grid[r][6].trim() : '';
-                let hours = grid[r][8] ? grid[r][8].trim() : '';
-                
-                let breaks = [];
-                for (let c = 9; c <= 13; c++) {
-                    if (grid[r] && grid[r][c] && (grid[r][c].includes('–') || grid[r][c].includes('-'))) {
-                        breaks.push(grid[r][c].trim());
-                    }
-                }
-                parsedStatus.push({ name, login, hours, breaks });
-            }
-            state.statusData = parsedStatus;
-
-            if (grid[2]) {
-                state.scheduleHeader = grid[2].slice(19, 50).map(d => d.trim()).filter(Boolean);
-                let schedList = [];
-                for (let r = 3; r <= 10; r++) {
-                    if (!grid[r] || !grid[r][18]) continue;
-                    let name = grid[r][18].trim();
-                    let shifts = grid[r].slice(19, 50).map(s => s ? s.trim() : '');
-                    schedList.push({ name, shifts });
-                }
-                state.scheduleData = schedList;
-            }
-        }
-
-        function processSpecsSheet(grid) {
-            if (!grid || grid.length < 2) return;
-            let specs = [];
-            let currentGroup = 'Без группы';
-
-            for (let r = 1; r < grid.length; r++) {
-                if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
-                
-                let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
-                if (rawGroup !== '') {
-                    currentGroup = rawGroup;
-                }
-                
-                specs.push({
-                    group: currentGroup,
-                    name: grid[r][1].trim(),
-                    login: grid[r][2] ? grid[r][2].trim() : '',
-                    type: grid[r][3] ? grid[r][3].trim() : '',
-                    hours: grid[r][4] ? grid[r][4].trim() : '',
-                    birthday: grid[r][5] ? grid[r][5].trim() : ''
-                });
-            }
-            state.specsData = specs;
-        }
-
-        function getAchievements(person, todayShift) {
-            let achievements = [];
-            const today = new Date();
-            
-            if (person.birthday) {
-                const bparts = person.birthday.split('.');
-                if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
-                    achievements.push({ icon: '🎂', name: 'Именинник', desc: 'С днем рождения!' });
-                }
-            }
-            
-            if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
-                const parts = todayShift.split(/[-–—]/);
-                const startLocal = parseMskTimeToLocal(parts[0].trim());
-                const endLocal = parseMskTimeToLocal(parts[1].trim());
-                if (startLocal && endLocal) {
-                    if (startLocal.getHours() < 9) {
-                        achievements.push({ icon: '🌅', name: 'Ранняя пташка', desc: 'Смена началась раньше 9:00' });
-                    }
-                    
-                    const durationMins = Math.round((endLocal - startLocal) / 60000);
-                    if (durationMins >= 720) {
-                        achievements.push({ icon: '🔋', name: 'Энерджайзер', desc: 'Рабочая смена 12 часов и более' });
+                    if (syncElement) {
+                        syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка сети`;
                     }
                 }
             }
-
-            if (person.breaks && person.breaks.length >= 4) {
-                achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
-            }
-
-            return achievements;
         }
 
+        // --- 4. Shift and Breaks Engine ---
+        
         function evaluateRealtimeStatus() {
             const now = new Date();
             let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
@@ -1145,7 +1019,7 @@
                     }
 
                     const isCurrent = currentBreakRange && currentBreakRange.text === br;
-                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'} ${hasDelay ? 'border border-cyan-500/10' : ''}">${displayRange}</span>`;
+                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-300'} ${hasDelay ? 'border border-cyan-500/10' : ''}">${displayRange}</span>`;
                 }).join(' ');
 
                 activeTableMarkup += `
@@ -1255,45 +1129,29 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
-            // Run Predictive Understaffing Alert System
             runPredictiveUnderstaffingScanner(hourlyCoverage);
-
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
-        function drawHeatmapAndOptions(stats, hourlyCoverage) {
-            const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
-            const kpiCov = document.getElementById('kpi-coverage');
-            if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
+        // --- 5. UI Elements Populators and Redrawers ---
+        
+        function populateAgentDropdowns() {
+            const plannerAgentSelect = document.getElementById('planner-agent-select');
+            if (!plannerAgentSelect || state.statusData.length === 0) return;
 
-            const maxCoverage = Math.max(...hourlyCoverage);
-            const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
-            const kpiPeak = document.getElementById('kpi-peak-hour');
-            if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
+            const currentPlannerVal = plannerAgentSelect.value;
 
-            let heatgridHTML = '';
-            for (let h = 0; h < 24; h++) {
-                const count = hourlyCoverage[h];
-                let colorClass = 'bg-slate-900 border-slate-800'; 
-                if (count > 0) {
-                    if (count <= 1) colorClass = 'bg-emerald-900/50 border-emerald-800/20 text-emerald-400';
-                    else if (count <= 3) colorClass = 'bg-emerald-700/60 border-emerald-600/30 text-emerald-100';
-                    else colorClass = 'bg-emerald-500 border-emerald-400 text-slate-950';
-                }
+            plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+            state.statusData.forEach(p => {
+                plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
 
-                heatgridHTML += `
-                    <div class="flex-1 aspect-square rounded-md border flex items-center justify-center font-mono text-[10px] font-bold group relative cursor-help transition-all duration-150 ${colorClass}">
-                        ${count > 0 ? count : ''}
-                        <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
-                            <span class="bg-slate-950 border border-slate-800 text-[9px] text-slate-300 font-sans px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
-                                Час: ${String(h).padStart(2, '0')}:00 • Операторов: ${count}
-                            </span>
-                        </div>
-                    </div>
-                `;
+            if (currentPlannerVal) {
+                plannerAgentSelect.value = currentPlannerVal;
+                populatePlannerBreaks();
+            } else {
+                populatePlannerBreaks();
             }
-            const heatmapRow = document.getElementById('coverage-heatmap-row');
-            if (heatmapRow) heatmapRow.innerHTML = heatgridHTML;
         }
 
         function renderUI() {
@@ -1455,7 +1313,8 @@
             lucide.createIcons();
         }
 
-        // --- Simple Specialist Session Login ---
+        // --- 6. Active Operator Session and Logins ---
+        
         window.openAgentLoginModal = function() {
             const modal = document.getElementById('agent-login-modal');
             const input = document.getElementById('agent-login-input');
@@ -1503,7 +1362,8 @@
             }
         };
 
-        // --- SLA Overload Signal System ---
+        // --- 7. Coordination, Swaps, SLA and Tools ---
+        
         window.setSlaStatus = function(status) {
             if (!state.currentUser) {
                 alert("Ошибка: Для отправки сигналов нагрузки вы должны авторизоваться в профиле слева!");
@@ -1518,7 +1378,33 @@
             evaluateSlaStorm();
         };
 
-        // --- Cheat Sheet Editor ---
+        function evaluateSlaStorm() {
+            let highCount = 0;
+            Object.keys(state.slaLoadSignals).forEach(name => {
+                if (state.slaLoadSignals[name] === 'HIGH') {
+                    highCount++;
+                }
+            });
+
+            const indicator = document.getElementById('sla-storm-indicator');
+            if (indicator) {
+                if (highCount >= 2) {
+                    indicator.classList.remove('hidden');
+                    if (!state.announcedEvents.has('sla-storm-sound')) {
+                        state.announcedEvents.add('sla-storm-sound');
+                        triggerNotification(
+                            "SLA Шторм на линии!",
+                            "Внимание, на линии завал звонков. Всем свободным операторам подключиться на поддержку.",
+                            "Внимание команда, на линии завал! Пожалуйста помогите коллегам!"
+                        );
+                    }
+                } else {
+                    indicator.classList.add('hidden');
+                    state.announcedEvents.delete('sla-storm-sound');
+                }
+            }
+        }
+
         window.openHelperEditor = function() {
             const modal = document.getElementById('tl-helper-editor-modal');
             const promoIn = document.getElementById('editor-promo-input');
@@ -1553,11 +1439,17 @@
                 }
                 updateCheatSheetUI();
                 closeHelperEditor();
-                addActivityEvent(`📝 Шпаргалка дня обновлена супервайзером.`, 'user-cog');
+                addActivityEvent("📝 Шпаргалка дня обновлена супервайзером.", "user-cog");
             }
         };
 
-        // --- Simple Agent Authorization Modal handlers ---
+        function updateCheatSheetUI() {
+            const pr = document.getElementById('cheat-promo-text');
+            const sc = document.getElementById('cheat-script-text');
+            if (pr) pr.innerText = state.dayPromo;
+            if (sc) sc.innerText = state.dayAnnounce;
+        }
+
         window.requestAgentDelay = function() {
             if (!state.currentUser) {
                 alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
@@ -1574,7 +1466,24 @@
             executeCancel(state.currentUser.name);
         };
 
-        // --- Box Breathing Anti-Stress guide ---
+        function executeDelay(agentName) {
+            state.delayedAgents[agentName] = {
+                delayMins: 15,
+                timestamp: Date.now()
+            };
+            broadcastSync();
+            evaluateRealtimeStatus();
+            speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. Смена перерывов скорректирована.`);
+            addActivityEvent(`📞 ${agentName.split(' ')[0]} задержался на звонке. График смещен на 15м.`, 'coffee');
+        }
+
+        function executeCancel(agentName) {
+            delete state.delayedAgents[agentName];
+            broadcastSync();
+            evaluateRealtimeStatus();
+            addActivityEvent(`🔄 ${agentName.split(' ')[0]} вернулся к исходному графику перерывов.`, 'info');
+        }
+
         window.startBoxBreathing = function() {
             const btnStart = document.getElementById('breath-start-btn');
             const btnStop = document.getElementById('breath-stop-btn');
@@ -1631,7 +1540,6 @@
             }
         };
 
-        // --- Game mechanics ---
         window.incrementCallCount = function() {
             state.callsCount++;
             localStorage.setItem('shiftflow_calls_today', state.callsCount);
@@ -1670,6 +1578,36 @@
             addActivityEvent(`🚀 Кто-то обновил статус своего настроения!`, 'smile');
         };
 
+        window.populateStaticSwapSelects = function() {
+            const selectTarget = document.getElementById('swap-target-break-select');
+            if (!selectTarget) return;
+
+            const slots = [
+                "09:45 – 10:00", "12:00 – 12:30", "15:15 – 15:30", "17:00 – 17:15", "19:00 – 19:30",
+                "10:45 – 11:00", "13:00 – 13:30", "16:15 – 16:30", "18:00 – 18:15", "20:00 – 20:30"
+            ];
+            selectTarget.innerHTML = '';
+            slots.forEach(slot => {
+                selectTarget.innerHTML += `<option value="${slot}">${slot}</option>`;
+            });
+        }
+
+        window.populateSwapAgentBreaks = function() {
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            if (!selectMyBreak || !state.currentUser) return;
+
+            const person = state.statusData.find(p => p.name === state.currentUser.name);
+            selectMyBreak.innerHTML = '';
+
+            if (person && person.breaks.length > 0) {
+                person.breaks.forEach((br, idx) => {
+                    selectMyBreak.innerHTML += `<option value="${idx}">${br}</option>`;
+                });
+            } else {
+                selectMyBreak.innerHTML = `<option value="">Перерывов нет</option>`;
+            }
+        };
+
         window.postSwapOffer = function() {
             const selectMyBreak = document.getElementById('swap-my-break-select');
             const selectTarget = document.getElementById('swap-target-break-select');
@@ -1706,7 +1644,61 @@
             addActivityEvent(`🔁 ${offer.sender.split(' ')[0]} выставил на обмен перерыв ${offer.senderBreakText}`, 'swap');
         };
 
-        // --- TL admin endpoints ---
+        window.acceptSwapOffer = function(offerId) {
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле в сайдбаре слева!");
+                return;
+            }
+            const acceptorName = state.currentUser.name;
+            const offer = state.swapOffers.find(o => o.id === offerId);
+            if (!offer) return;
+
+            if (offer.sender === acceptorName) {
+                alert("Вы не можете принять свое собственное предложение!");
+                return;
+            }
+
+            const acceptorPerson = state.statusData.find(p => p.name === acceptorName);
+            if (!acceptorPerson) return;
+
+            const hasTargetBreak = acceptorPerson.breaks.includes(offer.targetBreakText);
+            const targetBreakIdxInAcceptor = acceptorPerson.breaks.indexOf(offer.targetBreakText);
+
+            if (!hasTargetBreak) {
+                alert(`У вас нет перерыва ${offer.targetBreakText} для проведения обмена!`);
+                return;
+            }
+
+            const senderPerson = state.statusData.find(p => p.name === offer.sender);
+            if (!senderPerson) return;
+
+            senderPerson.breaks[offer.senderBreakIdx] = offer.targetBreakText;
+            acceptorPerson.breaks[targetBreakIdxInAcceptor] = offer.senderBreakText;
+
+            state.swapOffers = state.swapOffers.filter(o => o.id !== offerId);
+
+            if (state.bc) {
+                state.bc.postMessage({ 
+                    type: 'swap_offers_sync', 
+                    offers: state.swapOffers 
+                });
+                state.bc.postMessage({
+                    type: 'forced_break_array_mutation',
+                    statusData: state.statusData
+                });
+            }
+
+            renderSwapOffersList();
+            evaluateRealtimeStatus();
+
+            triggerNotification(
+                "Обмен перерывами совершен!",
+                `Успешный обмен между ${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]}.`,
+                `${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]} поменялись перерывами.`
+            );
+            addActivityEvent(`🤝 Обмен совершен: ${offer.sender.split(' ')[0]} (${offer.senderBreakText}) ⇄ ${acceptorName.split(' ')[0]} (${offer.targetBreakText})`, 'swap');
+        };
+
         window.tlForceStatus = function(agentName, forcedStatus) {
             if (!state.isTLMode) return;
             if (forcedStatus === 'CLEAR') {
@@ -1722,6 +1714,96 @@
             broadcastSync();
             evaluateRealtimeStatus();
         };
+
+        // --- 8. Core Initialization event listener ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            initBackgroundWorker();
+            setInterval(updateClock, 1000); 
+
+            initBroadcastChannel();
+            checkPregrantedPermissions();
+
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = selectBestRussianVoice;
+            } else {
+                selectBestRussianVoice();
+            }
+
+            const audioBtn = document.getElementById('audio-toggle');
+            if (audioBtn) {
+                audioBtn.addEventListener('click', async () => {
+                    await requestNotifications();
+                    toggleAudioState();
+                });
+            }
+
+            document.body.addEventListener('click', () => {
+                if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
+                    if (!state.isAudioEnabled) {
+                        toggleAudioState(true);
+                    }
+                }
+            }, { once: true });
+
+            const testBtn = document.getElementById('test-alert-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', () => {
+                    if (!state.isAudioEnabled) {
+                        alert("Пожалуйста, сначала включите оповещения кнопкой в шапке.");
+                        return;
+                    }
+                    triggerNotification(
+                        "Система оповещений ShiftFlow",
+                        "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
+                        "Проверка звука завершена успешно"
+                    );
+                });
+            }
+
+            const tlToggleBtn = document.getElementById('tl-mode-toggle');
+            if (tlToggleBtn) {
+                tlToggleBtn.addEventListener('click', () => {
+                    if (state.isTLMode) {
+                        logoutTL();
+                    } else {
+                        openTLAuthModal();
+                    }
+                });
+            }
+
+            document.getElementById('tl-pin-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitTLAuth();
+            });
+            document.getElementById('agent-login-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitAgentLogin();
+            });
+
+            const savedCalls = localStorage.getItem('shiftflow_calls_today');
+            if (savedCalls) {
+                state.callsCount = parseInt(savedCalls, 10);
+            }
+            updateCallsCounterUI();
+
+            const savedMood = sessionStorage.getItem('shiftflow_my_mood');
+            if (savedMood) {
+                const voteSec = document.getElementById('mood-vote-section');
+                if (voteSec) voteSec.classList.add('hidden');
+            }
+
+            populateStaticSwapSelects();
+
+            // Restore specialist login session on boot
+            const savedUser = localStorage.getItem('shiftflow_current_user');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+            }
+
+            fetchData();
+            setInterval(fetchData, 30000);
+        });
 
     </script>
 </body>
