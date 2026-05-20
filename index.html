@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShiftFlow — Панель управления сменами</title>
+    <title>ShiftFlow — Мониторинг голосовой поддержки</title>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,11 +12,11 @@
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-        .glass-panel { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.3); backdrop-filter: blur(8px); }
+        .glass-panel { background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(51, 65, 85, 0.25); backdrop-filter: blur(8px); }
         @keyframes breathe {
-            0%, 100% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
-            25%, 50% { transform: scale(1.3); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
-            75% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
+            0%, 100% { transform: scale(1); background-color: rgba(16, 185, 129, 0.1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.05); }
+            25%, 50% { transform: scale(1.25); background-color: rgba(16, 185, 129, 0.25); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+            75% { transform: scale(1); background-color: rgba(16, 185, 129, 0.1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.05); }
         }
         .breathing-sphere { animation: breathe 16s infinite ease-in-out; }
     </style>
@@ -31,7 +31,9 @@
     <!-- Header -->
     <header class="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-40 px-6 py-3.5 flex flex-wrap justify-between items-center gap-4">
         <div class="flex items-center space-x-3">
-            <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20"><i data-lucide="shield" class="w-5.5 h-5.5"></i></div>
+            <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                <i data-lucide="shield" class="w-5.5 h-5.5"></i>
+            </div>
             <div>
                 <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">ShiftFlow</h1>
                 <p class="text-[11px] text-slate-400 flex items-center gap-1.5"><span class="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Мониторинг смен</p>
@@ -60,7 +62,7 @@
                 <div id="profile-logged-out" class="text-center py-3">
                     <i data-lucide="user-x" class="w-7 h-7 text-slate-500 mx-auto mb-2"></i>
                     <h3 class="text-xs font-semibold text-slate-300 mb-2.5">Рабочее место не авторизовано</h3>
-                    <button onclick="openAgentLoginModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white transition px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 mx-auto"><i data-lucide="key" class="w-3.5 h-3.5"></i>Войти</button>
+                    <button onclick="openAgentLoginModal()" class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white transition px-4 py-2 rounded-xl text-xs font-semibold"><i data-lucide="key" class="w-3.5 h-3.5"></i>Войти</button>
                 </div>
                 <div id="profile-logged-in" class="hidden flex flex-col">
                     <div class="flex justify-between items-center mb-3">
@@ -272,10 +274,10 @@
     <div id="tl-auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
         <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
             <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5"><i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i> Авторизация Team Lead</h3>
-            <p class="text-xs text-slate-400 mb-4">Введите пин-код (Default: 7777).</p>
+            <p class="text-xs text-slate-400 mb-4">Введите пин-код супервайзера (Default: 7777).</p>
             <input type="password" id="tl-pin-input" placeholder="Введите пин-код" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300 mb-4 text-center tracking-widest font-bold focus:outline-none focus:border-slate-700">
             <div class="flex gap-2">
-                <button onclick="closeTLAuthModal()" class="flex-1 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs">Отмена</button>
+                <button onclick="closeTLAuthModal()" class="flex-1 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs font-medium">Отмена</button>
                 <button onclick="submitTLAuth()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-semibold">Войти</button>
             </div>
         </div>
@@ -313,16 +315,9 @@
         </div>
     </div>
 
-    <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <p>© ShiftFlow • Панель мониторинга смен голосовой поддержки</p>
-            <p id="sync-status" class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-600 inline-block"></span> Ожидание...</p>
-        </div>
-    </footer>
-
-    <!-- JS Logic Block -->
+    <!-- Core Script Block (Clean, Completely Deduplicated, Strictly Monolithic) -->
     <script>
-        // --- 1. Global Configurations ---
+        // --- 1. Configurations & Global State ---
         const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
         const GID_STATUS = '1638344831';
         const SHEET_NAME_SPECS = 'СПЕЦИАЛИСТЫ';
@@ -364,7 +359,7 @@
             currentUser: null 
         };
 
-        // --- 2. System Core Helpers, Sounds & Synthesizers (Hoisted & deduplicated) ---
+        // --- 2. System Core Helpers, Clocks & Sounds ---
 
         function initBackgroundWorker() {
             const workerCode = `
@@ -382,7 +377,7 @@
                 };
                 worker.postMessage('start');
             } catch (e) {
-                console.warn("Фоновый Worker заблокирован.");
+                console.warn("Фоновый поток заблокирован.");
             }
         }
 
@@ -1193,7 +1188,7 @@
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
-        // --- 6. Specialized UI Layout Generators ---
+        // --- 7. Specialized UI Layout Generators ---
 
         function populateAgentDropdowns() {
             const plannerAgentSelect = document.getElementById('planner-agent-select');
