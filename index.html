@@ -62,7 +62,7 @@
 
             <!-- Controls and Clock -->
             <div class="flex flex-wrap items-center gap-3">
-                <!-- SLA Storm Indicator Banner in Header (NEW) -->
+                <!-- SLA Storm Indicator Banner in Header -->
                 <div id="sla-storm-indicator" class="hidden flex items-center gap-1 bg-rose-500/10 border border-rose-500/20 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-semibold animate-pulse">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-rose-400"></i>
                     <span>SLA Шторм: Нагрузка!</span>
@@ -100,6 +100,36 @@
         <!-- Left Panel: Stats, Active, Queue & Activity (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
+            <!-- Specialist Personal Profile Card (NEW) -->
+            <div id="agent-profile-card" class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
+                <!-- Anonymous / Locked state -->
+                <div id="profile-logged-out" class="text-center py-4">
+                    <i data-lucide="user-x" class="w-8 h-8 text-slate-500 mx-auto mb-2"></i>
+                    <h3 class="text-xs font-semibold text-slate-300 mb-3">Рабочее место не авторизовано</h3>
+                    <button onclick="openAgentLoginModal()" class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white transition px-4 py-2 rounded-xl text-xs font-semibold">
+                        <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                        <span>Войти как специалист</span>
+                    </button>
+                </div>
+                <!-- Logged in state -->
+                <div id="profile-logged-in" class="hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i> Рабочее место
+                        </h3>
+                        <button onclick="logoutAgent()" class="text-[10px] text-rose-400 hover:text-rose-300 underline">Выйти</button>
+                    </div>
+                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900/50">
+                        <div class="text-sm font-bold text-slate-100" id="profile-user-name">Загрузка...</div>
+                        <div class="text-xs text-slate-500 font-mono" id="profile-user-login">@login</div>
+                        <div class="mt-3 pt-3 border-t border-slate-900/80 flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Смена сегодня:</span>
+                            <span class="font-mono text-slate-300" id="profile-user-hours">Выходной</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Quick Stats Card -->
             <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
                 <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
@@ -135,7 +165,7 @@
                 </button>
             </div>
 
-            <!-- Anti-Stress Breathing Trainer (NEW) -->
+            <!-- Anti-Stress Breathing Trainer -->
             <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
                 <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
                     <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-400"></i> Антистресс-тренажер дыхания
@@ -260,15 +290,16 @@
 
             <!-- Tab: Coordination / Break Planner / Swap Marketplace -->
             <div id="tab-coordination" class="tab-content hidden flex flex-col gap-6">
-                <!-- SLA Load Signaling Widget (NEW) -->
+                <!-- SLA Load Signaling Widget -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
                         <i data-lucide="activity" class="w-4 h-4 text-rose-400"></i>
                         Ситуация на линии (Сигнал нагрузки)
                     </h3>
-                    <p class="text-xs text-slate-400 mb-4">Выберите оператора и укажите текущее состояние загрузки входящих вызовов для оповещения всей команды.</p>
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <select id="sla-agent-select" class="bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300"></select>
+                    <p class="text-xs text-slate-400 mb-2">Укажите текущее состояние загрузки входящих вызовов для оповещения всей команды.</p>
+                    <p id="sla-unauthorized-warning" class="text-[10px] text-amber-400 mb-4 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Пожалуйста, авторизуйтесь в вашем профиле слева, чтобы отправлять сигналы.</p>
+                    <div id="sla-controls-row" class="hidden flex flex-wrap gap-3 items-center">
+                        <span class="text-xs text-slate-300 font-medium" id="sla-my-name-label">Вы: —</span>
                         <button onclick="setSlaStatus('LOW')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg text-xs font-semibold">Свободно</button>
                         <button onclick="setSlaStatus('HIGH')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                             <i data-lucide="zap" class="w-4 h-4"></i>
@@ -283,9 +314,10 @@
                         <i data-lucide="phone-forwarded" class="w-4 h-4 text-emerald-400"></i>
                         Самообслуживание оператора
                     </h3>
-                    <p class="text-xs text-slate-400 mb-4">Если ваш текущий звонок затянулся и вы не можете вовремя уйти на перерыв, выберите себя и нажмите кнопку задержки.</p>
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <select id="coordination-agent-select" class="bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 min-w-[200px]"></select>
+                    <p class="text-xs text-slate-400 mb-4">Если ваш текущий звонок затянулся и вы не можете вовремя уйти на перерыв, нажмите кнопку задержки.</p>
+                    <p id="delay-unauthorized-warning" class="text-[10px] text-amber-400 mb-4 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Пожалуйста, авторизуйтесь в вашем профиле слева, чтобы управлять сдвигом.</p>
+                    <div id="delay-controls-row" class="hidden flex flex-wrap gap-3 items-center">
+                        <span class="text-xs text-slate-300 font-medium" id="delay-my-name-label">Вы: —</span>
                         <button onclick="requestAgentDelay()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                             <i data-lucide="clock-alert" class="w-4 h-4"></i>
                             Задерживаюсь на звонке (на 15 минут)
@@ -296,7 +328,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Daily Cheat Sheet / Promo Codes (NEW) -->
+                <!-- Quick Daily Cheat Sheet / Promo Codes -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center justify-between">
                         <span class="flex items-center gap-1.5"><i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> Скрипты и промокоды дня</span>
@@ -322,8 +354,9 @@
                         Биржа обмена перерывами
                     </h3>
                     <p class="text-xs text-slate-400 mb-4">Хотите поменяться перерывами? Опубликуйте предложение. Другой оператор сможет принять обмен в один клик.</p>
+                    <p id="swap-unauthorized-warning" class="text-[10px] text-amber-400 mb-4 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Авторизуйтесь в вашем профиле слева для публикации заявок.</p>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-slate-950/40 p-4 rounded-xl border border-slate-900">
+                    <div id="swap-controls-row" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-slate-950/40 p-4 rounded-xl border border-slate-900">
                         <div>
                             <label class="text-[9px] text-slate-500 uppercase block mb-1">Свой текущий перерыв</label>
                             <select id="swap-my-break-select" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1.5 text-slate-300"></select>
@@ -483,22 +516,22 @@
         </div>
     </div>
 
-    <!-- Agent Verification Modal -->
-    <div id="agent-auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
+    <!-- Simple Agent Authorization Modal (NEW) -->
+    <div id="agent-login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
         <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
             <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
-                <i data-lucide="key" class="w-4 h-4 text-amber-400"></i> Подтверждение личности
+                <i data-lucide="key" class="w-4 h-4 text-emerald-400"></i> Авторизация специалиста
             </h3>
-            <p id="agent-auth-prompt" class="text-xs text-slate-400 mb-4 flex items-center gap-1">Введите ваш рабочий логин Telegram для верификации действия.</p>
+            <p class="text-xs text-slate-400 mb-4">Введите ваш рабочий логин Telegram (начиная с @) для авторизации сессии на этом компьютере.</p>
             <input type="text" id="agent-login-input" placeholder="@login_1" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 mb-4 text-center font-mono">
             <div class="flex gap-2">
-                <button onclick="closeAgentAuthModal()" class="flex-1 bg-slate-900 hover:bg-slate-850 text-slate-400 py-2 rounded-lg text-xs font-medium">Отмена</button>
-                <button onclick="submitAgentAuth()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2 rounded-lg text-xs font-semibold">Подтвердить</button>
+                <button onclick="closeAgentLoginModal()" class="flex-1 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs">Отмена</button>
+                <button onclick="submitAgentLogin()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-semibold">Войти</button>
             </div>
         </div>
     </div>
 
-    <!-- TL Cheat Sheet Editor Modal (NEW) -->
+    <!-- TL Cheat Sheet Editor Modal -->
     <div id="tl-helper-editor-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
         <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
             <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
@@ -522,7 +555,7 @@
     </div>
 
     <script>
-        // --- Global Navigation and System State ---
+        // --- 1. Global Navigation and System State ---
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
@@ -551,7 +584,6 @@
         const GID_STATUS = '1638344831';
         
         const URL_STATUS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_STATUS}`;
-        // Direct, bulletproof sheet export for the specialists tab
         const URL_SPECS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=СПЕЦИАЛИСТЫ`;
 
         let state = {
@@ -568,7 +600,6 @@
             localOverrides: {},  
             delayedAgents: {},   
             bc: null,
-            pendingAction: null,
             
             moodVotes: {},
             waveNode: null,
@@ -580,11 +611,13 @@
             activityLog: [],
             swapOffers: [],
 
-            // New features state
             breathInterval: null,
-            slaLoadSignals: {}, // Format: { "Agent Name": "LOW"|"HIGH" }
+            slaLoadSignals: {}, 
             dayPromo: "PROMO2026",
-            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий."
+            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий.",
+
+            // Simple Authorization state (NEW)
+            currentUser: null // Format: { name: "Имя Фамилия", login: "@login" }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -648,7 +681,7 @@
                 if (e.key === 'Enter') submitTLAuth();
             });
             document.getElementById('agent-login-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') submitAgentAuth();
+                if (e.key === 'Enter') submitAgentLogin();
             });
 
             const savedCalls = localStorage.getItem('shiftflow_calls_today');
@@ -665,11 +698,65 @@
 
             populateStaticSwapSelects();
 
+            // Load persistent Specialist Session if exists
+            const savedUser = localStorage.getItem('shiftflow_current_user');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+            }
+
             fetchData();
             setInterval(fetchData, 30000);
         });
 
-        // --- Box Breathing Anti-Stress guide (NEW) ---
+        // --- Simple Specialist Session Login (NEW) ---
+        window.openAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            const input = document.getElementById('agent-login-input');
+            if (modal && input) {
+                input.value = '';
+                modal.classList.remove('hidden');
+                input.focus();
+            }
+        };
+
+        window.closeAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.submitAgentLogin = function() {
+            const input = document.getElementById('agent-login-input');
+            if (!input) return;
+
+            const typedLogin = input.value.trim().toLowerCase();
+            const person = state.statusData.find(p => p.login.toLowerCase() === typedLogin);
+
+            if (person) {
+                state.currentUser = {
+                    name: person.name,
+                    login: person.login
+                };
+                localStorage.setItem('shiftflow_current_user', JSON.stringify(state.currentUser));
+                closeAgentLoginModal();
+                evaluateRealtimeStatus();
+                speak(`Добро пожаловать в систему, ${person.name.split(' ')[0]}! Смена активирована.`);
+                addActivityEvent(`🔑 ${person.name.split(' ')[0]} авторизовался в системе.`, 'info');
+            } else {
+                alert("Ошибка авторизации: специалист с таким логином Telegram не найден на сегодняшней смене!");
+                input.value = '';
+            }
+        };
+
+        window.logoutAgent = function() {
+            if (state.currentUser) {
+                addActivityEvent(`🚪 ${state.currentUser.name.split(' ')[0]} вышел из системы.`, 'info');
+                state.currentUser = null;
+                localStorage.removeItem('shiftflow_current_user');
+                evaluateRealtimeStatus();
+            }
+        };
+
+        // --- Box Breathing Anti-Stress guide ---
         window.startBoxBreathing = function() {
             const btnStart = document.getElementById('breath-start-btn');
             const btnStop = document.getElementById('breath-stop-btn');
@@ -680,11 +767,9 @@
 
             btnStart.classList.add('hidden');
             btnStop.classList.remove('hidden');
-
             sphere.className = "w-20 h-20 rounded-full breathing-sphere flex items-center justify-center mb-4";
             
             let second = 0;
-            // Guide loop (16s cycle: 4s inhale, 4s hold, 4s exhale, 4s hold)
             function updateBreathPhase() {
                 const cycleSecond = second % 16;
                 if (cycleSecond === 0) {
@@ -728,17 +813,15 @@
             }
         };
 
-        // --- SLA Overload Signal System (NEW) ---
+        // --- SLA Overload Signal System ---
         window.setSlaStatus = function(status) {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") {
-                alert("Пожалуйста, сначала выберите ваш рабочий профиль!");
+            if (!state.currentUser) {
+                alert("Ошибка: Для отправки сигналов нагрузки вы должны авторизоваться в профиле слева!");
                 return;
             }
-            const name = select.value;
+            const name = state.currentUser.name;
             state.slaLoadSignals[name] = status;
 
-            // Broadcast state update
             if (state.bc) {
                 state.bc.postMessage({ type: 'sla_sync', signals: state.slaLoadSignals });
             }
@@ -757,7 +840,6 @@
             if (indicator) {
                 if (highCount >= 2) {
                     indicator.classList.remove('hidden');
-                    // Trigger sound alert only once when storm starts
                     if (!state.announcedEvents.has('sla-storm-sound')) {
                         state.announcedEvents.add('sla-storm-sound');
                         triggerNotification(
@@ -773,7 +855,7 @@
             }
         }
 
-        // --- Cheat Sheet Editor (NEW) ---
+        // --- Cheat Sheet Editor ---
         window.openHelperEditor = function() {
             const modal = document.getElementById('tl-helper-editor-modal');
             const promoIn = document.getElementById('editor-promo-input');
@@ -857,7 +939,7 @@
             addActivityEvent(`📞 Команда завершила звонок! Всего: ${state.callsCount}`, 'phone');
 
             if (state.callsCount === state.callsGoal) {
-                speak(`Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!`);
+                speak("Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!");
                 addActivityEvent(`🏆 Поздравляем! Команда достигла дневной цели в 300 вызовов!`, 'award');
             }
         };
@@ -888,12 +970,10 @@
         }
 
         window.populateSwapAgentBreaks = function() {
-            const selectAgent = document.getElementById('coordination-agent-select');
             const selectMyBreak = document.getElementById('swap-my-break-select');
-            if (!selectAgent || !selectMyBreak) return;
+            if (!selectMyBreak || !state.currentUser) return;
 
-            const name = selectAgent.value;
-            const person = state.statusData.find(p => p.name === name);
+            const person = state.statusData.find(p => p.name === state.currentUser.name);
             selectMyBreak.innerHTML = '';
 
             if (person && person.breaks.length > 0) {
@@ -906,18 +986,22 @@
         };
 
         window.postSwapOffer = function() {
-            const selectAgent = document.getElementById('coordination-agent-select');
             const selectMyBreak = document.getElementById('swap-my-break-select');
             const selectTarget = document.getElementById('swap-target-break-select');
 
-            if (!selectAgent || selectAgent.value === "" || !selectMyBreak || selectMyBreak.value === "") {
-                alert("Пожалуйста, сначала выберите ваш профиль и перерыв, который вы хотите отдать!");
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле слева!");
+                return;
+            }
+
+            if (!selectMyBreak || selectMyBreak.value === "") {
+                alert("Пожалуйста, выберите перерыв, который вы хотите отдать!");
                 return;
             }
 
             const offer = {
                 id: 'swap-' + Date.now(),
-                sender: selectAgent.value,
+                sender: state.currentUser.name,
                 senderBreakIdx: parseInt(selectMyBreak.value, 10),
                 senderBreakText: selectMyBreak.options[selectMyBreak.selectedIndex].text,
                 targetBreakText: selectTarget.value
@@ -938,12 +1022,11 @@
         };
 
         window.acceptSwapOffer = function(offerId) {
-            const selectAgent = document.getElementById('coordination-agent-select');
-            if (!selectAgent || selectAgent.value === "") {
-                alert("Пожалуйста, сначала выберите ваш профиль в выпадающем списке самообслуживания вверху этой вкладки!");
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле в сайдбаре слева!");
                 return;
             }
-            const acceptorName = selectAgent.value;
+            const acceptorName = state.currentUser.name;
             const offer = state.swapOffers.find(o => o.id === offerId);
             if (!offer) return;
 
@@ -1065,13 +1148,11 @@
         }
 
         window.sendPeerGift = function(receiverName, giftType) {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") {
-                alert("Пожалуйста, сначала выберите ваш собственный профиль в выпадающем списке на вкладке '🛰️ Координация', чтобы отправить подарок!");
-                switchTab('tab-coordination');
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь во вкладке профиля слева, чтобы отправить подарок!");
                 return;
             }
-            const senderName = select.value;
+            const senderName = state.currentUser.name;
             if (senderName === receiverName) {
                 alert("Вы не можете отправить подарок самому себе!");
                 return;
@@ -1357,34 +1438,19 @@
             }
         }
 
+        // --- Safe Dropdowns & UI Synchronization ---
         function populateAgentDropdowns() {
-            const agentSelect = document.getElementById('coordination-agent-select');
             const plannerAgentSelect = document.getElementById('planner-agent-select');
-            const slaAgentSelect = document.getElementById('sla-agent-select');
 
-            if (!agentSelect || !plannerAgentSelect || !slaAgentSelect || state.statusData.length === 0) return;
+            if (!plannerAgentSelect || state.statusData.length === 0) return;
 
-            const currentCoordVal = agentSelect.value;
             const currentPlannerVal = plannerAgentSelect.value;
-            const currentSlaVal = slaAgentSelect.value;
-
-            agentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
-            state.statusData.forEach(p => {
-                agentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
 
             plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
             state.statusData.forEach(p => {
                 plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
             });
 
-            slaAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
-            state.statusData.forEach(p => {
-                slaAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
-
-            if (currentCoordVal) agentSelect.value = currentCoordVal;
-            if (currentSlaVal) slaAgentSelect.value = currentSlaVal;
             if (currentPlannerVal) {
                 plannerAgentSelect.value = currentPlannerVal;
                 populatePlannerBreaks();
@@ -1426,61 +1492,19 @@
 
         // --- Agent Verification Protection Logic ---
         window.requestAgentDelay = function() {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") {
-                alert("Пожалуйста, выберите оператора!");
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
                 return;
             }
-            state.pendingAction = { type: 'DELAY', agentName: select.value };
-            openAgentAuthModal(select.value);
+            executeDelay(state.currentUser.name);
         };
 
         window.requestCancelDelay = function() {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") {
-                alert("Пожалуйста, выберите оператора!");
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
                 return;
             }
-            state.pendingAction = { type: 'CANCEL', agentName: select.value };
-            openAgentAuthModal(select.value);
-        };
-
-        function openAgentAuthModal(agentName) {
-            const modal = document.getElementById('agent-auth-modal');
-            const prompt = document.getElementById('agent-auth-prompt');
-            const input = document.getElementById('agent-login-input');
-            if (modal && prompt && input) {
-                input.value = '';
-                prompt.innerText = `Подтвердите действие: введите ваш логин Telegram от имени ${agentName.split(' ')[0]}:`;
-                modal.classList.remove('hidden');
-                input.focus();
-            }
-        }
-
-        window.closeAgentAuthModal = function() {
-            const modal = document.getElementById('agent-auth-modal');
-            if (modal) modal.classList.add('hidden');
-            state.pendingAction = null;
-        };
-
-        window.submitAgentAuth = function() {
-            const input = document.getElementById('agent-login-input');
-            if (!input || !state.pendingAction) return;
-
-            const enteredLogin = input.value.trim();
-            const person = state.statusData.find(p => p.name === state.pendingAction.agentName);
-            
-            if (person && person.login && person.login.toLowerCase() === enteredLogin.toLowerCase()) {
-                if (state.pendingAction.type === 'DELAY') {
-                    executeDelay(state.pendingAction.agentName);
-                } else if (state.pendingAction.type === 'CANCEL') {
-                    executeCancel(state.pendingAction.agentName);
-                }
-                closeAgentAuthModal();
-            } else {
-                alert("Ошибка авторизации: логин Telegram не совпадает с логином этого специалиста в таблице!");
-                input.value = '';
-            }
+            executeCancel(state.currentUser.name);
         };
 
         // --- System Core Logic ---
@@ -1665,6 +1689,33 @@
             }
         }
 
+        function initBackgroundWorker() {
+            const workerCode = `
+                let intervalId;
+                self.onmessage = function(e) {
+                    if (e.data === 'start') {
+                        intervalId = setInterval(() => {
+                            self.postMessage('tick');
+                        }, 1000);
+                    } else if (e.data === 'stop') {
+                        clearInterval(intervalId);
+                    }
+                };
+            `;
+            try {
+                const blob = new Blob([workerCode], {type: 'application/javascript'});
+                const worker = new Worker(URL.createObjectURL(blob));
+                worker.onmessage = function(e) {
+                    if (e.data === 'tick') {
+                        updateClock();
+                    }
+                };
+                worker.postMessage('start');
+            } catch (e) {
+                setInterval(updateClock, 1000);
+            }
+        }
+
         function normalizeDateStr(str) {
             if (!str) return '';
             const clean = str.trim().replace(/\//g, '.');
@@ -1840,6 +1891,66 @@
 
             let hourlyCoverage = Array(24).fill(0); 
 
+            // Sync Employee Profile UI card (NEW)
+            const pLoggedOut = document.getElementById('profile-logged-out');
+            const pLoggedIn = document.getElementById('profile-logged-in');
+            
+            if (state.currentUser) {
+                if (pLoggedOut) pLoggedOut.classList.add('hidden');
+                if (pLoggedIn) pLoggedIn.classList.remove('hidden');
+                
+                const profName = document.getElementById('profile-user-name');
+                const profLogin = document.getElementById('profile-user-login');
+                const profHours = document.getElementById('profile-user-hours');
+
+                if (profName) profName.innerText = state.currentUser.name;
+                if (profLogin) profLogin.innerText = state.currentUser.login;
+                
+                const currentShift = getTodayShiftHours(state.currentUser.name, null);
+                if (profHours) profHours.innerText = currentShift ? formatMskRangeToLocal(currentShift) : "Выходной";
+                
+                // Show/hide help notices on tab coordination dynamically based on auth state
+                const slaWarn = document.getElementById('sla-unauthorized-warning');
+                const slaRow = document.getElementById('sla-controls-row');
+                const delayWarn = document.getElementById('delay-unauthorized-warning');
+                const delayRow = document.getElementById('delay-controls-row');
+                const swapWarn = document.getElementById('swap-unauthorized-warning');
+                const swapRow = document.getElementById('swap-controls-row');
+
+                if (slaWarn) slaWarn.classList.add('hidden');
+                if (slaRow) {
+                    slaRow.classList.remove('hidden');
+                    document.getElementById('sla-my-name-label').innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
+                }
+                if (delayWarn) delayWarn.classList.add('hidden');
+                if (delayRow) {
+                    delayRow.classList.remove('hidden');
+                    document.getElementById('delay-my-name-label').innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
+                }
+                if (swapWarn) swapWarn.classList.add('hidden');
+                if (swapRow) {
+                    swapRow.classList.remove('hidden');
+                    populateSwapAgentBreaks();
+                }
+            } else {
+                if (pLoggedOut) pLoggedOut.classList.remove('hidden');
+                if (pLoggedIn) pLoggedIn.classList.add('hidden');
+
+                const slaWarn = document.getElementById('sla-unauthorized-warning');
+                const slaRow = document.getElementById('sla-controls-row');
+                const delayWarn = document.getElementById('delay-unauthorized-warning');
+                const delayRow = document.getElementById('delay-controls-row');
+                const swapWarn = document.getElementById('swap-unauthorized-warning');
+                const swapRow = document.getElementById('swap-controls-row');
+
+                if (slaWarn) slaWarn.classList.remove('hidden');
+                if (slaRow) slaRow.classList.add('hidden');
+                if (delayWarn) delayWarn.classList.remove('hidden');
+                if (delayRow) delayRow.classList.add('hidden');
+                if (swapWarn) swapWarn.classList.remove('hidden');
+                if (swapRow) swapRow.classList.add('hidden');
+            }
+
             state.statusData.forEach(person => {
                 const todayShift = getTodayShiftHours(person.name, person.hours);
                 const isScheduledToday = todayShift !== null;
@@ -1932,8 +2043,8 @@
                             start: brStart,
                             end: brEnd,
                             rangeText: br,
-                            isCurrent: now >= brStart && now <= brEnd,
-                            isDelayed: hasDelay
+                            isDelayed: hasDelay,
+                            isCurrent: now >= brStart && now <= brEnd
                         });
                     }
 
@@ -2162,9 +2273,7 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
-            // Run Predictive Understaffing Alert System
             runPredictiveUnderstaffingScanner(hourlyCoverage);
-
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
