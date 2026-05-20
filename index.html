@@ -171,7 +171,7 @@
                         </div>
                     </div>
                     <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
-                        <h3 class="text-sm font-semibold text-slate-200 mb-4">Предстоящие дни рождения</h3>
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4">Предстоящие дни рождения (по порядку)</h3>
                         <div id="birthdays-list" class="space-y-3">
                             <!-- Dynamic Content -->
                         </div>
@@ -350,10 +350,19 @@
 
         function processSpecsSheet(grid) {
             let specs = [];
+            let currentGroup = 'Без группы';
+
             for (let r = 1; r < grid.length; r++) {
                 if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
+                
+                // Fill-down merged cell logic for group column
+                let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
+                if (rawGroup !== '') {
+                    currentGroup = rawGroup;
+                }
+                
                 specs.push({
-                    group: grid[r][0] ? grid[r][0].trim() : 'Без группы',
+                    group: currentGroup,
                     name: grid[r][1].trim(),
                     login: grid[r][2] ? grid[r][2].trim() : '',
                     type: grid[r][3] ? grid[r][3].trim() : '',
@@ -372,7 +381,6 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // Returns today's shift range string from calendar. If day off, returns null.
         function getTodayShiftHours(personName, fallbackHours) {
             const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
                 timeZone: 'Europe/Moscow',
@@ -391,7 +399,7 @@
             if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
                 return shiftToday.trim();
             }
-            return null; // Day off or not scheduled
+            return null;
         }
 
         function evaluateRealtimeStatus() {
@@ -402,7 +410,6 @@
             let weekendTableMarkup = '';
 
             state.statusData.forEach(person => {
-                // Get dynamic hours for today from calendar
                 const todayShift = getTodayShiftHours(person.name, person.hours);
                 const isScheduledToday = todayShift !== null;
 
@@ -433,12 +440,10 @@
                     }
                 }
 
-                // Check if active right now
                 if (worksToday && now >= startWork && now <= endWork) {
                     status = 'В строю';
                 }
 
-                // Parse breaks
                 person.breaks.forEach(br => {
                     const brParts = br.split(/[-–—]/);
                     const brStart = parseMskTimeToLocal(brParts[0].trim());
@@ -604,6 +609,11 @@
 
             let groupsMarkup = '';
             const sortedKeys = Object.keys(groups).sort((a, b) => {
+                const aNum = parseInt(a, 10);
+                const bNum = parseInt(b, 10);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return aNum - bNum;
+                }
                 if (a === 'TL') return 1;
                 if (b === 'TL') return -1;
                 return a.localeCompare(b);
@@ -627,10 +637,11 @@
             });
             document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
 
-            let bdayMarkup = '';
+            // Chronological Birthday sorting (nearest to today first)
             const today = new Date();
-            const currentDay = today.getDate();
-            const currentMonth = today.getMonth() + 1;
+            today.setHours(0, 0, 0, 0);
+
+            const specialistsWithBdayTime = [];
 
             state.specsData.forEach(spec => {
                 if (!spec.birthday) return;
@@ -639,15 +650,38 @@
                 const bMonth = parseInt(bparts[1], 10);
 
                 if (isNaN(bDay) || isNaN(bMonth)) return;
-                const isToday = (bDay === currentDay && bMonth === currentMonth);
-                
+
+                // Calculate next occurrence of this birthday
+                let nextBday = new Date(today.getFullYear(), bMonth - 1, bDay);
+                if (nextBday < today) {
+                    nextBday.setFullYear(today.getFullYear() + 1);
+                }
+
+                const diffTime = nextBday - today;
+                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                specialistsWithBdayTime.push({
+                    spec: spec,
+                    daysUntil: daysUntil,
+                    isToday: (bDay === today.getDate() && bMonth === (today.getMonth() + 1))
+                });
+            });
+
+            // Sort ascending by remaining days
+            specialistsWithBdayTime.sort((a, b) => a.daysUntil - b.daysUntil);
+
+            let bdayMarkup = '';
+            specialistsWithBdayTime.forEach(item => {
                 bdayMarkup += `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-800/80'}">
+                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-800/80'}">
                         <div class="flex items-center space-x-2">
-                            <i data-lucide="cake" class="w-4 h-4 ${isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
-                            <span class="text-xs font-medium ${isToday ? 'text-rose-200' : 'text-slate-300'}">${spec.name}</span>
+                            <i data-lucide="cake" class="w-4 h-4 ${item.isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
+                            <span class="text-xs font-medium ${item.isToday ? 'text-rose-200 font-semibold' : 'text-slate-300'}">${item.spec.name}</span>
                         </div>
-                        <span class="text-xs font-mono font-bold ${isToday ? 'text-rose-400' : 'text-slate-500'}">${spec.birthday} ${isToday ? '(Сегодня!)' : ''}</span>
+                        <div class="text-right">
+                            <span class="text-xs font-mono font-bold ${item.isToday ? 'text-rose-400' : 'text-slate-500'}">${item.spec.birthday}</span>
+                            <span class="text-[10px] text-slate-400 block">${item.isToday ? '(Сегодня!)' : `осталось дней: ${item.daysUntil}`}</span>
+                        </div>
                     </div>
                 `;
             });
