@@ -75,7 +75,7 @@
                 </button>
 
                 <!-- Test Alerts Button -->
-                <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
+                <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900/60 hover:bg-slate-850/60 text-slate-300 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
                     <i data-lucide="bell" class="w-3.5 h-3.5 text-emerald-400"></i>
                     <span>Тест</span>
                 </button>
@@ -555,8 +555,43 @@
     </div>
 
     <script>
-        // --- 1. System Core Audio & Synthesizers (No duplicates, completely distinct) ---
-        
+        // --- 1. Global State ---
+        let state = {
+            statusData: [],
+            scheduleHeader: [],
+            scheduleData: [],
+            specsData: [],
+            isAudioEnabled: false,
+            announcedEvents: new Set(),
+            cachedVoice: null,
+            
+            isTLMode: false,
+            tlPinHash: "7777",   
+            localOverrides: {},  
+            delayedAgents: {},   
+            bc: null,
+            pendingAction: null,
+            
+            moodVotes: {},
+            waveNode: null,
+            waveContext: null,
+            isWavePlaying: false,
+
+            callsCount: 0, 
+            callsGoal: 300,
+            activityLog: [],
+            swapOffers: [],
+
+            breathInterval: null,
+            slaLoadSignals: {}, 
+            dayPromo: "PROMO2026",
+            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий.",
+
+            currentUser: null 
+        };
+
+        // --- 2. Audio, Synth & Notifications Engine (Exactly Once) ---
+
         function selectBestRussianVoice() {
             if (typeof speechSynthesis === 'undefined') return;
             const voices = speechSynthesis.getVoices();
@@ -582,7 +617,7 @@
                         icon: 'https://img.icons8.com/color/96/000000/clock.png'
                     });
                 } catch (e) {
-                    console.error("Ошибка push-уведомления:", e);
+                    console.error(e);
                 }
             }
         }
@@ -601,7 +636,7 @@
                 utterance.pitch = 1.0;
                 speechSynthesis.speak(utterance);
             } catch (err) {
-                console.error("Сбой синтеза речи:", err);
+                console.error(err);
             }
         }
 
@@ -646,7 +681,6 @@
 
             try {
                 state.waveContext = new (window.AudioContext || window.webkitAudioContext)();
-                
                 const bufferSize = 2 * state.waveContext.sampleRate;
                 const noiseBuffer = state.waveContext.createBuffer(1, bufferSize, state.waveContext.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -713,7 +747,7 @@
             }
         };
 
-        // --- 2. Parsers and MSK-Local Date/Time Translators ---
+        // --- 3. Datetime Helpers & CSV Parser ---
 
         function parseMskTimeToLocal(timeStr) {
             if (!timeStr) return null;
@@ -763,7 +797,6 @@
 
         function getTodayShiftHours(personName, fallbackHours) {
             if (state.scheduleHeader.length === 0) return fallbackHours;
-            
             const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
                 timeZone: 'Europe/Moscow',
                 day: '2-digit',
@@ -773,7 +806,6 @@
 
             const normalizedToday = normalizeDateStr(mskTodayStr);
             const scheduleIdx = state.scheduleHeader.findIndex(h => normalizeDateStr(h) === normalizedToday);
-            
             if (scheduleIdx === -1) return fallbackHours;
 
             const personSched = state.scheduleData.find(p => p.name === personName);
@@ -812,16 +844,14 @@
             return lines;
         }
 
-        // --- 3. Sheet Fetch and Process Pipeline ---
+        // --- 4. Network Fetch & Sync Pipeline ---
 
         async function fetchData() {
             const syncElement = document.getElementById('sync-status');
             const offlineBanner = document.getElementById('offline-banner');
-
             if (syncElement) {
                 syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
             }
-            
             try {
                 const [statusRes, specsRes] = await Promise.all([
                     fetch(URL_STATUS).then(r => r.text()),
@@ -841,10 +871,8 @@
                 renderUI();
             } catch (err) {
                 console.error("Ошибка сети. Загрузка кэша.", err);
-                
                 const cachedStatus = localStorage.getItem('shiftflow_cache_status');
                 const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
-
                 if (cachedStatus && cachedSpecs) {
                     processStatusSheet(parseCSV(cachedStatus));
                     processSpecsSheet(parseCSV(cachedSpecs));
@@ -897,12 +925,10 @@
 
             for (let r = 1; r < grid.length; r++) {
                 if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
-                
                 let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
                 if (rawGroup !== '') {
                     currentGroup = rawGroup;
                 }
-                
                 specs.push({
                     group: currentGroup,
                     name: grid[r][1].trim(),
@@ -915,54 +941,6 @@
             state.specsData = specs;
         }
 
-        // --- 4. Gamification, Achievements & Clock engine ---
-
-        function getAchievements(person, todayShift) {
-            let achievements = [];
-            const today = new Date();
-            
-            if (person.birthday) {
-                const bparts = person.birthday.split('.');
-                if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
-                    achievements.push({ icon: '🎂', name: 'Именинник', desc: 'С днем рождения!' });
-                }
-            }
-            
-            if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
-                const parts = todayShift.split(/[-–—]/);
-                const startLocal = parseMskTimeToLocal(parts[0].trim());
-                const endLocal = parseMskTimeToLocal(parts[1].trim());
-                if (startLocal && endLocal) {
-                    if (startLocal.getHours() < 9) {
-                        achievements.push({ icon: '🌅', name: 'Ранняя пташка', desc: 'Смена началась раньше 9:00' });
-                    }
-                    
-                    const durationMins = Math.round((endLocal - startLocal) / 60000);
-                    if (durationMins >= 720) {
-                        achievements.push({ icon: '🔋', name: 'Энерджайзер', desc: 'Рабочая смена 12 часов и более' });
-                    }
-                }
-            }
-
-            if (person.breaks && person.breaks.length >= 4) {
-                achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
-            }
-
-            return achievements;
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const timeEl = document.getElementById('live-time');
-            const dateEl = document.getElementById('live-date');
-            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
-            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            if (state.statusData.length > 0) {
-                evaluateRealtimeStatus();
-            }
-        }
-
         // --- 5. Status Evaluator and Realtime Dashboard Renderer ---
 
         function evaluateRealtimeStatus() {
@@ -973,7 +951,6 @@
             let activeTableMarkup = '';
             let weekendTableMarkup = '';
             let queueBreaks = [];
-
             let hourlyCoverage = Array(24).fill(0); 
 
             // Sync Employee Profile UI card
@@ -1063,7 +1040,6 @@
                     const hoursParts = todayShift.split(/[-–—]/);
                     startWork = parseMskTimeToLocal(hoursParts[0].trim());
                     endWork = parseMskTimeToLocal(hoursParts[1].trim());
-                    
                     if (endWork < startWork) {
                         endWork.setDate(endWork.getDate() + 1);
                     }
@@ -1363,41 +1339,6 @@
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
-        function drawHeatmapAndOptions(stats, hourlyCoverage) {
-            const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
-            const kpiCov = document.getElementById('kpi-coverage');
-            if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
-
-            const maxCoverage = Math.max(...hourlyCoverage);
-            const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
-            const kpiPeak = document.getElementById('kpi-peak-hour');
-            if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
-
-            let heatgridHTML = '';
-            for (let h = 0; h < 24; h++) {
-                const count = hourlyCoverage[h];
-                let colorClass = 'bg-slate-900 border-slate-800'; 
-                if (count > 0) {
-                    if (count <= 1) colorClass = 'bg-emerald-900/50 border-emerald-800/20 text-emerald-400';
-                    else if (count <= 3) colorClass = 'bg-emerald-700/60 border-emerald-600/30 text-emerald-100';
-                    else colorClass = 'bg-emerald-500 border-emerald-400 text-slate-950';
-                }
-
-                heatgridHTML += `
-                    <div class="flex-1 aspect-square rounded-md border flex items-center justify-center font-mono text-[10px] font-bold group relative cursor-help transition-all duration-150 ${colorClass}">
-                        ${count > 0 ? count : ''}
-                        <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
-                            <span class="bg-slate-950 border border-slate-800 text-[9px] text-slate-300 font-sans px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
-                                Час: ${String(h).padStart(2, '0')}:00 • Операторов: ${count}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }
-            const heatmapRow = document.getElementById('coverage-heatmap-row');
-            if (heatmapRow) heatmapRow.innerHTML = heatgridHTML;
-        }
-
         // --- 6. Specialized UI Layout Generators ---
 
         function populateAgentDropdowns() {
@@ -1578,7 +1519,7 @@
             lucide.createIcons();
         }
 
-        // --- 7. Interactive Features, Coordination, Swaps, SLA and Tools ---
+        // --- 7. Interactive Coordination, Swaps, SLA and Tools ---
 
         window.openAgentLoginModal = function() {
             const modal = document.getElementById('agent-login-modal');
@@ -1679,13 +1620,6 @@
             }
         };
 
-        function updateCheatSheetUI() {
-            const pr = document.getElementById('cheat-promo-text');
-            const sc = document.getElementById('cheat-script-text');
-            if (pr) pr.innerText = state.dayPromo;
-            if (sc) sc.innerText = state.dayAnnounce;
-        }
-
         window.requestAgentDelay = function() {
             if (!state.currentUser) {
                 alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
@@ -1710,7 +1644,7 @@
             broadcastSync();
             evaluateRealtimeStatus();
             speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. Смена перерывов скорректирована.`);
-            addActivityEvent(`📞 ${agentName.split(' ')[0]} задержался на звонке. График смещен на 15м.`, 'coffee');
+            addActivityEvent(`📞 ${agentName.split(' ')[0]} затянул звонок. Сдвиг перерывов на 15м.`, 'coffee');
         }
 
         function executeCancel(agentName) {
@@ -1935,36 +1869,20 @@
             addActivityEvent(`🤝 Обмен совершен: ${offer.sender.split(' ')[0]} (${offer.senderBreakText}) ⇄ ${acceptorName.split(' ')[0]} (${offer.targetBreakText})`, 'swap');
         };
 
-        // --- TL admin endpoints ---
-        
-        window.openTLAuthModal = function() {
-            const modal = document.getElementById('tl-auth-modal');
-            const pinInput = document.getElementById('tl-pin-input');
-            if (modal && pinInput) {
-                pinInput.value = '';
-                modal.classList.remove('hidden');
-                pinInput.focus();
-            }
-        };
-
-        window.closeTLAuthModal = function() {
-            const modal = document.getElementById('tl-auth-modal');
-            if (modal) modal.classList.add('hidden');
-        };
-
-        window.submitTLAuth = function() {
-            const input = document.getElementById('tl-pin-input');
-            if (input && input.value === state.tlPinHash) {
-                toggleTLMode(true);
-                closeTLAuthModal();
+        window.tlForceStatus = function(agentName, forcedStatus) {
+            if (!state.isTLMode) return;
+            if (forcedStatus === 'CLEAR') {
+                delete state.localOverrides[agentName];
+                addActivityEvent(`🛡️ TL: Сброс статуса для ${agentName.split(' ')[0]}`, 'info');
             } else {
-                alert("Неверный пин-код доступа супервайзера!");
-                if (input) input.value = '';
+                state.localOverrides[agentName] = {
+                    status: forcedStatus,
+                    timestamp: Date.now()
+                };
+                addActivityEvent(`🛡️ TL: ${agentName.split(' ')[0]} переведен в "${forcedStatus}"`, 'user-cog');
             }
-        };
-
-        window.logoutTL = function() {
-            toggleTLMode(false);
+            broadcastSync();
+            evaluateRealtimeStatus();
         };
 
         // --- 8. Core Initialization Event Handler (DOMContentLoaded) ---
