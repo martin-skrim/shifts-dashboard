@@ -27,9 +27,9 @@
                     <h1 class="text-lg font-bold tracking-tight">ShiftFlow</h1>
                     <p class="text-xs text-slate-400 flex items-center gap-1">
                         Голосовая поддержка • 
-                        <span class="text-emerald-400 font-medium flex items-center gap-0.5">
-                            <i data-lucide="globe" class="w-3 h-3 inline"></i> 
-                            Время местное (ПК)
+                        <span class="text-emerald-400 font-medium flex items-center gap-0.5" title="Полноценная фоновая работа через Web Worker">
+                            <i data-lucide="globe" class="w-3 h-3 inline animate-spin-slow"></i> 
+                            Фоновый тайминг активен
                         </span>
                     </p>
                 </div>
@@ -227,9 +227,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            updateClock();
-            setInterval(updateClock, 1000);
             
+            // Web Worker to bypass inactive background tab limits
+            initBackgroundWorker();
+
             if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
                 speechSynthesis.onvoiceschanged = selectBestRussianVoice;
             } else {
@@ -274,6 +275,35 @@
             fetchData();
             setInterval(fetchData, 30000);
         });
+
+        // Creates an inline Web Worker via Blob to tick every 1000ms uninterrupted in background
+        function initBackgroundWorker() {
+            const workerCode = `
+                let intervalId;
+                self.onmessage = function(e) {
+                    if (e.data === 'start') {
+                        intervalId = setInterval(() => {
+                            self.postMessage('tick');
+                        }, 1000);
+                    } else if (e.data === 'stop') {
+                        clearInterval(intervalId);
+                    }
+                };
+            `;
+            try {
+                const blob = new Blob([workerCode], {type: 'application/javascript'});
+                const worker = new Worker(URL.createObjectURL(blob));
+                worker.onmessage = function(e) {
+                    if (e.data === 'tick') {
+                        updateClock();
+                    }
+                };
+                worker.postMessage('start');
+            } catch (e) {
+                console.warn("Фоновый Worker не поддерживается, запуск локального таймера.");
+                setInterval(updateClock, 1000);
+            }
+        }
 
         function updateClock() {
             const now = new Date();
@@ -486,6 +516,44 @@
             return null;
         }
 
+        // Calculates gamified achievements/badges based on the shift context & birthdays
+        function getAchievements(person, todayShift) {
+            let achievements = [];
+            const today = new Date();
+            
+            // 1. Birthday Badge
+            if (person.birthday) {
+                const bparts = person.birthday.split('.');
+                if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
+                    achievements.push({ icon: '🎂', name: 'Именинник', desc: 'С днем рождения!' });
+                }
+            }
+            
+            // 2. Shift Duration & Shift Start badges
+            if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
+                const parts = todayShift.split(/[-–—]/);
+                const startLocal = parseMskTimeToLocal(parts[0].trim());
+                const endLocal = parseMskTimeToLocal(parts[1].trim());
+                if (startLocal && endLocal) {
+                    if (startLocal.getHours() < 9) {
+                        achievements.push({ icon: '🌅', name: 'Ранняя пташка', desc: 'Смена началась раньше 9:00' });
+                    }
+                    
+                    const durationMins = Math.round((endLocal - startLocal) / 60000);
+                    if (durationMins >= 720) {
+                        achievements.push({ icon: '🔋', name: 'Энерджайзер', desc: 'Рабочая смена 12 часов и более' });
+                    }
+                }
+            }
+
+            // 3. Break density badge
+            if (person.breaks && person.breaks.length >= 4) {
+                achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
+            }
+
+            return achievements;
+        }
+
         function evaluateRealtimeStatus() {
             const now = new Date();
             let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
@@ -531,12 +599,9 @@
                     status = 'В строю';
                 }
 
-                // Split full name to read only the first name
                 const firstName = person.name.split(' ')[0] || person.name;
 
-                // -------------------------------------------------------------
-                // 1. Shift Start / End notifications
-                // -------------------------------------------------------------
+                // Shift lifecycle sound & push alerts
                 if (worksToday && startWork && endWork) {
                     if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
                         const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
@@ -585,7 +650,294 @@
                         });
                     }
 
-                    // -------------------------------------------------------------
-                    // 2. Break Start / End notifications
-                    // -------------------------------------------------------------
-                    if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getM
+                    // Break lifecycle sound & push alerts
+                    if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
+                        const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}`;
+                        if (!state.announcedEvents.has(breakStartKey)) {
+                            state.announcedEvents.add(breakStartKey);
+                            triggerNotification(
+                                `Сотрудник на перерыве: ${person.name}`,
+                                `${person.name} уходит на перерыв.`,
+                                `${firstName} уходит на перерыв. Хорошего отдыха!`
+                            );
+                        }
+                    }
+
+                    if (now.getHours() === brEnd.getHours() && now.getMinutes() === brEnd.getMinutes()) {
+                        const breakEndKey = `${person.name}-break-end-${brParts[1].trim()}`;
+                        if (!state.announcedEvents.has(breakEndKey)) {
+                            state.announcedEvents.add(breakEndKey);
+                            triggerNotification(
+                                `Сотрудник на линии: ${person.name}`,
+                                `${person.name} вернулся с перерыва.`,
+                                `${firstName} возвращается на линию. Перерыв окончен.`
+                            );
+                        }
+                    }
+                });
+
+                if (status === 'В строю') stats.active++;
+                else if (status === 'Перерыв') stats.onBreak++;
+                else stats.offline++;
+
+                let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
+                if (status === 'В строю') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
+                } else if (status === 'Перерыв') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
+                }
+
+                // Compile Achievements / Badges HTML
+                const achievements = getAchievements(person, todayShift);
+                const achievementsHTML = achievements.map(ach => `
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-900 text-slate-300 border border-slate-800 cursor-help" title="${ach.desc}">
+                        <span>${ach.icon}</span>
+                        <span class="ml-1 hidden sm:inline">${ach.name}</span>
+                    </span>
+                `).join(' ');
+
+                const localShiftHours = formatMskRangeToLocal(todayShift);
+                const breakListHTML = person.breaks.map(br => {
+                    const localBreakRange = formatMskRangeToLocal(br);
+                    const isCurrent = currentBreakRange && currentBreakRange.text === br;
+                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">${localBreakRange}</span>`;
+                }).join(' ');
+
+                activeTableMarkup += `
+                    <tr class="hover:bg-slate-900/30 transition">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-200">${person.name}</div>
+                            <div class="text-xs text-slate-500 mb-1.5">${person.login}</div>
+                            <!-- Gamification Badges -->
+                            <div class="flex flex-wrap gap-1">${achievementsHTML || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4"><div class="flex flex-wrap gap-1.5">${breakListHTML || '<span class="text-slate-600 text-xs">Нет перерывов</span>'}</div></td>
+                    </tr>
+                `;
+
+                if (status === 'Перерыв' && currentBreakRange) {
+                    const totalDuration = currentBreakRange.end - currentBreakRange.start;
+                    const elapsed = now - currentBreakRange.start;
+                    const percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                    const remainingMins = Math.ceil((currentBreakRange.end - now) / 60000);
+
+                    activeBreaksMarkup += `
+                        <div class="bg-slate-950/80 p-4 rounded-lg border border-slate-800">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-slate-200 text-sm">${person.name}</h4>
+                                    <p class="text-xs text-slate-400 font-mono">${formatMskRangeToLocal(currentBreakRange.text)}</p>
+                                </div>
+                                <span class="text-xs text-amber-400 font-medium">Осталось ~${remainingMins}м</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('stat-active').innerText = stats.active;
+            document.getElementById('stat-break').innerText = stats.onBreak;
+            document.getElementById('stat-offline').innerText = stats.offline;
+
+            const activeBreaksBox = document.getElementById('active-breaks-box');
+            if (activeBreaksMarkup === '') {
+                activeBreaksBox.classList.add('hidden');
+            } else {
+                activeBreaksBox.classList.remove('hidden');
+                document.getElementById('active-breaks-list').innerHTML = activeBreaksMarkup;
+            }
+
+            queueBreaks.sort((a, b) => a.start - b.start);
+            const limitedQueue = queueBreaks.slice(0, 4); 
+
+            let queueMarkup = '';
+            limitedQueue.forEach(item => {
+                const badgeStyle = item.isCurrent 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                    : 'bg-slate-950 text-slate-400 border-slate-800';
+
+                queueMarkup += `
+                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${badgeStyle}">
+                        <div class="flex items-center space-x-2 truncate">
+                            ${item.isCurrent ? '<span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block"></span>' : ''}
+                            <span class="font-medium truncate">${item.name}</span>
+                        </div>
+                        <span class="font-mono text-[10px] whitespace-nowrap">${formatMskRangeToLocal(item.rangeText)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('breaks-timeline-queue').innerHTML = queueMarkup || `<div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>`;
+
+            document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
+            document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
+        }
+
+        function renderUI() {
+            evaluateRealtimeStatus();
+            renderMonthlySchedule();
+            renderSpecialistsAndBirthdays();
+        }
+
+        function renderMonthlySchedule() {
+            if (state.scheduleHeader.length === 0) return;
+
+            let tableHeader = `<tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">`;
+            tableHeader += `<th class="px-4 py-3 sticky left-0 bg-slate-900/90 min-w-[150px]">Специалист</th>`;
+            
+            state.scheduleHeader.forEach(day => {
+                const cleanDay = day.split('.')[0] || day;
+                tableHeader += `<th class="px-3 py-3 text-center min-w-[80px] font-mono">${cleanDay}</th>`;
+            });
+            tableHeader += `</tr>`;
+
+            let tableBody = `<tbody class="divide-y divide-slate-800/50 text-xs">`;
+            state.scheduleData.forEach(person => {
+                tableBody += `<tr class="hover:bg-slate-900/20 transition">`;
+                tableBody += `<td class="px-4 py-3 sticky left-0 bg-slate-900/90 font-medium text-slate-300 border-r border-slate-800/80">${person.name}</td>`;
+                
+                person.shifts.forEach(shift => {
+                    const isOff = !shift || shift.trim() === "" || shift.includes("Вых");
+                    const displayShift = isOff ? 'Вых' : shift;
+                    tableBody += `
+                        <td class="px-2 py-3 text-center font-mono ${isOff ? 'text-slate-600 bg-slate-950/20' : 'text-emerald-400 bg-emerald-500/5'}">
+                            ${displayShift}
+                        </td>`;
+                });
+                tableBody += `</tr>`;
+            });
+            tableBody += `</tbody>`;
+
+            document.getElementById('schedule-table').innerHTML = tableHeader + tableBody;
+
+            if (state.scheduleHeader[0]) {
+                const parts = state.scheduleHeader[0].split('.');
+                if (parts[1]) {
+                    const monthMap = {
+                        '01': 'Январь', '02': 'Февраль', '03': 'Март', '04': 'Апрель',
+                        '05': 'Май', '06': 'Июнь', '07': 'Июль', '08': 'Август',
+                        '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
+                    };
+                    document.getElementById('current-month-label').innerText = `${monthMap[parts[1]] || ''} ${parts[2] || ''}`;
+                }
+            }
+        }
+
+        function renderSpecialistsAndBirthdays() {
+            const groups = {};
+            state.specsData.forEach(spec => {
+                const groupKey = spec.group.trim();
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                }
+                if (!groups[groupKey].some(item => item.name === spec.name)) {
+                    groups[groupKey].push(spec);
+                }
+            });
+
+            let groupsMarkup = '';
+            const sortedKeys = Object.keys(groups).sort((a, b) => {
+                const aNum = parseInt(a, 10);
+                const bNum = parseInt(b, 10);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return aNum - bNum;
+                }
+                if (a === 'TL') return 1;
+                if (b === 'TL') return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedKeys.forEach(gKey => {
+                groupsMarkup += `
+                    <div class="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Группа ${gKey}</h4>
+                        <div class="space-y-1.5">
+                `;
+                groups[gKey].forEach(p => {
+                    groupsMarkup += `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-200 font-medium">${p.name}</span>
+                            <span class="text-slate-500">${p.login}</span>
+                        </div>
+                    `;
+                });
+                groupsMarkup += `</div></div>`;
+            });
+            document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+
+            // Birthday rendering
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const specialistsWithBdayTime = [];
+
+            state.specsData.forEach(spec => {
+                if (!spec.birthday) return;
+                const bparts = spec.birthday.split('.');
+                const bDay = parseInt(bparts[0], 10);
+                const bMonth = parseInt(bparts[1], 10);
+
+                if (isNaN(bDay) || isNaN(bMonth)) return;
+
+                let nextBday = new Date(today.getFullYear(), bMonth - 1, bDay);
+                if (nextBday < today) {
+                    nextBday.setFullYear(today.getFullYear() + 1);
+                }
+
+                const diffTime = nextBday - today;
+                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                specialistsWithBdayTime.push({
+                    spec: spec,
+                    daysUntil: daysUntil,
+                    isToday: (bDay === today.getDate() && bMonth === (today.getMonth() + 1))
+                });
+            });
+
+            specialistsWithBdayTime.sort((a, b) => a.daysUntil - b.daysUntil);
+
+            let bdayMarkup = '';
+            specialistsWithBdayTime.forEach(item => {
+                bdayMarkup += `
+                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-800/80'}">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="cake" class="w-4 h-4 ${item.isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
+                            <span class="text-xs font-medium ${item.isToday ? 'text-rose-200 font-semibold' : 'text-slate-300'}">${item.spec.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-mono font-bold ${item.isToday ? 'text-rose-400' : 'text-slate-500'}">${item.spec.birthday}</span>
+                            <span class="text-[10px] text-slate-400 block">${item.isToday ? '(Сегодня!)' : `осталось дней: ${item.daysUntil}`}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('birthdays-list').innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            lucide.createIcons();
+        }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+
+            const tabs = ['tab-status', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === tabId) {
+                    btn.classList.add('border-emerald-500', 'text-emerald-400');
+                    btn.classList.remove('border-transparent', 'text-slate-400');
+                } else {
+                    btn.classList.remove('border-emerald-500', 'text-emerald-400');
+                    btn.classList.add('border-transparent', 'text-slate-400');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
