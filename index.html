@@ -144,8 +144,8 @@
             <div id="tab-status" class="tab-content block">
                 <!-- TL Mode Info Banner -->
                 <div id="tl-banner" class="hidden mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3.5 text-xs text-indigo-300 flex items-center justify-between">
-                    <span class="flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4"></i> Вы вошли как Team Lead. Доступно принудительное управление с сменами.</span>
-                    <button onclick="toggleTLMode(false)" class="underline hover:text-indigo-200">Выйти</button>
+                    <span class="flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4"></i> Вы вошли как Team Lead. Доступно принудительное управление сменами.</span>
+                    <button onclick="logoutTL()" class="underline hover:text-indigo-200">Выйти</button>
                 </div>
 
                 <div class="glass-panel border border-slate-800/60 rounded-2xl overflow-hidden shadow-sm">
@@ -167,7 +167,7 @@
                 </div>
             </div>
 
-            <!-- Tab: Coordination / Break Planner (NEW) -->
+            <!-- Tab: Coordination / Break Planner -->
             <div id="tab-coordination" class="tab-content hidden flex flex-col gap-6">
                 <!-- Self-Service Panel: Delay Break ("Я на звонке") -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
@@ -180,11 +180,11 @@
                         <select id="coordination-agent-select" class="bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 min-w-[200px]">
                             <!-- Options populated dynamically -->
                         </select>
-                        <button onclick="signalDelayOnCall()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                        <button onclick="requestAgentDelay()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                             <i data-lucide="clock-alert" class="w-4 h-4"></i>
                             Задерживаюсь на звонке (на 15 минут)
                         </button>
-                        <button onclick="cancelActiveDelay()" class="bg-slate-900 hover:bg-slate-800 text-slate-400 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold">
+                        <button onclick="requestCancelDelay()" class="bg-slate-900 hover:bg-slate-800 text-slate-400 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold">
                             Вернуть график по умолчанию
                         </button>
                     </div>
@@ -310,14 +310,37 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <p>© ShiftFlow • Панель мониторинга смен голосовой поддержки</p>
-            <p id="sync-status" class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-600 inline-block"></span> Ожидание...</p>
+    <!-- TL PIN Modal Authorization -->
+    <div id="tl-auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
+        <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
+            <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i> Авторизация Team Lead
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Введите пин-код супервайзера для разблокировки панели принудительного управления сменами (Default: 7777).</p>
+            <input type="password" id="tl-pin-input" placeholder="Введите пин-код" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 mb-4 text-center tracking-widest font-bold">
+            <div class="flex gap-2">
+                <button onclick="closeTLAuthModal()" class="flex-1 bg-slate-900 hover:bg-slate-850 text-slate-400 py-2 rounded-lg text-xs font-medium">Отмена</button>
+                <button onclick="submitTLAuth()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-semibold">Войти</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
+    <!-- Agent Verification Modal -->
+    <div id="agent-auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
+        <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
+            <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
+                <i data-lucide="key" class="w-4 h-4 text-amber-400"></i> Подтверждение личности
+            </h3>
+            <p id="agent-auth-prompt" class="text-xs text-slate-400 mb-4">Введите ваш рабочий логин Telegram (начиная с @) для верификации действия.</p>
+            <input type="text" id="agent-login-input" placeholder="@login_1" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 mb-4 text-center font-mono">
+            <div class="flex gap-2">
+                <button onclick="closeAgentAuthModal()" class="flex-1 bg-slate-900 hover:bg-slate-850 text-slate-400 py-2 rounded-lg text-xs font-medium">Отмена</button>
+                <button onclick="submitAgentAuth()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2 rounded-lg text-xs font-semibold">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
     <script>
         // --- 1. Global Navigation and System State ---
         window.switchTab = function(tabId) {
@@ -360,11 +383,15 @@
             announcedEvents: new Set(),
             cachedVoice: null,
             
-            // New local synchronization & simulation parameters
+            // Protected Authorization & Coordination values
             isTLMode: false,
-            localOverrides: {}, // Format: { "Agent Name": { status: "В строю"/"Перерыв"/"Офлайн", expires: ts } }
-            delayedAgents: {},   // Format: { "Agent Name": { delayMins: 15, timestamp: ts } }
-            bc: null             // BroadcastChannel
+            tlPinHash: "7777",   // Supervisor access key (changeable here)
+            localOverrides: {},  
+            delayedAgents: {},   
+            bc: null,
+            
+            // Temporary container for agent verification queue
+            pendingAction: null  // { type: 'DELAY'|'CANCEL', agentName: 'name' }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -387,7 +414,6 @@
                 });
             }
 
-            // Click listener to restore audio smoothly on first interaction
             document.body.addEventListener('click', () => {
                 if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
                     if (!state.isAudioEnabled) {
@@ -404,8 +430,8 @@
                         return;
                     }
                     triggerNotification(
-                        "Тестовое уведомление",
-                        "Проверка звука и push-уведомлений завершена успешно!",
+                        "Система оповещений ShiftFlow",
+                        "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
                         "Проверка звука завершена успешно"
                     );
                 });
@@ -414,15 +440,134 @@
             const tlToggleBtn = document.getElementById('tl-mode-toggle');
             if (tlToggleBtn) {
                 tlToggleBtn.addEventListener('click', () => {
-                    toggleTLMode(!state.isTLMode);
+                    if (state.isTLMode) {
+                        logoutTL();
+                    } else {
+                        openTLAuthModal();
+                    }
                 });
             }
+
+            // Keyboard enter bindings for Auth Modals
+            document.getElementById('tl-pin-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitTLAuth();
+            });
+            document.getElementById('agent-login-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitAgentAuth();
+            });
 
             fetchData();
             setInterval(fetchData, 30000);
         });
 
-        // BroadcastChannel to synchronize team adjustments instantly across all browser instances
+        // --- TL Mode Protection Logic ---
+        function openTLAuthModal() {
+            const modal = document.getElementById('tl-auth-modal');
+            const pinInput = document.getElementById('tl-pin-input');
+            if (modal && pinInput) {
+                pinInput.value = '';
+                modal.classList.remove('hidden');
+                pinInput.focus();
+            }
+        }
+
+        window.closeTLAuthModal = function() {
+            const modal = document.getElementById('tl-auth-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.submitTLAuth = function() {
+            const input = document.getElementById('tl-pin-input');
+            if (input && input.value === state.tlPinHash) {
+                toggleTLMode(true);
+                closeTLAuthModal();
+            } else {
+                alert("Неверный пин-код доступа супервайзера!");
+                if (input) input.value = '';
+            }
+        };
+
+        window.logoutTL = function() {
+            toggleTLMode(false);
+        };
+
+        // --- Agent Verification Protection Logic ---
+        window.requestAgentDelay = function() {
+            const select = document.getElementById('coordination-agent-select');
+            if (!select || select.value === "") {
+                alert("Пожалуйста, выберите оператора!");
+                return;
+            }
+            state.pendingAction = { type: 'DELAY', agentName: select.value };
+            openAgentAuthModal(select.value);
+        };
+
+        window.requestCancelDelay = function() {
+            const select = document.getElementById('coordination-agent-select');
+            if (!select || select.value === "") {
+                alert("Пожалуйста, выберите оператора!");
+                return;
+            }
+            state.pendingAction = { type: 'CANCEL', agentName: select.value };
+            openAgentAuthModal(select.value);
+        };
+
+        function openAgentAuthModal(agentName) {
+            const modal = document.getElementById('agent-auth-modal');
+            const prompt = document.getElementById('agent-auth-prompt');
+            const input = document.getElementById('agent-login-input');
+            if (modal && prompt && input) {
+                input.value = '';
+                prompt.innerText = `Введите ваш логин Telegram для подтверждения действия от имени ${agentName.split(' ')[0]}:`;
+                modal.classList.remove('hidden');
+                input.focus();
+            }
+        }
+
+        window.closeAgentAuthModal = function() {
+            const modal = document.getElementById('agent-auth-modal');
+            if (modal) modal.classList.add('hidden');
+            state.pendingAction = null;
+        };
+
+        window.submitAgentAuth = function() {
+            const input = document.getElementById('agent-login-input');
+            if (!input || !state.pendingAction) return;
+
+            const enteredLogin = input.value.trim();
+            const person = state.statusData.find(p => p.name === state.pendingAction.agentName);
+            
+            if (person && person.login && person.login.toLowerCase() === enteredLogin.toLowerCase()) {
+                // Success - authorize execution of pending action
+                if (state.pendingAction.type === 'DELAY') {
+                    executeDelay(state.pendingAction.agentName);
+                } else if (state.pendingAction.type === 'CANCEL') {
+                    executeCancel(state.pendingAction.agentName);
+                }
+                closeAgentAuthModal();
+            } else {
+                alert("Ошибка авторизации: логин Telegram не совпадает с логином этого специалиста в таблице!");
+                input.value = '';
+            }
+        };
+
+        function executeDelay(agentName) {
+            state.delayedAgents[agentName] = {
+                delayMins: 15,
+                timestamp: Date.now()
+            };
+            broadcastSync();
+            evaluateRealtimeStatus();
+            speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. Смена перерывов скорректирована.`);
+        }
+
+        function executeCancel(agentName) {
+            delete state.delayedAgents[agentName];
+            broadcastSync();
+            evaluateRealtimeStatus();
+        }
+
+        // --- System Core Logic ---
         function initBroadcastChannel() {
             if ('BroadcastChannel' in window) {
                 state.bc = new BroadcastChannel('shiftflow_coordination_channel');
@@ -446,7 +591,6 @@
             }
         }
 
-        // Team Lead Control Override API
         window.toggleTLMode = function(forceState) {
             state.isTLMode = forceState;
             const btn = document.getElementById('tl-mode-toggle');
@@ -478,31 +622,6 @@
             evaluateRealtimeStatus();
         };
 
-        // Self-Service Agent Delay API
-        window.signalDelayOnCall = function() {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") return;
-            
-            const agentName = select.value;
-            state.delayedAgents[agentName] = {
-                delayMins: 15,
-                timestamp: Date.now()
-            };
-            broadcastSync();
-            evaluateRealtimeStatus();
-            speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. График перерывов скорректирован.`);
-        };
-
-        window.cancelActiveDelay = function() {
-            const select = document.getElementById('coordination-agent-select');
-            if (!select || select.value === "") return;
-            const agentName = select.value;
-            delete state.delayedAgents[agentName];
-            broadcastSync();
-            evaluateRealtimeStatus();
-        };
-
-        // Break Window Planner algorithm
         window.populatePlannerBreaks = function() {
             const selectAgent = document.getElementById('planner-agent-select');
             const selectBreak = document.getElementById('planner-break-select');
@@ -541,14 +660,12 @@
             const originalStart = parseMskTimeToLocal(parts[0].trim());
             const originalEnd = parseMskTimeToLocal(parts[1].trim());
 
-            // Project new simulated start & end
             const simulatedStart = new Date(originalStart.getTime() + offsetMins * 60000);
             const simulatedEnd = new Date(originalEnd.getTime() + offsetMins * 60000);
 
-            // Re-evaluate line coverage at simulated start to check impact
             let otherActiveCoverage = 0;
             state.statusData.forEach(p => {
-                if (p.name === name) return; // ignore targeted person
+                if (p.name === name) return;
 
                 const todayShift = getTodayShiftHours(p.name, p.hours);
                 if (!todayShift) return;
@@ -559,7 +676,6 @@
 
                 if (pShiftEnd < pShiftStart) pShiftEnd.setDate(pShiftEnd.getDate() + 1);
 
-                // Verify if peer is online at simulated test timestamp
                 if (simulatedStart >= pShiftStart && simulatedStart <= pShiftEnd) {
                     let insidePeerBreak = false;
                     p.breaks.forEach(pBr => {
@@ -576,7 +692,6 @@
                 }
             });
 
-            // Render modern planner result cards
             const resultBox = document.getElementById('planner-result-box');
             const resTitle = document.getElementById('planner-result-title');
             const resDesc = document.getElementById('planner-result-desc');
@@ -591,7 +706,7 @@
                 resTitle.innerText = `Новое время: ${formattedStartStr} – ${formattedEndStr}`;
 
                 if (otherActiveCoverage >= 2) {
-                    resultBox.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-xs flex justify-between items-center";
+                    resultBox.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-xs flex justify-between items-center animate-pulse";
                     resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400";
                     resBadge.innerText = "🟢 Безопасно";
                     resDesc.innerText = `Свободно на линии: ${otherActiveCoverage} оп. Отличное время для сдвига перерыва.`;
@@ -608,49 +723,6 @@
                 }
             }
         };
-
-        function checkPregrantedPermissions() {
-            if (window.Notification && Notification.permission === 'granted') {
-                const savedAudioPref = localStorage.getItem('shiftflow_audio_enabled');
-                const text = document.getElementById('audio-status-text');
-                const icon = document.getElementById('audio-icon');
-                
-                if (savedAudioPref === 'true' && text && icon) {
-                    icon.setAttribute('data-lucide', 'volume-2');
-                    icon.className = 'w-4 h-4 text-emerald-400';
-                    text.innerText = 'Оповещения включены';
-                    lucide.createIcons();
-                }
-            }
-        }
-
-        async function requestNotifications() {
-            if ("Notification" in window) {
-                await Notification.requestPermission();
-            }
-        }
-
-        function toggleAudioState(forceOn = false) {
-            state.isAudioEnabled = forceOn ? true : !state.isAudioEnabled;
-            localStorage.setItem('shiftflow_audio_enabled', state.isAudioEnabled ? 'true' : 'false');
-            
-            const icon = document.getElementById('audio-icon');
-            const text = document.getElementById('audio-status-text');
-            
-            if (text && icon) {
-                if (state.isAudioEnabled) {
-                    icon.setAttribute('data-lucide', 'volume-2');
-                    icon.className = 'w-4 h-4 text-emerald-400';
-                    text.innerText = 'Оповещения включены';
-                    speak("Оповещения активированы.");
-                } else {
-                    icon.setAttribute('data-lucide', 'volume-x');
-                    icon.className = 'w-4 h-4 text-rose-400';
-                    text.innerText = 'Включить оповещения';
-                }
-                lucide.createIcons();
-            }
-        }
 
         function initBackgroundWorker() {
             const workerCode = `
@@ -676,6 +748,18 @@
                 worker.postMessage('start');
             } catch (e) {
                 setInterval(updateClock, 1000);
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('live-time');
+            const dateEl = document.getElementById('live-date');
+            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (state.statusData.length > 0) {
+                evaluateRealtimeStatus();
             }
         }
 
@@ -802,7 +886,6 @@
                     fetch(URL_SPECS).then(r => r.text())
                 ]);
 
-                // Store successful downloads to localStorage cache
                 localStorage.setItem('shiftflow_cache_status', statusRes);
                 localStorage.setItem('shiftflow_cache_specs', specsRes);
 
@@ -815,9 +898,8 @@
                 }
                 renderUI();
             } catch (err) {
-                console.error("Предупреждение: Сбой соединения с сетью. Загрузка из кэша.", err);
+                console.error("Ошибка загрузки.", err);
                 
-                // Fallback to offline cache
                 const cachedStatus = localStorage.getItem('shiftflow_cache_status');
                 const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
 
@@ -1020,7 +1102,6 @@
                     }
                 }
 
-                // Check active break delay triggers
                 const hasDelay = state.delayedAgents[person.name] !== undefined;
 
                 person.breaks.forEach(br => {
@@ -1030,7 +1111,6 @@
 
                     if (!brStart || !brEnd) return;
 
-                    // If agent signalized delay, offset break range by 15 mins
                     if (hasDelay) {
                         brStart = new Date(brStart.getTime() + 15 * 60000);
                         brEnd = new Date(brEnd.getTime() + 15 * 60000);
@@ -1070,7 +1150,7 @@
                         if (!state.announcedEvents.has(breakEndKey)) {
                             state.announcedEvents.add(breakEndKey);
                             triggerNotification(
-                                `Сотрудник на линии: ${person.name}`,
+                                `Сотрудник вернулся на линию: ${person.name}`,
                                 `${person.name} вернулся с перерыва.`,
                                 `${firstName} возвращается на линию. Перерыв окончен.`
                             );
@@ -1078,12 +1158,10 @@
                     }
                 });
 
-                // Check and enforce local override by Team Lead
                 if (state.localOverrides[person.name]) {
                     status = state.localOverrides[person.name].status;
                 }
 
-                // Calculate Hourly Coverage Values
                 if (worksToday) {
                     for (let h = 0; h < 24; h++) {
                         let checkTime = new Date(startWork);
@@ -1105,7 +1183,6 @@
                                     onBreakAtCheck = true;
                                 }
                             });
-                            // Take into account manual overrides in heat diagram
                             let simulatedStatus = onBreakAtCheck ? 'Перерыв' : 'В строю';
                             if (state.localOverrides[person.name]) {
                                 simulatedStatus = state.localOverrides[person.name].status;
@@ -1122,7 +1199,6 @@
                 else if (status === 'Перерыв') stats.onBreak++;
                 else stats.offline++;
 
-                // Build status badges with delay and override indicators
                 let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
                 if (status === 'В строю') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
@@ -1132,12 +1208,10 @@
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Занят звонком</span>`;
                 }
 
-                // Enforce "Занят звонком" status visual if they have active delay but aren't currently on the rescheduled break
                 if (hasDelay && status === 'В строю') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 animate-pulse">Занят звонком</span>`;
                 }
 
-                // If TL Mode is active, render override controls next to agent
                 let tlControlsHTML = '';
                 if (state.isTLMode) {
                     tlControlsHTML = `
@@ -1236,7 +1310,7 @@
             let queueMarkup = '';
             limitedQueue.forEach(item => {
                 const badgeStyle = item.isCurrent 
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' 
                     : 'bg-slate-950 text-slate-400 border-slate-800';
 
                 queueMarkup += `
@@ -1263,12 +1337,10 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
-            // Redraw heatmap and update coordination selection options
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
         function drawHeatmapAndOptions(stats, hourlyCoverage) {
-            // Fill agent selection lists in Coordination tab
             const agentSelect = document.getElementById('coordination-agent-select');
             const plannerAgentSelect = document.getElementById('planner-agent-select');
             
@@ -1285,7 +1357,6 @@
                 });
             }
 
-            // Fill KPI Metrics Cards
             const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
             const kpiCov = document.getElementById('kpi-coverage');
             if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
@@ -1295,7 +1366,6 @@
             const kpiPeak = document.getElementById('kpi-peak-hour');
             if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
 
-            // Generate Heatmap row
             let heatgridHTML = '';
             for (let h = 0; h < 24; h++) {
                 const count = hourlyCoverage[h];
@@ -1424,7 +1494,6 @@
                 specsGroups.innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
             }
 
-            // Birthday rendering
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const specialistsWithBdayTime = [];
