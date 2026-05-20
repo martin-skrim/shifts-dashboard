@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
@@ -60,7 +60,7 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats & Immediate Statuses (4 Cols) -->
+        <!-- Left Panel: Stats & Break Queue (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- Quick Stats Card -->
@@ -82,17 +82,28 @@
                 </div>
             </div>
 
-            <!-- Current Breaks List -->
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm flex-grow flex flex-col min-h-[300px]">
-                <div class="flex justify-between items-center mb-4">
+            <!-- Active Break Status -->
+            <div id="active-breaks-box" class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm flex flex-col min-h-[140px] hidden">
+                <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Сейчас на перерыве</h2>
                     <span class="flex h-2 w-2 relative">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                     </span>
                 </div>
-                <div id="active-breaks-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-grow pr-1">
-                    <div class="text-sm text-slate-500 text-center py-8">Все на рабочих местах</div>
+                <div id="active-breaks-list" class="space-y-3">
+                    <!-- Progress Cards populated by JS -->
+                </div>
+            </div>
+
+            <!-- Next Breaks Queue -->
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm flex-grow flex flex-col min-h-[220px]">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+                    <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                    Ближайшие перерывы сегодня
+                </h2>
+                <div id="breaks-timeline-queue" class="space-y-2 overflow-y-auto custom-scrollbar flex-grow text-xs">
+                    <div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>
                 </div>
             </div>
         </div>
@@ -103,7 +114,6 @@
             <!-- Tab Controls -->
             <div class="flex border-b border-slate-800 gap-2 overflow-x-auto custom-scrollbar">
                 <button onclick="switchTab('tab-status')" id="btn-tab-status" class="px-4 py-2 text-sm font-medium border-b-2 border-emerald-500 text-emerald-400 transition whitespace-nowrap">На смене сегодня</button>
-                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">📊 Аналитика & Смены</button>
                 <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Сегодня выходной</button>
                 <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">График на месяц</button>
                 <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Список специалистов</button>
@@ -126,75 +136,6 @@
                                 <!-- Dynamic rows -->
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Analytics & Coverage -->
-            <div id="tab-analytics" class="tab-content hidden flex flex-col gap-6">
-                <!-- Analytics KPI Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Укомплектованность линии</span>
-                        <div class="flex items-baseline space-x-2">
-                            <span id="kpi-coverage" class="text-2xl font-bold text-emerald-400">0%</span>
-                            <span class="text-xs text-slate-500">от планового фонда</span>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Утилизация перерывов</span>
-                        <div class="flex items-baseline space-x-2">
-                            <span id="kpi-breaks-used" class="text-2xl font-bold text-amber-400">0%</span>
-                            <span class="text-xs text-slate-500">использовано командой</span>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Час пик покрытия</span>
-                        <div class="flex items-baseline space-x-2">
-                            <span id="kpi-peak-hour" class="text-2xl font-bold text-indigo-400">—</span>
-                            <span class="text-xs text-slate-500">макс. людей на линии</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hourly Coverage Heatmap -->
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5">
-                    <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
-                        Покрытие линии по часам (Тепловая карта присутствия операторов)
-                    </h3>
-                    <div class="grid grid-cols-24 gap-1 p-2 bg-slate-950 rounded-lg overflow-x-auto custom-scrollbar" id="coverage-chart-container">
-                        <!-- Filled by JS -->
-                    </div>
-                    <div class="flex justify-between items-center mt-3 text-[10px] text-slate-400 px-1">
-                        <span>00:00 (Ночь)</span>
-                        <span>12:00 (День)</span>
-                        <span>23:00 (Ночь)</span>
-                    </div>
-                </div>
-
-                <!-- Two Column Details -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Chronological Break Queue -->
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5">
-                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                            <i data-lucide="list-ordered" class="w-4 h-4 text-amber-400"></i>
-                            Очередь перерывов на сегодня
-                        </h4>
-                        <div id="breaks-timeline-queue" class="space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar pr-1 text-xs">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Break Adherence / Consumption Tracker -->
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5">
-                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                            <i data-lucide="timer" class="w-4 h-4 text-indigo-400"></i>
-                            Бюджет времени перерывов (использовано)
-                        </h4>
-                        <div id="breaks-budget-list" class="space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar pr-1 text-xs">
-                            <!-- Populated dynamically -->
-                        </div>
                     </div>
                 </div>
             </div>
@@ -280,7 +221,7 @@
             scheduleData: [],
             specsData: [],
             isAudioEnabled: false,
-            announcedEvents: new Set(), // Replaces announcedBreaks to support multi-event logging
+            announcedEvents: new Set(),
             cachedVoice: null
         };
 
@@ -289,14 +230,12 @@
             updateClock();
             setInterval(updateClock, 1000);
             
-            // Populate/choose the best voice when available
             if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
                 speechSynthesis.onvoiceschanged = selectBestRussianVoice;
             } else {
                 selectBestRussianVoice();
             }
 
-            // Audio & Notification activation button
             const audioBtn = document.getElementById('audio-toggle');
             audioBtn.addEventListener('click', async () => {
                 if ("Notification" in window) {
@@ -320,13 +259,11 @@
                 lucide.createIcons();
             });
 
-            // "Test Alerts" Button Event
             document.getElementById('test-alert-btn').addEventListener('click', () => {
                 if (!state.isAudioEnabled) {
                     alert("Пожалуйста, сначала включите оповещения кнопкой справа, чтобы активировать звук и системные права.");
                     return;
                 }
-                // Fires a demo cascade to preview quality
                 triggerNotification(
                     "Система оповещений ShiftFlow",
                     "Тест пройден. Канал звука и пуш-уведомлений работает стабильно."
@@ -347,7 +284,6 @@
             }
         }
 
-        // Voice scanning logic: chooses the most human-like Neural or Google/Microsoft Premium voices
         function selectBestRussianVoice() {
             if (typeof speechSynthesis === 'undefined') return;
             const voices = speechSynthesis.getVoices();
@@ -355,7 +291,6 @@
             
             if (ruVoices.length === 0) return;
 
-            // Prioritize best cloud / high-definition voices
             const premiumVoice = ruVoices.find(v => 
                 v.name.includes('Google') || 
                 v.name.includes('Neural') || 
@@ -385,7 +320,6 @@
         function speak(text) {
             if (!state.isAudioEnabled || typeof speechSynthesis === 'undefined') return;
             try {
-                // Instantly wipe previous speech queue to solve stuck browser thread issues
                 speechSynthesis.cancel(); 
                 
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -394,7 +328,7 @@
                 }
                 utterance.lang = 'ru-RU';
                 utterance.volume = 1.0;
-                utterance.rate = 0.95;  // Tiny scale-down for a more relaxed, natural pace
+                utterance.rate = 0.95;  
                 utterance.pitch = 1.0;
                 
                 speechSynthesis.speak(utterance);
@@ -461,584 +395,3 @@
             try {
                 const [statusRes, specsRes] = await Promise.all([
                     fetch(URL_STATUS).then(r => r.text()),
-                    fetch(URL_SPECS).then(r => r.text())
-                ]);
-
-                processStatusSheet(parseCSV(statusRes));
-                processSpecsSheet(parseCSV(specsRes));
-
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
-                renderUI();
-            } catch (err) {
-                console.error(err);
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
-            }
-        }
-
-        function processStatusSheet(grid) {
-            let parsedStatus = [];
-            for (let r = 3; r <= 10; r++) {
-                if (!grid[r] || !grid[r][5]) continue; 
-                let name = grid[r][5].trim();
-                let login = grid[r][6] ? grid[r][6].trim() : '';
-                let hours = grid[r][8] ? grid[r][8].trim() : '';
-                
-                let breaks = [];
-                for (let c = 9; c <= 13; c++) {
-                    if (grid[r][c] && (grid[r][c].includes('–') || grid[r][c].includes('-'))) {
-                        breaks.push(grid[r][c].trim());
-                    }
-                }
-                parsedStatus.push({ name, login, hours, breaks });
-            }
-            state.statusData = parsedStatus;
-
-            if (grid[2]) {
-                state.scheduleHeader = grid[2].slice(19, 50).map(d => d.trim()).filter(Boolean);
-                let schedList = [];
-                for (let r = 3; r <= 10; r++) {
-                    if (!grid[r] || !grid[r][18]) continue;
-                    let name = grid[r][18].trim();
-                    let shifts = grid[r].slice(19, 50).map(s => s.trim());
-                    schedList.push({ name, shifts });
-                }
-                state.scheduleData = schedList;
-            }
-        }
-
-        function processSpecsSheet(grid) {
-            let specs = [];
-            let currentGroup = 'Без группы';
-
-            for (let r = 1; r < grid.length; r++) {
-                if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
-                
-                let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
-                if (rawGroup !== '') {
-                    currentGroup = rawGroup;
-                }
-                
-                specs.push({
-                    group: currentGroup,
-                    name: grid[r][1].trim(),
-                    login: grid[r][2] ? grid[r][2].trim() : '',
-                    type: grid[r][3] ? grid[r][3].trim() : '',
-                    hours: grid[r][4] ? grid[r][4].trim() : '',
-                    birthday: grid[r][5] ? grid[r][5].trim() : ''
-                });
-            }
-            state.specsData = specs;
-        }
-
-        function getTodayShiftHours(personName, fallbackHours) {
-            const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
-                timeZone: 'Europe/Moscow',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            }).format(new Date());
-
-            const scheduleIdx = state.scheduleHeader.indexOf(mskTodayStr);
-            if (scheduleIdx === -1) return fallbackHours;
-
-            const personSched = state.scheduleData.find(p => p.name === personName);
-            if (!personSched) return fallbackHours;
-
-            const shiftToday = personSched.shifts[scheduleIdx];
-            if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
-                return shiftToday.trim();
-            }
-            return null;
-        }
-
-        function evaluateRealtimeStatus() {
-            const now = new Date();
-            let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
-            
-            let activeBreaksMarkup = '';
-            let activeTableMarkup = '';
-            let weekendTableMarkup = '';
-
-            let hourlyCoverage = Array(24).fill(0); 
-            let queueBreaks = [];
-            let breaksBudgetList = [];
-
-            state.statusData.forEach(person => {
-                const todayShift = getTodayShiftHours(person.name, person.hours);
-                const isScheduledToday = todayShift !== null;
-
-                if (!isScheduledToday) {
-                    weekendTableMarkup += `
-                        <tr class="hover:bg-slate-900/10 transition">
-                            <td class="px-6 py-4 font-semibold text-slate-400">${person.name}</td>
-                            <td class="px-6 py-4 text-slate-500 text-xs">${person.login}</td>
-                            <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-slate-900 text-slate-500 border border-slate-800">Выходной</span></td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                stats.scheduledTotal++;
-                let status = 'Офлайн';
-                let currentBreakRange = null;
-                let worksToday = false;
-                let startWork = null, endWork = null;
-
-                if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
-                    worksToday = true;
-                    const hoursParts = todayShift.split(/[-–—]/);
-                    startWork = parseMskTimeToLocal(hoursParts[0].trim());
-                    endWork = parseMskTimeToLocal(hoursParts[1].trim());
-                    
-                    if (endWork < startWork) {
-                        endWork.setDate(endWork.getDate() + 1);
-                    }
-                }
-
-                if (worksToday && now >= startWork && now <= endWork) {
-                    status = 'В строю';
-                }
-
-                // -------------------------------------------------------------
-                // 1. Shift Lifecycle sound alerts (Start / End Shift)
-                // -------------------------------------------------------------
-                if (worksToday && startWork && endWork) {
-                    // Start Shift Alert (within exact target minute)
-                    if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
-                        const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
-                        if (!state.announcedEvents.has(shiftStartKey)) {
-                            state.announcedEvents.add(shiftStartKey);
-                            triggerNotification(
-                                `Смена началась: ${person.name}`,
-                                `${person.name} заступил на рабочую смену. Приветствуем на линии!`
-                            );
-                        }
-                    }
-
-                    // End Shift Alert (within exact target minute)
-                    if (now.getHours() === endWork.getHours() && now.getMinutes() === endWork.getMinutes()) {
-                        const shiftEndKey = `${person.name}-shift-end-${endWork.getHours()}:${endWork.getMinutes()}`;
-                        if (!state.announcedEvents.has(shiftEndKey)) {
-                            state.announcedEvents.add(shiftEndKey);
-                            triggerNotification(
-                                `Смена окончена: ${person.name}`,
-                                `${person.name} закончил рабочую смену. Спасибо за работу!`
-                            );
-                        }
-                    }
-                }
-
-                let totalAllocatedMins = 0;
-                let spentAllocatedMins = 0;
-
-                person.breaks.forEach(br => {
-                    const brParts = br.split(/[-–—]/);
-                    const brStart = parseMskTimeToLocal(brParts[0].trim());
-                    const brEnd = parseMskTimeToLocal(brParts[1].trim());
-
-                    if (!brStart || !brEnd) return;
-
-                    const breakDurationMs = brEnd - brStart;
-                    const breakDurationMins = Math.round(breakDurationMs / 60000);
-                    totalAllocatedMins += breakDurationMins;
-
-                    if (now >= brEnd) {
-                        spentAllocatedMins += breakDurationMins;
-                    } else if (now >= brStart && now <= brEnd) {
-                        status = 'Перерыв';
-                        currentBreakRange = { start: brStart, end: brEnd, text: br };
-                        
-                        const elapsedMins = Math.round((now - brStart) / 60000);
-                        spentAllocatedMins += elapsedMins;
-                    }
-
-                    queueBreaks.push({
-                        name: person.name,
-                        start: brStart,
-                        end: brEnd,
-                        rangeText: br,
-                        isCurrent: now >= brStart && now <= brEnd,
-                        isPassed: now > brEnd
-                    });
-
-                    // -------------------------------------------------------------
-                    // 2. Break Lifecycle sound alerts (Start / End Break)
-                    // -------------------------------------------------------------
-                    if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
-                        const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}`;
-                        if (!state.announcedEvents.has(breakStartKey)) {
-                            state.announcedEvents.add(breakStartKey);
-                            triggerNotification(
-                                `Сотрудник уходит на перерыв: ${person.name}`,
-                                `${person.name} уходит на перерыв. Отличного отдыха!`
-                            );
-                        }
-                    }
-
-                    if (now.getHours() === brEnd.getHours() && now.getMinutes() === brEnd.getMinutes()) {
-                        const breakEndKey = `${person.name}-break-end-${brParts[1].trim()}`;
-                        if (!state.announcedEvents.has(breakEndKey)) {
-                            state.announcedEvents.add(breakEndKey);
-                            triggerNotification(
-                                `Сотрудник вернулся на линию: ${person.name}`,
-                                `${person.name}, ваш перерыв окончен. Пора возвращаться на линию.`
-                            );
-                        }
-                    }
-                });
-
-                if (worksToday) {
-                    for (let h = 0; h < 24; h++) {
-                        let checkTime = new Date(startWork);
-                        checkTime.setHours(h, 30, 0, 0);
-
-                        if (checkTime >= startWork && checkTime <= endWork) {
-                            let onBreakAtCheck = false;
-                            person.breaks.forEach(br => {
-                                const brParts = br.split(/[-–—]/);
-                                const brStart = parseMskTimeToLocal(brParts[0].trim());
-                                const brEnd = parseMskTimeToLocal(brParts[1].trim());
-                                if (brStart && brEnd && checkTime >= brStart && checkTime <= brEnd) {
-                                    onBreakAtCheck = true;
-                                }
-                            });
-                            if (!onBreakAtCheck) {
-                                hourlyCoverage[h]++;
-                            }
-                        }
-                    }
-                }
-
-                breaksBudgetList.push({
-                    name: person.name,
-                    total: totalAllocatedMins,
-                    spent: spentAllocatedMins,
-                    percent: totalAllocatedMins > 0 ? Math.round((spentAllocatedMins / totalAllocatedMins) * 100) : 0
-                });
-
-                if (status === 'В строю') stats.active++;
-                else if (status === 'Перерыв') stats.onBreak++;
-                else stats.offline++;
-
-                let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
-                if (status === 'В строю') {
-                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
-                } else if (status === 'Перерыв') {
-                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
-                }
-
-                const localShiftHours = formatMskRangeToLocal(todayShift);
-                const breakListHTML = person.breaks.map(br => {
-                    const localBreakRange = formatMskRangeToLocal(br);
-                    const isCurrent = currentBreakRange && currentBreakRange.text === br;
-                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">${localBreakRange}</span>`;
-                }).join(' ');
-
-                activeTableMarkup += `
-                    <tr class="hover:bg-slate-900/30 transition">
-                        <td class="px-6 py-4">
-                            <div class="font-semibold text-slate-200">${person.name}</div>
-                            <div class="text-xs text-slate-500">${person.login}</div>
-                        </td>
-                        <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
-                        <td class="px-6 py-4">${statusBadge}</td>
-                        <td class="px-6 py-4"><div class="flex flex-wrap gap-1.5">${breakListHTML || '<span class="text-slate-600 text-xs">Нет перерывов</span>'}</div></td>
-                    </tr>
-                `;
-
-                if (status === 'Перерыв' && currentBreakRange) {
-                    const totalDuration = currentBreakRange.end - currentBreakRange.start;
-                    const elapsed = now - currentBreakRange.start;
-                    const percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-                    const remainingMins = Math.ceil((currentBreakRange.end - now) / 60000);
-
-                    activeBreaksMarkup += `
-                        <div class="bg-slate-950/80 p-4 rounded-lg border border-slate-800">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="font-semibold text-slate-200 text-sm">${person.name}</h4>
-                                    <p class="text-xs text-slate-400 font-mono">${formatMskRangeToLocal(currentBreakRange.text)}</p>
-                                </div>
-                                <span class="text-xs text-amber-400 font-medium">Осталось ~${remainingMins}м</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div class="bg-amber-500 h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
-            document.getElementById('stat-active').innerText = stats.active;
-            document.getElementById('stat-break').innerText = stats.onBreak;
-            document.getElementById('stat-offline').innerText = stats.offline;
-
-            const activeListContainer = document.getElementById('active-breaks-list');
-            if (activeBreaksMarkup === '') {
-                activeListContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center text-center py-12 text-slate-500">
-                        <i data-lucide="coffee" class="w-8 h-8 mb-2 text-slate-600"></i>
-                        <p class="text-xs">В данный момент все на рабочих местах</p>
-                    </div>
-                `;
-                lucide.createIcons();
-            } else {
-                activeListContainer.innerHTML = activeBreaksMarkup;
-            }
-
-            document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
-            document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
-
-            calculateAnalyticsUI(stats, hourlyCoverage, queueBreaks, breaksBudgetList);
-        }
-
-        function calculateAnalyticsUI(stats, hourlyCoverage, queueBreaks, breaksBudgetList) {
-            const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
-            document.getElementById('kpi-coverage').innerText = `${coverageRate}%`;
-
-            let overallTotalBreak = 0;
-            let overallSpentBreak = 0;
-            breaksBudgetList.forEach(item => {
-                overallTotalBreak += item.total;
-                overallSpentBreak += item.spent;
-            });
-            const breakConsumption = overallTotalBreak > 0 ? Math.round((overallSpentBreak / overallTotalBreak) * 100) : 0;
-            document.getElementById('kpi-breaks-used').innerText = `${breakConsumption}%`;
-
-            const maxCoverage = Math.max(...hourlyCoverage);
-            const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
-            document.getElementById('kpi-peak-hour').innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
-
-            let chartMarkup = '';
-            for (let h = 0; h < 24; h++) {
-                const count = hourlyCoverage[h];
-                const heightPercent = maxCoverage > 0 ? Math.round((count / maxCoverage) * 90) + 10 : 10;
-                
-                let colorClass = 'bg-slate-800';
-                if (count > 0) {
-                    if (count <= 1) colorClass = 'bg-emerald-800 text-emerald-100';
-                    else if (count <= 3) colorClass = 'bg-emerald-600 text-emerald-50';
-                    else colorClass = 'bg-emerald-400 text-slate-950';
-                }
-
-                chartMarkup += `
-                    <div class="flex flex-col items-center justify-end h-32 group relative">
-                        <div class="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                            <span class="bg-slate-900 border border-slate-700 text-[10px] text-slate-200 px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                                Час: ${String(h).padStart(2, '0')}:00 • Оп: ${count}
-                            </span>
-                        </div>
-                        <div class="w-full ${colorClass} rounded-t transition-all duration-300 flex items-center justify-center font-mono text-[9px] font-bold" style="height: ${heightPercent}%">
-                            ${count > 0 ? count : ''}
-                        </div>
-                        <span class="text-[8px] font-mono text-slate-500 mt-1">${String(h).padStart(2, '0')}</span>
-                    </div>
-                `;
-            }
-            document.getElementById('coverage-chart-container').innerHTML = chartMarkup;
-
-            queueBreaks.sort((a, b) => a.start - b.start);
-            let queueMarkup = '';
-            queueBreaks.forEach(item => {
-                let statusClass = 'border-slate-800 bg-slate-900/30 text-slate-400';
-                let indicator = '';
-                if (item.isCurrent) {
-                    statusClass = 'border-amber-500/40 bg-amber-500/10 text-amber-300';
-                    indicator = `<span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse inline-block"></span>`;
-                } else if (item.isPassed) {
-                    statusClass = 'border-slate-800/20 bg-slate-950/20 text-slate-600 line-through';
-                }
-
-                queueMarkup += `
-                    <div class="flex items-center justify-between p-2 rounded-lg border ${statusClass}">
-                        <div class="flex items-center space-x-2">
-                            ${indicator}
-                            <span class="font-medium">${item.name}</span>
-                        </div>
-                        <span class="font-mono text-[10px]">${formatMskRangeToLocal(item.rangeText)}</span>
-                    </div>
-                `;
-            });
-            document.getElementById('breaks-timeline-queue').innerHTML = queueMarkup || `<div class="text-center text-slate-600 py-8">Очередь пуста</div>`;
-
-            let budgetMarkup = '';
-            breaksBudgetList.forEach(item => {
-                budgetMarkup += `
-                    <div class="p-3 bg-slate-950/60 rounded-lg border border-slate-900">
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="font-medium text-slate-300">${item.name}</span>
-                            <span class="font-mono text-[10px] text-slate-400">${item.spent} / ${item.total} мин (${item.percent}%)</span>
-                        </div>
-                        <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-indigo-500 h-full rounded-full" style="width: ${item.percent}%"></div>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('breaks-budget-list').innerHTML = budgetMarkup || `<div class="text-center text-slate-600 py-8">Нет данных</div>`;
-        }
-
-        function renderUI() {
-            evaluateRealtimeStatus();
-            renderMonthlySchedule();
-            renderSpecialistsAndBirthdays();
-        }
-
-        function renderMonthlySchedule() {
-            if (state.scheduleHeader.length === 0) return;
-
-            let tableHeader = `<tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">`;
-            tableHeader += `<th class="px-4 py-3 sticky left-0 bg-slate-900/90 min-w-[150px]">Специалист</th>`;
-            
-            state.scheduleHeader.forEach(day => {
-                const cleanDay = day.split('.')[0] || day;
-                tableHeader += `<th class="px-3 py-3 text-center min-w-[80px] font-mono">${cleanDay}</th>`;
-            });
-            tableHeader += `</tr>`;
-
-            let tableBody = `<tbody class="divide-y divide-slate-800/50 text-xs">`;
-            state.scheduleData.forEach(person => {
-                tableBody += `<tr class="hover:bg-slate-900/20 transition">`;
-                tableBody += `<td class="px-4 py-3 sticky left-0 bg-slate-900/90 font-medium text-slate-300 border-r border-slate-800/80">${person.name}</td>`;
-                
-                person.shifts.forEach(shift => {
-                    const isOff = !shift || shift.trim() === "" || shift.includes("Вых");
-                    const displayShift = isOff ? 'Вых' : shift;
-                    tableBody += `
-                        <td class="px-2 py-3 text-center font-mono ${isOff ? 'text-slate-600 bg-slate-950/20' : 'text-emerald-400 bg-emerald-500/5'}">
-                            ${displayShift}
-                        </td>`;
-                });
-                tableBody += `</tr>`;
-            });
-            tableBody += `</tbody>`;
-
-            document.getElementById('schedule-table').innerHTML = tableHeader + tableBody;
-
-            if (state.scheduleHeader[0]) {
-                const parts = state.scheduleHeader[0].split('.');
-                if (parts[1]) {
-                    const monthMap = {
-                        '01': 'Январь', '02': 'Февраль', '03': 'Март', '04': 'Апрель',
-                        '05': 'Май', '06': 'Июнь', '07': 'Июль', '08': 'Август',
-                        '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
-                    };
-                    document.getElementById('current-month-label').innerText = `${monthMap[parts[1]] || ''} ${parts[2] || ''}`;
-                }
-            }
-        }
-
-        function renderSpecialistsAndBirthdays() {
-            const groups = {};
-            state.specsData.forEach(spec => {
-                const groupKey = spec.group.trim();
-                if (!groups[groupKey]) {
-                    groups[groupKey] = [];
-                }
-                if (!groups[groupKey].some(item => item.name === spec.name)) {
-                    groups[groupKey].push(spec);
-                }
-            });
-
-            let groupsMarkup = '';
-            const sortedKeys = Object.keys(groups).sort((a, b) => {
-                const aNum = parseInt(a, 10);
-                const bNum = parseInt(b, 10);
-                if (!isNaN(aNum) && !isNaN(bNum)) {
-                    return aNum - bNum;
-                }
-                if (a === 'TL') return 1;
-                if (b === 'TL') return -1;
-                return a.localeCompare(b);
-            });
-
-            sortedKeys.forEach(gKey => {
-                groupsMarkup += `
-                    <div class="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
-                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Группа ${gKey}</h4>
-                        <div class="space-y-1.5">
-                `;
-                groups[gKey].forEach(p => {
-                    groupsMarkup += `
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-200 font-medium">${p.name}</span>
-                            <span class="text-slate-500">${p.login}</span>
-                        </div>
-                    `;
-                });
-                groupsMarkup += `</div></div>`;
-            });
-            document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
-
-            // Birthday rendering
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const specialistsWithBdayTime = [];
-
-            state.specsData.forEach(spec => {
-                if (!spec.birthday) return;
-                const bparts = spec.birthday.split('.');
-                const bDay = parseInt(bparts[0], 10);
-                const bMonth = parseInt(bparts[1], 10);
-
-                if (isNaN(bDay) || isNaN(bMonth)) return;
-
-                let nextBday = new Date(today.getFullYear(), bMonth - 1, bDay);
-                if (nextBday < today) {
-                    nextBday.setFullYear(today.getFullYear() + 1);
-                }
-
-                const diffTime = nextBday - today;
-                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                specialistsWithBdayTime.push({
-                    spec: spec,
-                    daysUntil: daysUntil,
-                    isToday: (bDay === today.getDate() && bMonth === (today.getMonth() + 1))
-                });
-            });
-
-            specialistsWithBdayTime.sort((a, b) => a.daysUntil - b.daysUntil);
-
-            let bdayMarkup = '';
-            specialistsWithBdayTime.forEach(item => {
-                bdayMarkup += `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-800/80'}">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="cake" class="w-4 h-4 ${item.isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
-                            <span class="text-xs font-medium ${item.isToday ? 'text-rose-200 font-semibold' : 'text-slate-300'}">${item.spec.name}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs font-mono font-bold ${item.isToday ? 'text-rose-400' : 'text-slate-500'}">${item.spec.birthday}</span>
-                            <span class="text-[10px] text-slate-400 block">${item.isToday ? '(Сегодня!)' : `осталось дней: ${item.daysUntil}`}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('birthdays-list').innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
-            lucide.createIcons();
-        }
-
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
-            });
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(tabId).classList.add('block');
-
-            const tabs = ['tab-status', 'tab-analytics', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                if (t === tabId) {
-                    btn.classList.add('border-emerald-500', 'text-emerald-400');
-                    btn.classList.remove('border-transparent', 'text-slate-400');
-                } else {
-                    btn.classList.remove('border-emerald-500', 'text-emerald-400');
-                    btn.classList.add('border-transparent', 'text-slate-400');
-                }
-            });
-        }
-    </script>
-</body>
-</html>
