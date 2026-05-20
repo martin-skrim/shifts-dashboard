@@ -20,11 +20,10 @@
             border: 1px solid rgba(51, 65, 85, 0.3);
             backdrop-filter: blur(8px);
         }
-        /* Box breathing pulse animation */
         @keyframes breathe {
             0% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
-            25% { transform: scale(1.4); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
-            50% { transform: scale(1.4); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
+            25% { transform: scale(1.3); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
+            50% { transform: scale(1.3); background-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
             75% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
             100% { transform: scale(1); background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.1); }
         }
@@ -81,7 +80,7 @@
                 </button>
 
                 <!-- Audio & Push Toggle -->
-                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 transition-all duration-200 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs font-semibold shadow-sm">
+                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-850 transition-all duration-200 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs font-semibold shadow-sm">
                     <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
                     <span id="audio-status-text">Включить звук</span>
                 </button>
@@ -97,15 +96,15 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats, Active, Queue & Activity (4 Cols) -->
+        <!-- Left Panel: Stats, Active & Queue (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
-            <!-- Specialist Personal Profile Card (NEW) -->
+            <!-- Specialist Personal Profile Card -->
             <div id="agent-profile-card" class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
-                <!-- Anonymous / Locked state -->
-                <div id="profile-logged-out" class="text-center py-4">
-                    <i data-lucide="user-x" class="w-8 h-8 text-slate-500 mx-auto mb-2"></i>
-                    <h3 class="text-xs font-semibold text-slate-300 mb-3">Рабочее место не авторизовано</h3>
+                <!-- Anonymous state -->
+                <div id="profile-logged-out" class="text-center py-3">
+                    <i data-lucide="user-x" class="w-7 h-7 text-slate-500 mx-auto mb-2"></i>
+                    <h3 class="text-xs font-semibold text-slate-300 mb-2.5">Рабочее место не авторизовано</h3>
                     <button onclick="openAgentLoginModal()" class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white transition px-4 py-2 rounded-xl text-xs font-semibold">
                         <i data-lucide="key" class="w-3.5 h-3.5"></i>
                         <span>Войти как специалист</span>
@@ -113,16 +112,16 @@
                 </div>
                 <!-- Logged in state -->
                 <div id="profile-logged-in" class="hidden">
-                    <div class="flex justify-between items-start mb-3">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                             <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i> Рабочее место
                         </h3>
                         <button onclick="logoutAgent()" class="text-[10px] text-rose-400 hover:text-rose-300 underline">Выйти</button>
                     </div>
-                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900/50">
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900/55">
                         <div class="text-sm font-bold text-slate-100" id="profile-user-name">Загрузка...</div>
                         <div class="text-xs text-slate-500 font-mono" id="profile-user-login">@login</div>
-                        <div class="mt-3 pt-3 border-t border-slate-900/80 flex justify-between items-center text-xs">
+                        <div class="mt-2.5 pt-2.5 border-t border-slate-900/80 flex justify-between items-center text-xs">
                             <span class="text-slate-400">Смена сегодня:</span>
                             <span class="font-mono text-slate-300" id="profile-user-hours">Выходной</span>
                         </div>
@@ -516,7 +515,7 @@
         </div>
     </div>
 
-    <!-- Simple Agent Authorization Modal (NEW) -->
+    <!-- Simple Agent Authorization Modal -->
     <div id="agent-login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
         <div class="glass-panel border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl mx-4">
             <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
@@ -555,7 +554,50 @@
     </div>
 
     <script>
-        // --- 1. Global Navigation and System State ---
+        // --- 1. Global Navigation and system variables ---
+        const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
+        const GID_STATUS = '1638344831';
+        const SHEET_NAME_SPECS = 'СПЕЦИАЛИСТЫ';
+
+        const URL_STATUS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_STATUS}`;
+        const URL_SPECS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(SHEET_NAME_SPECS)}`;
+
+        let state = {
+            statusData: [],
+            scheduleHeader: [],
+            scheduleData: [],
+            specsData: [],
+            isAudioEnabled: false,
+            announcedEvents: new Set(),
+            cachedVoice: null,
+            
+            isTLMode: false,
+            tlPinHash: "7777",   
+            localOverrides: {},  
+            delayedAgents: {},   
+            bc: null,
+            pendingAction: null,
+            
+            moodVotes: {},
+            waveNode: null,
+            waveContext: null,
+            isWavePlaying: false,
+
+            callsCount: 0, 
+            callsGoal: 300,
+            activityLog: [],
+            swapOffers: [],
+
+            breathInterval: null,
+            slaLoadSignals: {}, 
+            dayPromo: "PROMO2026",
+            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий.",
+
+            currentUser: null 
+        };
+
+        // --- 2. Global System Functions (Hoisted) ---
+        
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
@@ -580,1140 +622,87 @@
             });
         };
 
-        const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
-        const GID_STATUS = '1638344831';
-        
-        const URL_STATUS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_STATUS}`;
-        const URL_SPECS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=СПЕЦИАЛИСТЫ`;
-
-        let state = {
-            statusData: [],
-            scheduleHeader: [],
-            scheduleData: [],
-            specsData: [],
-            isAudioEnabled: false,
-            announcedEvents: new Set(),
-            cachedVoice: null,
+        function selectBestRussianVoice() {
+            if (typeof speechSynthesis === 'undefined') return;
+            const voices = speechSynthesis.getVoices();
+            const ruVoices = voices.filter(v => v.lang.startsWith('ru'));
             
-            isTLMode: false,
-            tlPinHash: "7777",   
-            localOverrides: {},  
-            delayedAgents: {},   
-            bc: null,
-            
-            moodVotes: {},
-            waveNode: null,
-            waveContext: null,
-            isWavePlaying: false,
-
-            callsCount: 184, 
-            callsGoal: 300,
-            activityLog: [],
-            swapOffers: [],
-
-            breathInterval: null,
-            slaLoadSignals: {}, 
-            dayPromo: "PROMO2026",
-            dayAnnounce: "Доставка в регионы задерживается на 1 день из-за погодных условий.",
-
-            // Simple Authorization state (NEW)
-            currentUser: null // Format: { name: "Имя Фамилия", login: "@login" }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            
-            initBackgroundWorker();
-            setInterval(updateClock, 1000); 
-
-            initBroadcastChannel();
-            checkPregrantedPermissions();
-
-            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-                speechSynthesis.onvoiceschanged = selectBestRussianVoice;
-            } else {
-                selectBestRussianVoice();
-            }
-
-            const audioBtn = document.getElementById('audio-toggle');
-            if (audioBtn) {
-                audioBtn.addEventListener('click', async () => {
-                    await requestNotifications();
-                    toggleAudioState();
-                });
-            }
-
-            document.body.addEventListener('click', () => {
-                if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
-                    if (!state.isAudioEnabled) {
-                        toggleAudioState(true);
-                    }
-                }
-            }, { once: true });
-
-            const testBtn = document.getElementById('test-alert-btn');
-            if (testBtn) {
-                testBtn.addEventListener('click', () => {
-                    if (!state.isAudioEnabled) {
-                        alert("Пожалуйста, сначала включите оповещения кнопкой в шапке.");
-                        return;
-                    }
-                    triggerNotification(
-                        "Система оповещений ShiftFlow",
-                        "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
-                        "Проверка звука завершена успешно"
-                    );
-                });
-            }
-
-            const tlToggleBtn = document.getElementById('tl-mode-toggle');
-            if (tlToggleBtn) {
-                tlToggleBtn.addEventListener('click', () => {
-                    if (state.isTLMode) {
-                        logoutTL();
-                    } else {
-                        openTLAuthModal();
-                    }
-                });
-            }
-
-            document.getElementById('tl-pin-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') submitTLAuth();
-            });
-            document.getElementById('agent-login-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') submitAgentLogin();
-            });
-
-            const savedCalls = localStorage.getItem('shiftflow_calls_today');
-            if (savedCalls) {
-                state.callsCount = parseInt(savedCalls, 10);
-            }
-            updateCallsCounterUI();
-
-            const savedMood = sessionStorage.getItem('shiftflow_my_mood');
-            if (savedMood) {
-                const voteSec = document.getElementById('mood-vote-section');
-                if (voteSec) voteSec.classList.add('hidden');
-            }
-
-            populateStaticSwapSelects();
-
-            // Load persistent Specialist Session if exists
-            const savedUser = localStorage.getItem('shiftflow_current_user');
-            if (savedUser) {
-                state.currentUser = JSON.parse(savedUser);
-            }
-
-            fetchData();
-            setInterval(fetchData, 30000);
-        });
-
-        // --- Simple Specialist Session Login (NEW) ---
-        window.openAgentLoginModal = function() {
-            const modal = document.getElementById('agent-login-modal');
-            const input = document.getElementById('agent-login-input');
-            if (modal && input) {
-                input.value = '';
-                modal.classList.remove('hidden');
-                input.focus();
-            }
-        };
-
-        window.closeAgentLoginModal = function() {
-            const modal = document.getElementById('agent-login-modal');
-            if (modal) modal.classList.add('hidden');
-        };
-
-        window.submitAgentLogin = function() {
-            const input = document.getElementById('agent-login-input');
-            if (!input) return;
-
-            const typedLogin = input.value.trim().toLowerCase();
-            const person = state.statusData.find(p => p.login.toLowerCase() === typedLogin);
-
-            if (person) {
-                state.currentUser = {
-                    name: person.name,
-                    login: person.login
-                };
-                localStorage.setItem('shiftflow_current_user', JSON.stringify(state.currentUser));
-                closeAgentLoginModal();
-                evaluateRealtimeStatus();
-                speak(`Добро пожаловать в систему, ${person.name.split(' ')[0]}! Смена активирована.`);
-                addActivityEvent(`🔑 ${person.name.split(' ')[0]} авторизовался в системе.`, 'info');
-            } else {
-                alert("Ошибка авторизации: специалист с таким логином Telegram не найден на сегодняшней смене!");
-                input.value = '';
-            }
-        };
-
-        window.logoutAgent = function() {
-            if (state.currentUser) {
-                addActivityEvent(`🚪 ${state.currentUser.name.split(' ')[0]} вышел из системы.`, 'info');
-                state.currentUser = null;
-                localStorage.removeItem('shiftflow_current_user');
-                evaluateRealtimeStatus();
-            }
-        };
-
-        // --- Box Breathing Anti-Stress guide ---
-        window.startBoxBreathing = function() {
-            const btnStart = document.getElementById('breath-start-btn');
-            const btnStop = document.getElementById('breath-stop-btn');
-            const sphere = document.getElementById('breath-circle');
-            const phaseText = document.getElementById('breath-phase-text');
-
-            if (!sphere || !phaseText) return;
-
-            btnStart.classList.add('hidden');
-            btnStop.classList.remove('hidden');
-            sphere.className = "w-20 h-20 rounded-full breathing-sphere flex items-center justify-center mb-4";
-            
-            let second = 0;
-            function updateBreathPhase() {
-                const cycleSecond = second % 16;
-                if (cycleSecond === 0) {
-                    phaseText.innerText = "Вдох";
-                    phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
-                } else if (cycleSecond === 4) {
-                    phaseText.innerText = "Задержка";
-                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
-                } else if (cycleSecond === 8) {
-                    phaseText.innerText = "Выдох";
-                    phaseText.className = "text-[10px] uppercase font-bold text-teal-400 tracking-wider";
-                } else if (cycleSecond === 12) {
-                    phaseText.innerText = "Задержка";
-                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
-                }
-                second++;
-            }
-
-            updateBreathPhase();
-            state.breathInterval = setInterval(updateBreathPhase, 1000);
-            addActivityEvent(`🧘 Кто-то запустил антистресс-тренировку дыхания.`, 'info');
-        };
-
-        window.stopBoxBreathing = function() {
-            const btnStart = document.getElementById('breath-start-btn');
-            const btnStop = document.getElementById('breath-stop-btn');
-            const sphere = document.getElementById('breath-circle');
-            const phaseText = document.getElementById('breath-phase-text');
-
-            clearInterval(state.breathInterval);
-            state.breathInterval = null;
-
-            if (btnStart) btnStart.classList.remove('hidden');
-            if (btnStop) btnStop.classList.add('hidden');
-            if (sphere) {
-                sphere.className = "w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4 transition-all duration-1000";
-            }
-            if (phaseText) {
-                phaseText.innerText = "Вдох";
-                phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
-            }
-        };
-
-        // --- SLA Overload Signal System ---
-        window.setSlaStatus = function(status) {
-            if (!state.currentUser) {
-                alert("Ошибка: Для отправки сигналов нагрузки вы должны авторизоваться в профиле слева!");
-                return;
-            }
-            const name = state.currentUser.name;
-            state.slaLoadSignals[name] = status;
-
-            if (state.bc) {
-                state.bc.postMessage({ type: 'sla_sync', signals: state.slaLoadSignals });
-            }
-            evaluateSlaStorm();
-        };
-
-        function evaluateSlaStorm() {
-            let highCount = 0;
-            Object.keys(state.slaLoadSignals).forEach(name => {
-                if (state.slaLoadSignals[name] === 'HIGH') {
-                    highCount++;
-                }
-            });
-
-            const indicator = document.getElementById('sla-storm-indicator');
-            if (indicator) {
-                if (highCount >= 2) {
-                    indicator.classList.remove('hidden');
-                    if (!state.announcedEvents.has('sla-storm-sound')) {
-                        state.announcedEvents.add('sla-storm-sound');
-                        triggerNotification(
-                            "SLA Шторм на линии!",
-                            "Внимание, на линии завал звонков. Всем свободным операторам подключиться на поддержку.",
-                            "Внимание команда, на линии завал! Пожалуйста помогите коллегам!"
-                        );
-                    }
-                } else {
-                    indicator.classList.add('hidden');
-                    state.announcedEvents.delete('sla-storm-sound');
-                }
-            }
-        }
-
-        // --- Cheat Sheet Editor ---
-        window.openHelperEditor = function() {
-            const modal = document.getElementById('tl-helper-editor-modal');
-            const promoIn = document.getElementById('editor-promo-input');
-            const scriptIn = document.getElementById('editor-script-input');
-
-            if (modal && promoIn && scriptIn) {
-                promoIn.value = state.dayPromo;
-                scriptIn.value = state.dayAnnounce;
-                modal.classList.remove('hidden');
-            }
-        };
-
-        window.closeHelperEditor = function() {
-            const modal = document.getElementById('tl-helper-editor-modal');
-            if (modal) modal.classList.add('hidden');
-        };
-
-        window.saveAndBroadcastHelper = function() {
-            const promoIn = document.getElementById('editor-promo-input');
-            const scriptIn = document.getElementById('editor-script-input');
-
-            if (promoIn && scriptIn) {
-                state.dayPromo = promoIn.value.trim() || "—";
-                state.dayAnnounce = scriptIn.value.trim() || "—";
-
-                if (state.bc) {
-                    state.bc.postMessage({
-                        type: 'cheat_sync',
-                        promo: state.dayPromo,
-                        announce: state.dayAnnounce
-                    });
-                }
-                updateCheatSheetUI();
-                closeHelperEditor();
-                addActivityEvent(`📝 Шпаргалка дня обновлена супервайзером.`, 'user-cog');
-            }
-        };
-
-        function updateCheatSheetUI() {
-            const pr = document.getElementById('cheat-promo-text');
-            const sc = document.getElementById('cheat-script-text');
-            if (pr) pr.innerText = state.dayPromo;
-            if (sc) sc.innerText = state.dayAnnounce;
-        }
-
-        // --- Live Activity Feed Logger ---
-        function addActivityEvent(text, icon = 'info') {
-            const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            state.activityLog.unshift({ time: timeStr, text, icon });
-            if (state.activityLog.length > 8) state.activityLog.pop();
-            renderActivityFeed();
-        }
-
-        function renderActivityFeed() {
-            const feedContainer = document.getElementById('live-activity-log');
-            if (!feedContainer) return;
-
-            let markup = '';
-            state.activityLog.forEach(log => {
-                markup += `
-                    <div class="flex items-start gap-2 text-[11px] leading-relaxed select-none">
-                        <span class="font-mono text-slate-500 whitespace-nowrap">${log.time}</span>
-                        <span class="text-slate-300 break-words">${log.text}</span>
-                    </div>
-                `;
-            });
-            feedContainer.innerHTML = markup || `<div class="text-slate-600 text-center py-8">Лента событий пуста</div>`;
-        }
-
-        // --- Collective Call Counter Logic ---
-        window.incrementCallCount = function() {
-            state.callsCount++;
-            localStorage.setItem('shiftflow_calls_today', state.callsCount);
-            
-            if (state.bc) {
-                state.bc.postMessage({ type: 'calls', count: state.callsCount });
-            }
-            updateCallsCounterUI();
-            playSyntheticChime();
-
-            addActivityEvent(`📞 Команда завершила звонок! Всего: ${state.callsCount}`, 'phone');
-
-            if (state.callsCount === state.callsGoal) {
-                speak("Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!");
-                addActivityEvent(`🏆 Поздравляем! Команда достигла дневной цели в 300 вызовов!`, 'award');
-            }
-        };
-
-        function updateCallsCounterUI() {
-            const label = document.getElementById('calls-progress-label');
-            const bar = document.getElementById('calls-progress-bar');
-            if (label && bar) {
-                label.innerText = `${state.callsCount} / ${state.callsGoal}`;
-                const pct = Math.min(100, Math.round((state.callsCount / state.callsGoal) * 100));
-                bar.style.width = `${pct}%`;
-            }
-        }
-
-        // --- Interactive Break Swap Marketplace Logic ---
-        function populateStaticSwapSelects() {
-            const selectTarget = document.getElementById('swap-target-break-select');
-            if (!selectTarget) return;
-
-            const slots = [
-                "09:45 – 10:00", "12:00 – 12:30", "15:15 – 15:30", "17:00 – 17:15", "19:00 – 19:30",
-                "10:45 – 11:00", "13:00 – 13:30", "16:15 – 16:30", "18:00 – 18:15", "20:00 – 20:30"
-            ];
-            selectTarget.innerHTML = '';
-            slots.forEach(slot => {
-                selectTarget.innerHTML += `<option value="${slot}">${slot}</option>`;
-            });
-        }
-
-        window.populateSwapAgentBreaks = function() {
-            const selectMyBreak = document.getElementById('swap-my-break-select');
-            if (!selectMyBreak || !state.currentUser) return;
-
-            const person = state.statusData.find(p => p.name === state.currentUser.name);
-            selectMyBreak.innerHTML = '';
-
-            if (person && person.breaks.length > 0) {
-                person.breaks.forEach((br, idx) => {
-                    selectMyBreak.innerHTML += `<option value="${idx}">${br}</option>`;
-                });
-            } else {
-                selectMyBreak.innerHTML = `<option value="">Перерывов нет</option>`;
-            }
-        };
-
-        window.postSwapOffer = function() {
-            const selectMyBreak = document.getElementById('swap-my-break-select');
-            const selectTarget = document.getElementById('swap-target-break-select');
-
-            if (!state.currentUser) {
-                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле слева!");
-                return;
-            }
-
-            if (!selectMyBreak || selectMyBreak.value === "") {
-                alert("Пожалуйста, выберите перерыв, который вы хотите отдать!");
-                return;
-            }
-
-            const offer = {
-                id: 'swap-' + Date.now(),
-                sender: state.currentUser.name,
-                senderBreakIdx: parseInt(selectMyBreak.value, 10),
-                senderBreakText: selectMyBreak.options[selectMyBreak.selectedIndex].text,
-                targetBreakText: selectTarget.value
-            };
-
-            if (state.swapOffers.some(o => o.sender === offer.sender && o.senderBreakText === offer.senderBreakText)) {
-                alert("Вы уже создали аналогичный запрос на обмен для этого перерыва.");
-                return;
-            }
-
-            state.swapOffers.push(offer);
-            
-            if (state.bc) {
-                state.bc.postMessage({ type: 'swap_offers_sync', offers: state.swapOffers });
-            }
-            renderSwapOffersList();
-            addActivityEvent(`🔁 ${offer.sender.split(' ')[0]} выставил на обмен перерыв ${offer.senderBreakText}`, 'swap');
-        };
-
-        window.acceptSwapOffer = function(offerId) {
-            if (!state.currentUser) {
-                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле в сайдбаре слева!");
-                return;
-            }
-            const acceptorName = state.currentUser.name;
-            const offer = state.swapOffers.find(o => o.id === offerId);
-            if (!offer) return;
-
-            if (offer.sender === acceptorName) {
-                alert("Вы не можете принять свое собственное предложение!");
-                return;
-            }
-
-            const acceptorPerson = state.statusData.find(p => p.name === acceptorName);
-            if (!acceptorPerson) return;
-
-            const hasTargetBreak = acceptorPerson.breaks.includes(offer.targetBreakText);
-            const targetBreakIdxInAcceptor = acceptorPerson.breaks.indexOf(offer.targetBreakText);
-
-            if (!hasTargetBreak) {
-                alert(`У вас нет перерыва ${offer.targetBreakText} для проведения обмена!`);
-                return;
-            }
-
-            const senderPerson = state.statusData.find(p => p.name === offer.sender);
-            if (!senderPerson) return;
-
-            senderPerson.breaks[offer.senderBreakIdx] = offer.targetBreakText;
-            acceptorPerson.breaks[targetBreakIdxInAcceptor] = offer.senderBreakText;
-
-            state.swapOffers = state.swapOffers.filter(o => o.id !== offerId);
-
-            if (state.bc) {
-                state.bc.postMessage({ 
-                    type: 'swap_offers_sync', 
-                    offers: state.swapOffers 
-                });
-                state.bc.postMessage({
-                    type: 'forced_break_array_mutation',
-                    statusData: state.statusData
-                });
-            }
-
-            renderSwapOffersList();
-            evaluateRealtimeStatus();
-
-            triggerNotification(
-                "Обмен перерывами совершен!",
-                `Успешный обмен между ${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]}.`,
-                `${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]} поменялись перерывами.`
+            if (ruVoices.length === 0) return;
+
+            const premiumVoice = ruVoices.find(v => 
+                v.name.includes('Google') || 
+                v.name.includes('Neural') || 
+                v.name.includes('Irina') || 
+                v.name.includes('Pavel') || 
+                v.name.includes('Premium')
             );
-            addActivityEvent(`🤝 Обмен совершен: ${offer.sender.split(' ')[0]} (${offer.senderBreakText}) ⇄ ${acceptorName.split(' ')[0]} (${offer.targetBreakText})`, 'swap');
-        };
 
-        function renderSwapOffersList() {
-            const listEl = document.getElementById('swap-offers-list');
-            if (!listEl) return;
-
-            if (state.swapOffers.length === 0) {
-                listEl.innerHTML = `<div class="text-slate-500 text-center py-4">Нет активных заявок на обмен</div>`;
-                return;
-            }
-
-            let markup = '';
-            state.swapOffers.forEach(offer => {
-                markup += `
-                    <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                        <div>
-                            <span class="font-bold text-slate-200 block">${offer.sender.split(' ')[0]}</span>
-                            <span class="text-[10px] text-slate-400 block mt-0.5">Отдает: <span class="font-mono font-semibold text-amber-400">${offer.senderBreakText}</span></span>
-                            <span class="text-[10px] text-slate-400 block">Желает взамен: <span class="font-mono font-semibold text-indigo-400">${offer.targetBreakText}</span></span>
-                        </div>
-                        <button onclick="acceptSwapOffer('${offer.id}')" class="bg-indigo-500/15 hover:bg-indigo-500 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg border border-indigo-500/20 transition-all font-semibold">Обменяться</button>
-                    </div>
-                `;
-            });
-            listEl.innerHTML = markup;
+            state.cachedVoice = premiumVoice || ruVoices[0];
         }
 
-        // --- System Broadcast Messages Handlers ---
-        function initBroadcastChannel() {
-            if ('BroadcastChannel' in window) {
-                state.bc = new BroadcastChannel('shiftflow_coordination_channel');
-                state.bc.onmessage = (e) => {
-                    if (!e.data) return;
-                    if (e.data.type === 'sync') {
-                        state.localOverrides = e.data.localOverrides;
-                        state.delayedAgents = e.data.delayedAgents;
-                        evaluateRealtimeStatus();
-                    } else if (e.data.type === 'mood') {
-                        state.moodVotes = e.data.moodVotes;
-                        calculateMoodUI();
-                    } else if (e.data.type === 'gift') {
-                        handleIncomingGift(e.data);
-                    } else if (e.data.type === 'calls') {
-                        state.callsCount = e.data.count;
-                        updateCallsCounterUI();
-                    } else if (e.data.type === 'swap_offers_sync') {
-                        state.swapOffers = e.data.offers;
-                        renderSwapOffersList();
-                    } else if (e.data.type === 'forced_break_array_mutation') {
-                        state.statusData = e.data.statusData;
-                        evaluateRealtimeStatus();
-                    } else if (e.data.type === 'cheat_sync') {
-                        state.dayPromo = e.data.promo;
-                        state.dayAnnounce = e.data.announce;
-                        updateCheatSheetUI();
-                    } else if (e.data.type === 'sla_sync') {
-                        state.slaLoadSignals = e.data.signals;
-                        evaluateSlaStorm();
-                    }
-                };
-            }
-        }
-
-        function broadcastSync() {
-            if (state.bc) {
-                state.bc.postMessage({
-                    type: 'sync',
-                    localOverrides: state.localOverrides,
-                    delayedAgents: state.delayedAgents
-                });
-            }
-        }
-
-        window.sendPeerGift = function(receiverName, giftType) {
-            if (!state.currentUser) {
-                alert("Пожалуйста, сначала авторизуйтесь во вкладке профиля слева, чтобы отправить подарок!");
-                return;
-            }
-            const senderName = state.currentUser.name;
-            if (senderName === receiverName) {
-                alert("Вы не можете отправить подарок самому себе!");
-                return;
-            }
-
-            const payload = {
-                type: 'gift',
-                sender: senderName.split(' ')[0],
-                receiver: receiverName,
-                gift: giftType
-            };
-
-            if (state.bc) {
-                state.bc.postMessage(payload);
-            }
-            handleIncomingGift(payload);
-        };
-
-        function handleIncomingGift(data) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-
-            const iconMap = { 'coffee': '☕', 'highfive': '✋' };
-            const textMap = { 
-                'coffee': `прислал(а) вам виртуальный горячий кофе! Отдохните!`, 
-                'highfive': `дает вам пять за отличную поддержку на линии!` 
-            };
-
-            const isMe = state.statusData.some(p => p.name === data.receiver);
-            if (!isMe) return; 
-
-            playSyntheticChime();
-
-            const toast = document.createElement('div');
-            toast.className = "glass-panel border-emerald-500/40 bg-slate-950/95 p-4 rounded-xl shadow-2xl flex items-start gap-3 pointer-events-auto transition-all duration-300 transform translate-y-4 opacity-0 border";
-            toast.innerHTML = `
-                <span class="text-2xl">${iconMap[data.gift]}</span>
-                <div>
-                    <h4 class="text-xs font-bold text-slate-100">${data.sender}</h4>
-                    <p class="text-[10px] text-slate-400 mt-0.5">${textMap[data.gift]}</p>
-                </div>
-            `;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-4', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => { toast.remove(); }, 300);
-            }, 6000);
-
-            addActivityEvent(`🎁 ${data.sender} отправил подарок ${iconMap[data.gift]} для ${data.receiver.split(' ')[0]}`, 'gift');
-        }
-
-        function playSyntheticChime() {
-            if (!state.isAudioEnabled) return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
-                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); 
-                
-                gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.8);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-
-        window.toggleOceanWaves = function(on) {
-            const btns = document.querySelectorAll('.ambient-relax-btn');
-            if (!on) {
-                if (state.waveNode) {
-                    try { state.waveNode.stop(); } catch(e){}
-                    state.waveNode = null;
-                }
-                state.isWavePlaying = false;
-                btns.forEach(b => {
-                    b.innerHTML = `<i data-lucide="music" class="w-3 h-3 inline"></i> <span>Шум моря</span>`;
-                    b.className = "ambient-relax-btn mt-2 inline-flex items-center gap-1 px-2.5 py-1 bg-slate-900 hover:bg-slate-850 text-slate-400 rounded-md text-[10px] border border-slate-800 transition-all";
-                });
-                lucide.createIcons();
-                return;
-            }
-
-            try {
-                state.waveContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                const bufferSize = 2 * state.waveContext.sampleRate;
-                const noiseBuffer = state.waveContext.createBuffer(1, bufferSize, state.waveContext.sampleRate);
-                const output = noiseBuffer.getChannelData(0);
-                let lastOut = 0.0;
-                
-                for (let i = 0; i < bufferSize; i++) {
-                    const white = Math.random() * 2 - 1;
-                    output[i] = (lastOut + (0.018 * white)) / 1.018;
-                    lastOut = output[i];
-                    output[i] *= 3.8; 
-                }
-
-                const noise = state.waveContext.createBufferSource();
-                noise.buffer = noiseBuffer;
-                noise.loop = true;
-
-                const filter = state.waveContext.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.Q.value = 1.2;
-
-                const lfo = state.waveContext.createOscillator();
-                lfo.frequency.value = 0.12; 
-                const lfoGain = state.waveContext.createGain();
-                lfoGain.gain.value = 350; 
-
-                lfo.connect(lfoGain);
-                lfoGain.connect(filter.frequency);
-                filter.frequency.value = 450; 
-
-                const gainNode = state.waveContext.createGain();
-                gainNode.gain.value = 0.12; 
-
-                noise.connect(filter);
-                filter.connect(gainNode);
-                gainNode.connect(state.waveContext.destination);
-
-                lfo.start();
-                noise.start();
-
-                state.waveNode = {
-                    stop: () => {
-                        try { lfo.stop(); } catch(e){}
-                        try { noise.stop(); } catch(e){}
-                        try { state.waveContext.close(); } catch(e){}
-                    }
-                };
-                state.isWavePlaying = true;
-                
-                btns.forEach(b => {
-                    b.innerHTML = `<i data-lucide="volume-2" class="w-3 h-3 inline animate-pulse text-emerald-400"></i> <span class="text-emerald-400 font-semibold">Играет море...</span>`;
-                    b.className = "ambient-relax-btn mt-2 inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border-emerald-500/20 rounded-md text-[10px] transition-all";
-                });
-                lucide.createIcons();
-            } catch(e) {
-                console.error(e);
-            }
-        };
-
-        window.triggerOceanToggle = function() {
-            if (state.isWavePlaying) {
-                toggleOceanWaves(false);
-            } else {
-                toggleOceanWaves(true);
-            }
-        };
-
-        window.submitMoodVote = function(emoji) {
-            if (sessionStorage.getItem('shiftflow_my_mood')) return;
-
-            if (!state.moodVotes[emoji]) state.moodVotes[emoji] = 0;
-            state.moodVotes[emoji]++;
-
-            sessionStorage.setItem('shiftflow_my_mood', emoji);
-            const widget = document.getElementById('mood-vote-section');
-            if (widget) widget.classList.add('hidden');
-
-            if (state.bc) {
-                state.bc.postMessage({
-                    type: 'mood',
-                    moodVotes: state.moodVotes
-                });
-            }
-            calculateMoodUI();
-            addActivityEvent(`🚀 Кто-то обновил статус своего настроения!`, 'smile');
-        };
-
-        function calculateMoodUI() {
-            let total = 0;
-            let scoreSum = 0;
-            const weights = { '🚀': 100, '☕': 80, '😴': 50, '🤯': 30 };
-
-            Object.keys(weights).forEach(em => {
-                const count = state.moodVotes[em] || 0;
-                total += count;
-                scoreSum += count * weights[em];
-            });
-
-            const scorePercent = total > 0 ? Math.round(scoreSum / total) : 75;
-            const percentageText = document.getElementById('team-energy-percentage');
-            const bar = document.getElementById('team-energy-bar');
-
-            if (percentageText && bar) {
-                percentageText.innerText = `${scorePercent}%`;
-                bar.style.width = `${scorePercent}%`;
-                
-                if (scorePercent >= 80) {
-                    bar.className = "bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500";
-                } else if (scorePercent >= 50) {
-                    bar.className = "bg-gradient-to-r from-amber-500 to-orange-400 h-full rounded-full transition-all duration-500";
-                } else {
-                    bar.className = "bg-gradient-to-r from-rose-500 to-red-400 h-full rounded-full transition-all duration-500";
-                }
-            }
-        }
-
-        function runPredictiveUnderstaffingScanner(hourlyCoverage) {
-            const now = new Date();
-            let alertActive = false;
-            let earliestUnderstaffedTime = null;
-            let minimumUnderstaffedHeadcount = 2;
-
-            for (let offset = 5; offset <= 60; offset += 5) {
-                const checkTime = new Date(now.getTime() + offset * 60000);
-                let projectedActive = 0;
-
-                state.statusData.forEach(person => {
-                    const todayShift = getTodayShiftHours(person.name, person.hours);
-                    if (!todayShift) return;
-
-                    const shiftParts = todayShift.split(/[-–—]/);
-                    const startWork = parseMskTimeToLocal(shiftParts[0].trim());
-                    const endWork = parseMskTimeToLocal(shiftParts[1].trim());
-
-                    if (endWork < startWork) endWork.setDate(endWork.getDate() + 1);
-
-                    if (checkTime >= startWork && checkTime <= endWork) {
-                        let onBreak = false;
-                        const hasDelay = state.delayedAgents[person.name] !== undefined;
-
-                        person.breaks.forEach(br => {
-                            const brParts = br.split(/[-–—]/);
-                            let brStart = parseMskTimeToLocal(brParts[0].trim());
-                            let brEnd = parseMskTimeToLocal(brParts[1].trim());
-
-                            if (hasDelay && brStart && brEnd) {
-                                brStart = new Date(brStart.getTime() + 15 * 60000);
-                                brEnd = new Date(brEnd.getTime() + 15 * 60000);
-                            }
-
-                            if (brStart && brEnd && checkTime >= brStart && checkTime <= brEnd) {
-                                onBreak = true;
-                            }
-                        });
-
-                        let finalStatus = onBreak ? 'Перерыв' : 'В строю';
-                        if (state.localOverrides[person.name]) {
-                            finalStatus = state.localOverrides[person.name].status;
-                        }
-
-                        if (finalStatus === 'В строю') {
-                            projectedActive++;
-                        }
-                    }
-                });
-
-                if (projectedActive < 2) {
-                    alertActive = true;
-                    earliestUnderstaffedTime = checkTime;
-                    minimumUnderstaffedHeadcount = projectedActive;
-                    break; 
-                }
-            }
-
-            const banner = document.getElementById('understaffing-banner');
-            const textEl = document.getElementById('understaffing-text');
-
-            if (banner && textEl) {
-                if (alertActive && earliestUnderstaffedTime) {
-                    banner.classList.remove('hidden');
-                    const timeStr = String(earliestUnderstaffedTime.getHours()).padStart(2, '0') + ':' + String(earliestUnderstaffedTime.getMinutes()).padStart(2, '0');
-                    textEl.innerText = `Внимание: в ${timeStr} на линии останется всего ${minimumUnderstaffedHeadcount} оп. Сдвиг перерывов нежелателен!`;
-                } else {
-                    banner.classList.add('hidden');
-                }
-            }
-        }
-
-        // --- Safe Dropdowns & UI Synchronization ---
-        function populateAgentDropdowns() {
-            const plannerAgentSelect = document.getElementById('planner-agent-select');
-
-            if (!plannerAgentSelect || state.statusData.length === 0) return;
-
-            const currentPlannerVal = plannerAgentSelect.value;
-
-            plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
-            state.statusData.forEach(p => {
-                plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
-
-            if (currentPlannerVal) {
-                plannerAgentSelect.value = currentPlannerVal;
-                populatePlannerBreaks();
-            } else {
-                populatePlannerBreaks();
-            }
-        }
-
-        // --- TL Mode Protection Logic ---
-        function openTLAuthModal() {
-            const modal = document.getElementById('tl-auth-modal');
-            const pinInput = document.getElementById('tl-pin-input');
-            if (modal && pinInput) {
-                pinInput.value = '';
-                modal.classList.remove('hidden');
-                pinInput.focus();
-            }
-        }
-
-        window.closeTLAuthModal = function() {
-            const modal = document.getElementById('tl-auth-modal');
-            if (modal) modal.classList.add('hidden');
-        };
-
-        window.submitTLAuth = function() {
-            const input = document.getElementById('tl-pin-input');
-            if (input && input.value === state.tlPinHash) {
-                toggleTLMode(true);
-                closeTLAuthModal();
-            } else {
-                alert("Неверный пин-код доступа супервайзера!");
-                if (input) input.value = '';
-            }
-        };
-
-        window.logoutTL = function() {
-            toggleTLMode(false);
-        };
-
-        // --- Agent Verification Protection Logic ---
-        window.requestAgentDelay = function() {
-            if (!state.currentUser) {
-                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
-                return;
-            }
-            executeDelay(state.currentUser.name);
-        };
-
-        window.requestCancelDelay = function() {
-            if (!state.currentUser) {
-                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
-                return;
-            }
-            executeCancel(state.currentUser.name);
-        };
-
-        // --- System Core Logic ---
-        window.toggleTLMode = function(forceState) {
-            state.isTLMode = forceState;
-            const btn = document.getElementById('tl-mode-toggle');
-            const banner = document.getElementById('tl-banner');
-            const editHelperBtn = document.getElementById('edit-helper-btn');
-            
-            if (btn) {
-                if (state.isTLMode) {
-                    btn.className = "flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 px-3 py-1.5 rounded-lg border border-indigo-500 text-xs font-medium";
-                    if (banner) banner.classList.remove('hidden');
-                    if (editHelperBtn) editHelperBtn.classList.remove('hidden');
-                } else {
-                    btn.className = "flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium";
-                    if (banner) banner.classList.add('hidden');
-                    if (editHelperBtn) editHelperBtn.classList.add('hidden');
-                }
-            }
-            evaluateRealtimeStatus();
-        };
-
-        window.tlForceStatus = function(agentName, forcedStatus) {
-            if (!state.isTLMode) return;
-            if (forcedStatus === 'CLEAR') {
-                delete state.localOverrides[agentName];
-                addActivityEvent(`🛡️ TL: Сброс статуса для ${agentName.split(' ')[0]}`, 'info');
-            } else {
-                state.localOverrides[agentName] = {
-                    status: forcedStatus,
-                    timestamp: Date.now()
-                };
-                addActivityEvent(`🛡️ TL: ${agentName.split(' ')[0]} переведен в "${forcedStatus}"`, 'user-cog');
-            }
-            broadcastSync();
-            evaluateRealtimeStatus();
-        };
-
-        window.populatePlannerBreaks = function() {
-            const selectAgent = document.getElementById('planner-agent-select');
-            const selectBreak = document.getElementById('planner-break-select');
-            if (!selectAgent || !selectBreak) return;
-
-            const name = selectAgent.value;
-            const person = state.statusData.find(p => p.name === name);
-            
-            selectBreak.innerHTML = '';
-            if (person && person.breaks.length > 0) {
-                person.breaks.forEach((br, idx) => {
-                    selectBreak.innerHTML += `<option value="${idx}">${br}</option>`;
-                });
-            } else {
-                selectBreak.innerHTML = `<option value="">Перерывов нет</option>`;
-            }
-        };
-
-        window.calculateProposedBreakMove = function() {
-            const agentSelect = document.getElementById('planner-agent-select');
-            const breakSelect = document.getElementById('planner-break-select');
-            const offsetSelect = document.getElementById('planner-offset-select');
-            
-            if (!agentSelect || !breakSelect || !offsetSelect) return;
-            if (agentSelect.value === "" || breakSelect.value === "") return;
-
-            const name = agentSelect.value;
-            const breakIdx = parseInt(breakSelect.value, 10);
-            const offsetMins = parseInt(offsetSelect.value, 10);
-
-            const person = state.statusData.find(p => p.name === name);
-            if (!person) return;
-
-            const breakText = person.breaks[breakIdx];
-            const parts = breakText.split(/[-–—]/);
-            const originalStart = parseMskTimeToLocal(parts[0].trim());
-            const originalEnd = parseMskTimeToLocal(parts[1].trim());
-
-            const simulatedStart = new Date(originalStart.getTime() + offsetMins * 60000);
-            const simulatedEnd = new Date(originalEnd.getTime() + offsetMins * 60000);
-
-            let otherActiveCoverage = 0;
-            state.statusData.forEach(p => {
-                if (p.name === name) return;
-
-                const todayShift = getTodayShiftHours(p.name, p.hours);
-                if (!todayShift) return;
-
-                const shiftParts = todayShift.split(/[-–—]/);
-                const pShiftStart = parseMskTimeToLocal(shiftParts[0].trim());
-                const pShiftEnd = parseMskTimeToLocal(shiftParts[1].trim());
-
-                if (pShiftEnd < pShiftStart) pShiftEnd.setDate(pShiftEnd.getDate() + 1);
-
-                if (simulatedStart >= pShiftStart && simulatedStart <= pShiftEnd) {
-                    let insidePeerBreak = false;
-                    p.breaks.forEach(pBr => {
-                        const pBrParts = pBr.split(/[-–—]/);
-                        const pBrStart = parseMskTimeToLocal(pBrParts[0].trim());
-                        const pBrEnd = parseMskTimeToLocal(pBrParts[1].trim());
-                        if (simulatedStart >= pBrStart && simulatedStart <= pBrEnd) {
-                            insidePeerBreak = true;
-                        }
+        function triggerNotification(title, text, spokenText) {
+            speak(spokenText || text);
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    new Notification(title, {
+                        body: text,
+                        icon: 'https://img.icons8.com/color/96/000000/clock.png'
                     });
-                    if (!insidePeerBreak) {
-                        otherActiveCoverage++;
-                    }
-                }
-            });
-
-            const resultBox = document.getElementById('planner-result-box');
-            const resTitle = document.getElementById('planner-result-title');
-            const resDesc = document.getElementById('planner-result-desc');
-            const resBadge = document.getElementById('planner-result-badge');
-
-            if (resultBox && resTitle && resDesc && resBadge) {
-                resultBox.classList.remove('hidden');
-                
-                const formattedStartStr = String(simulatedStart.getHours()).padStart(2, '0') + ':' + String(simulatedStart.getMinutes()).padStart(2, '0');
-                const formattedEndStr = String(simulatedEnd.getHours()).padStart(2, '0') + ':' + String(simulatedEnd.getMinutes()).padStart(2, '0');
-
-                resTitle.innerText = `Новое время: ${formattedStartStr} – ${formattedEndStr}`;
-
-                if (otherActiveCoverage >= 2) {
-                    resultBox.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-xs flex justify-between items-center animate-pulse";
-                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400";
-                    resBadge.innerText = "🟢 Безопасно";
-                    resDesc.innerText = `Свободно на линии: ${otherActiveCoverage} оп. Отличное время для сдвига перерыва.`;
-                } else if (otherActiveCoverage === 1) {
-                    resultBox.className = "p-4 rounded-xl border bg-amber-500/10 border-amber-500/20 text-xs flex justify-between items-center";
-                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-amber-500/20 text-amber-400";
-                    resBadge.innerText = "🟡 Ослабление (1 оп.)";
-                    resDesc.innerText = `На линии останется только один оператор. Требуется согласование с TL.`;
-                } else {
-                    resultBox.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/20 text-xs flex justify-between items-center";
-                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-rose-500/20 text-rose-400";
-                    resBadge.innerText = "🔴 Пустая линия (0 оп.)";
-                    resDesc.innerText = `Критическое провисание смены! Перенос создаст пустоту на линии. Сдвиг запрещен.`;
-                }
-            }
-        };
-
-        function checkPregrantedPermissions() {
-            if (window.Notification && Notification.permission === 'granted') {
-                const savedAudioPref = localStorage.getItem('shiftflow_audio_enabled');
-                const text = document.getElementById('audio-status-text');
-                const icon = document.getElementById('audio-icon');
-                
-                if (savedAudioPref === 'true' && text && icon) {
-                    icon.setAttribute('data-lucide', 'volume-2');
-                    icon.className = 'w-4 h-4 text-emerald-400';
-                    text.innerText = 'Оповещения включены';
-                    lucide.createIcons();
+                } catch (e) {
+                    console.error("Ошибка push-уведомления:", e);
                 }
             }
         }
 
-        async function requestNotifications() {
-            if ("Notification" in window) {
-                await Notification.requestPermission();
-            }
-        }
-
-        function toggleAudioState(forceOn = false) {
-            state.isAudioEnabled = forceOn ? true : !state.isAudioEnabled;
-            localStorage.setItem('shiftflow_audio_enabled', state.isAudioEnabled ? 'true' : 'false');
-            
-            const icon = document.getElementById('audio-icon');
-            const text = document.getElementById('audio-status-text');
-            
-            if (text && icon) {
-                if (state.isAudioEnabled) {
-                    icon.setAttribute('data-lucide', 'volume-2');
-                    icon.className = 'w-4 h-4 text-emerald-400';
-                    text.innerText = 'Оповещения включены';
-                    speak("Оповещения активированы.");
-                } else {
-                    icon.setAttribute('data-lucide', 'volume-x');
-                    icon.className = 'w-4 h-4 text-rose-400';
-                    text.innerText = 'Включить оповещения';
-                }
-                lucide.createIcons();
-            }
-        }
-
-        function initBackgroundWorker() {
-            const workerCode = `
-                let intervalId;
-                self.onmessage = function(e) {
-                    if (e.data === 'start') {
-                        intervalId = setInterval(() => {
-                            self.postMessage('tick');
-                        }, 1000);
-                    } else if (e.data === 'stop') {
-                        clearInterval(intervalId);
-                    }
-                };
-            `;
+        function speak(text) {
+            if (!state.isAudioEnabled || typeof speechSynthesis === 'undefined') return;
             try {
-                const blob = new Blob([workerCode], {type: 'application/javascript'});
-                const worker = new Worker(URL.createObjectURL(blob));
-                worker.onmessage = function(e) {
-                    if (e.data === 'tick') {
-                        updateClock();
-                    }
-                };
-                worker.postMessage('start');
-            } catch (e) {
-                setInterval(updateClock, 1000);
+                speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (state.cachedVoice) {
+                    utterance.voice = state.cachedVoice;
+                }
+                utterance.lang = 'ru-RU';
+                utterance.volume = 1.0;
+                utterance.rate = 0.95;  
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
+            } catch (err) {
+                console.error("Сбой синтеза речи:", err);
             }
+        }
+
+        function parseMskTimeToLocal(timeStr) {
+            if (!timeStr) return null;
+            const cleanTime = timeStr.trim();
+            const parts = cleanTime.split(':');
+            if (parts.length < 2) return null;
+            
+            const now = new Date();
+            const mskFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const formattingParts = mskFormatter.formatToParts(now);
+            
+            let month = '01', day = '01', year = '1970';
+            for (let part of formattingParts) {
+                if (part.type === 'month') month = part.value;
+                if (part.type === 'day') day = part.value;
+                if (part.type === 'year') year = part.value;
+            }
+
+            const isoStr = `${year}-${month}-${day}T${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00+03:00`;
+            return new Date(isoStr);
+        }
+
+        function formatMskRangeToLocal(rangeStr) {
+            if (!rangeStr || (!rangeStr.includes('–') && !rangeStr.includes('-'))) return '—';
+            const parts = rangeStr.split(/[-–—]/);
+            const startLocal = parseMskTimeToLocal(parts[0].trim());
+            const endLocal = parseMskTimeToLocal(parts[1].trim());
+            if (!startLocal || !endLocal) return rangeStr;
+            
+            const formatTime = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            return `${formatTime(startLocal)} – ${formatTime(endLocal)}`;
         }
 
         function normalizeDateStr(str) {
@@ -1731,6 +720,8 @@
         }
 
         function getTodayShiftHours(personName, fallbackHours) {
+            if (state.scheduleHeader.length === 0) return fallbackHours;
+            
             const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
                 timeZone: 'Europe/Moscow',
                 day: '2-digit',
@@ -1777,50 +768,6 @@
                 lines.push(row);
             }
             return lines;
-        }
-
-        async function fetchData() {
-            const syncElement = document.getElementById('sync-status');
-            const offlineBanner = document.getElementById('offline-banner');
-
-            if (syncElement) {
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
-            }
-            
-            try {
-                const [statusRes, specsRes] = await Promise.all([
-                    fetch(URL_STATUS).then(r => r.text()),
-                    fetch(URL_SPECS).then(r => r.text())
-                ]);
-
-                localStorage.setItem('shiftflow_cache_status', statusRes);
-                localStorage.setItem('shiftflow_cache_specs', specsRes);
-
-                processStatusSheet(parseCSV(statusRes));
-                processSpecsSheet(parseCSV(specsRes));
-
-                if (offlineBanner) offlineBanner.classList.add('hidden');
-                if (syncElement) {
-                    syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
-                }
-                renderUI();
-            } catch (err) {
-                console.error("Ошибка сети. Загрузка кэша.", err);
-                
-                const cachedStatus = localStorage.getItem('shiftflow_cache_status');
-                const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
-
-                if (cachedStatus && cachedSpecs) {
-                    processStatusSheet(parseCSV(cachedStatus));
-                    processSpecsSheet(parseCSV(cachedSpecs));
-                    if (offlineBanner) offlineBanner.classList.remove('hidden');
-                    renderUI();
-                } else {
-                    if (syncElement) {
-                        syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка сети`;
-                    }
-                }
-            }
         }
 
         function processStatusSheet(grid) {
@@ -1880,6 +827,40 @@
             state.specsData = specs;
         }
 
+        function getAchievements(person, todayShift) {
+            let achievements = [];
+            const today = new Date();
+            
+            if (person.birthday) {
+                const bparts = person.birthday.split('.');
+                if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
+                    achievements.push({ icon: '🎂', name: 'Именинник', desc: 'С днем рождения!' });
+                }
+            }
+            
+            if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
+                const parts = todayShift.split(/[-–—]/);
+                const startLocal = parseMskTimeToLocal(parts[0].trim());
+                const endLocal = parseMskTimeToLocal(parts[1].trim());
+                if (startLocal && endLocal) {
+                    if (startLocal.getHours() < 9) {
+                        achievements.push({ icon: '🌅', name: 'Ранняя пташка', desc: 'Смена началась раньше 9:00' });
+                    }
+                    
+                    const durationMins = Math.round((endLocal - startLocal) / 60000);
+                    if (durationMins >= 720) {
+                        achievements.push({ icon: '🔋', name: 'Энерджайзер', desc: 'Рабочая смена 12 часов и более' });
+                    }
+                }
+            }
+
+            if (person.breaks && person.breaks.length >= 4) {
+                achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
+            }
+
+            return achievements;
+        }
+
         function evaluateRealtimeStatus() {
             const now = new Date();
             let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
@@ -1891,7 +872,7 @@
 
             let hourlyCoverage = Array(24).fill(0); 
 
-            // Sync Employee Profile UI card (NEW)
+            // Sync Employee Profile UI card
             const pLoggedOut = document.getElementById('profile-logged-out');
             const pLoggedIn = document.getElementById('profile-logged-in');
             
@@ -1909,7 +890,6 @@
                 const currentShift = getTodayShiftHours(state.currentUser.name, null);
                 if (profHours) profHours.innerText = currentShift ? formatMskRangeToLocal(currentShift) : "Выходной";
                 
-                // Show/hide help notices on tab coordination dynamically based on auth state
                 const slaWarn = document.getElementById('sla-unauthorized-warning');
                 const slaRow = document.getElementById('sla-controls-row');
                 const delayWarn = document.getElementById('delay-unauthorized-warning');
@@ -1920,12 +900,14 @@
                 if (slaWarn) slaWarn.classList.add('hidden');
                 if (slaRow) {
                     slaRow.classList.remove('hidden');
-                    document.getElementById('sla-my-name-label').innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
+                    const label = document.getElementById('sla-my-name-label');
+                    if (label) label.innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
                 }
                 if (delayWarn) delayWarn.classList.add('hidden');
                 if (delayRow) {
                     delayRow.classList.remove('hidden');
-                    document.getElementById('delay-my-name-label').innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
+                    const label = document.getElementById('delay-my-name-label');
+                    if (label) label.innerText = `Вы: ${state.currentUser.name.split(' ')[0]}`;
                 }
                 if (swapWarn) swapWarn.classList.add('hidden');
                 if (swapRow) {
@@ -2273,7 +1255,9 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
+            // Run Predictive Understaffing Alert System
             runPredictiveUnderstaffingScanner(hourlyCoverage);
+
             drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
@@ -2470,6 +1454,275 @@
             }
             lucide.createIcons();
         }
+
+        // --- Simple Specialist Session Login ---
+        window.openAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            const input = document.getElementById('agent-login-input');
+            if (modal && input) {
+                input.value = '';
+                modal.classList.remove('hidden');
+                input.focus();
+            }
+        };
+
+        window.closeAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.submitAgentLogin = function() {
+            const input = document.getElementById('agent-login-input');
+            if (!input) return;
+
+            const typedLogin = input.value.trim().toLowerCase();
+            const person = state.statusData.find(p => p.login.toLowerCase() === typedLogin);
+
+            if (person) {
+                state.currentUser = {
+                    name: person.name,
+                    login: person.login
+                };
+                localStorage.setItem('shiftflow_current_user', JSON.stringify(state.currentUser));
+                closeAgentLoginModal();
+                evaluateRealtimeStatus();
+                speak(`Добро пожаловать в систему, ${person.name.split(' ')[0]}! Смена активирована.`);
+                addActivityEvent(`🔑 ${person.name.split(' ')[0]} авторизовался в системе.`, 'info');
+            } else {
+                alert("Ошибка авторизации: специалист с таким логином Telegram не найден на сегодняшней смене!");
+                input.value = '';
+            }
+        };
+
+        window.logoutAgent = function() {
+            if (state.currentUser) {
+                addActivityEvent(`🚪 ${state.currentUser.name.split(' ')[0]} вышел из системы.`, 'info');
+                state.currentUser = null;
+                localStorage.removeItem('shiftflow_current_user');
+                evaluateRealtimeStatus();
+            }
+        };
+
+        // --- SLA Overload Signal System ---
+        window.setSlaStatus = function(status) {
+            if (!state.currentUser) {
+                alert("Ошибка: Для отправки сигналов нагрузки вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            const name = state.currentUser.name;
+            state.slaLoadSignals[name] = status;
+
+            if (state.bc) {
+                state.bc.postMessage({ type: 'sla_sync', signals: state.slaLoadSignals });
+            }
+            evaluateSlaStorm();
+        };
+
+        // --- Cheat Sheet Editor ---
+        window.openHelperEditor = function() {
+            const modal = document.getElementById('tl-helper-editor-modal');
+            const promoIn = document.getElementById('editor-promo-input');
+            const scriptIn = document.getElementById('editor-script-input');
+
+            if (modal && promoIn && scriptIn) {
+                promoIn.value = state.dayPromo;
+                scriptIn.value = state.dayAnnounce;
+                modal.classList.remove('hidden');
+            }
+        };
+
+        window.closeHelperEditor = function() {
+            const modal = document.getElementById('tl-helper-editor-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.saveAndBroadcastHelper = function() {
+            const promoIn = document.getElementById('editor-promo-input');
+            const scriptIn = document.getElementById('editor-script-input');
+
+            if (promoIn && scriptIn) {
+                state.dayPromo = promoIn.value.trim() || "—";
+                state.dayAnnounce = scriptIn.value.trim() || "—";
+
+                if (state.bc) {
+                    state.bc.postMessage({
+                        type: 'cheat_sync',
+                        promo: state.dayPromo,
+                        announce: state.dayAnnounce
+                    });
+                }
+                updateCheatSheetUI();
+                closeHelperEditor();
+                addActivityEvent(`📝 Шпаргалка дня обновлена супервайзером.`, 'user-cog');
+            }
+        };
+
+        // --- Simple Agent Authorization Modal handlers ---
+        window.requestAgentDelay = function() {
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            executeDelay(state.currentUser.name);
+        };
+
+        window.requestCancelDelay = function() {
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            executeCancel(state.currentUser.name);
+        };
+
+        // --- Box Breathing Anti-Stress guide ---
+        window.startBoxBreathing = function() {
+            const btnStart = document.getElementById('breath-start-btn');
+            const btnStop = document.getElementById('breath-stop-btn');
+            const sphere = document.getElementById('breath-circle');
+            const phaseText = document.getElementById('breath-phase-text');
+
+            if (!sphere || !phaseText) return;
+
+            btnStart.classList.add('hidden');
+            btnStop.classList.remove('hidden');
+            sphere.className = "w-20 h-20 rounded-full breathing-sphere flex items-center justify-center mb-4";
+            
+            let second = 0;
+            function updateBreathPhase() {
+                const cycleSecond = second % 16;
+                if (cycleSecond === 0) {
+                    phaseText.innerText = "Вдох";
+                    phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
+                } else if (cycleSecond === 4) {
+                    phaseText.innerText = "Задержка";
+                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
+                } else if (cycleSecond === 8) {
+                    phaseText.innerText = "Выдох";
+                    phaseText.className = "text-[10px] uppercase font-bold text-teal-400 tracking-wider";
+                } else if (cycleSecond === 12) {
+                    phaseText.innerText = "Задержка";
+                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
+                }
+                second++;
+            }
+
+            updateBreathPhase();
+            state.breathInterval = setInterval(updateBreathPhase, 1000);
+            addActivityEvent(`🧘 Кто-то запустил антистресс-тренировку дыхания.`, 'info');
+        };
+
+        window.stopBoxBreathing = function() {
+            const btnStart = document.getElementById('breath-start-btn');
+            const btnStop = document.getElementById('breath-stop-btn');
+            const sphere = document.getElementById('breath-circle');
+            const phaseText = document.getElementById('breath-phase-text');
+
+            clearInterval(state.breathInterval);
+            state.breathInterval = null;
+
+            if (btnStart) btnStart.classList.remove('hidden');
+            if (btnStop) btnStop.classList.add('hidden');
+            if (sphere) {
+                sphere.className = "w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4 transition-all duration-1000";
+            }
+            if (phaseText) {
+                phaseText.innerText = "Вдох";
+                phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
+            }
+        };
+
+        // --- Game mechanics ---
+        window.incrementCallCount = function() {
+            state.callsCount++;
+            localStorage.setItem('shiftflow_calls_today', state.callsCount);
+            
+            if (state.bc) {
+                state.bc.postMessage({ type: 'calls', count: state.callsCount });
+            }
+            updateCallsCounterUI();
+            playSyntheticChime();
+
+            addActivityEvent(`📞 Команда завершила звонок! Всего: ${state.callsCount}`, 'phone');
+
+            if (state.callsCount === state.callsGoal) {
+                speak("Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!");
+                addActivityEvent(`🏆 Поздравляем! Команда достигла дневной цели в 300 вызовов!`, 'award');
+            }
+        };
+
+        window.submitMoodVote = function(emoji) {
+            if (sessionStorage.getItem('shiftflow_my_mood')) return;
+
+            if (!state.moodVotes[emoji]) state.moodVotes[emoji] = 0;
+            state.moodVotes[emoji]++;
+
+            sessionStorage.setItem('shiftflow_my_mood', emoji);
+            const widget = document.getElementById('mood-vote-section');
+            if (widget) widget.classList.add('hidden');
+
+            if (state.bc) {
+                state.bc.postMessage({
+                    type: 'mood',
+                    moodVotes: state.moodVotes
+                });
+            }
+            calculateMoodUI();
+            addActivityEvent(`🚀 Кто-то обновил статус своего настроения!`, 'smile');
+        };
+
+        window.postSwapOffer = function() {
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            const selectTarget = document.getElementById('swap-target-break-select');
+
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле слева!");
+                return;
+            }
+
+            if (!selectMyBreak || selectMyBreak.value === "") {
+                alert("Пожалуйста, выберите перерыв, который вы хотите отдать!");
+                return;
+            }
+
+            const offer = {
+                id: 'swap-' + Date.now(),
+                sender: state.currentUser.name,
+                senderBreakIdx: parseInt(selectMyBreak.value, 10),
+                senderBreakText: selectMyBreak.options[selectMyBreak.selectedIndex].text,
+                targetBreakText: selectTarget.value
+            };
+
+            if (state.swapOffers.some(o => o.sender === offer.sender && o.senderBreakText === offer.senderBreakText)) {
+                alert("Вы уже создали аналогичный запрос на обмен для этого перерыва.");
+                return;
+            }
+
+            state.swapOffers.push(offer);
+            
+            if (state.bc) {
+                state.bc.postMessage({ type: 'swap_offers_sync', offers: state.swapOffers });
+            }
+            renderSwapOffersList();
+            addActivityEvent(`🔁 ${offer.sender.split(' ')[0]} выставил на обмен перерыв ${offer.senderBreakText}`, 'swap');
+        };
+
+        // --- TL admin endpoints ---
+        window.tlForceStatus = function(agentName, forcedStatus) {
+            if (!state.isTLMode) return;
+            if (forcedStatus === 'CLEAR') {
+                delete state.localOverrides[agentName];
+                addActivityEvent(`🛡️ TL: Сброс статуса для ${agentName.split(' ')[0]}`, 'info');
+            } else {
+                state.localOverrides[agentName] = {
+                    status: forcedStatus,
+                    timestamp: Date.now()
+                };
+                addActivityEvent(`🛡️ TL: ${agentName.split(' ')[0]} переведен в "${forcedStatus}"`, 'user-cog');
+            }
+            broadcastSync();
+            evaluateRealtimeStatus();
+        };
+
     </script>
 </body>
 </html>
