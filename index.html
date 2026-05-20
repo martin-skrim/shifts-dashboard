@@ -1163,3 +1163,900 @@
                 });
 
                 if (state.localOverrides[person.name]) {
+                    status = state.localOverrides[person.name].status;
+                }
+
+                if (worksToday) {
+                    for (let h = 0; h < 24; h++) {
+                        let checkTime = new Date(startWork);
+                        checkTime.setHours(h, 30, 0, 0);
+
+                        if (checkTime >= startWork && checkTime <= endWork) {
+                            let onBreakAtCheck = false;
+                            person.breaks.forEach(br => {
+                                const brParts = br.split(/[-–—]/);
+                                let brStart = parseMskTimeToLocal(brParts[0].trim());
+                                let brEnd = parseMskTimeToLocal(brParts[1].trim());
+
+                                if (hasDelay && brStart && brEnd) {
+                                    brStart = new Date(brStart.getTime() + 15 * 60000);
+                                    brEnd = new Date(brEnd.getTime() + 15 * 60000);
+                                }
+
+                                if (brStart && brEnd && checkTime >= brStart && checkTime <= brEnd) {
+                                    onBreakAtCheck = true;
+                                }
+                            });
+                            let simulatedStatus = onBreakAtCheck ? 'Перерыв' : 'В строю';
+                            if (state.localOverrides[person.name]) {
+                                simulatedStatus = state.localOverrides[person.name].status;
+                            }
+
+                            if (simulatedStatus === 'В строю') {
+                                hourlyCoverage[h]++;
+                            }
+                        }
+                    }
+                }
+
+                if (status === 'В строю') stats.active++;
+                else if (status === 'Перерыв') stats.onBreak++;
+                else stats.offline++;
+
+                let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
+                if (status === 'В строю') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
+                } else if (status === 'Перерыв') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
+                } else if (status === 'Занят звонком') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Занят звонком</span>`;
+                }
+
+                if (hasDelay && status === 'В строю') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 animate-pulse">Занят звонком</span>`;
+                }
+
+                let tlControlsHTML = '';
+                if (state.isTLMode) {
+                    tlControlsHTML = `
+                        <div class="mt-2 flex gap-1 items-center bg-slate-950/40 p-1.5 rounded-lg border border-slate-800/40 w-fit">
+                            <span class="text-[9px] text-slate-500 uppercase mr-1">TL:</span>
+                            <button onclick="tlForceStatus('${person.name}', 'В строю')" class="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded text-[10px]">В сеть</button>
+                            <button onclick="tlForceStatus('${person.name}', 'Перерыв')" class="px-1.5 py-0.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded text-[10px]">Перерыв</button>
+                            <button onclick="tlForceStatus('${person.name}', 'Офлайн')" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded text-[10px]">Офлайн</button>
+                            ${state.localOverrides[person.name] ? `<button onclick="tlForceStatus('${person.name}', 'CLEAR')" class="text-rose-400 hover:text-rose-300 text-[10px] ml-1">Сброс</button>` : ''}
+                        </div>
+                    `;
+                }
+
+                const achievements = getAchievements(person, todayShift);
+                const achievementsHTML = achievements.map(ach => `
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-900 text-slate-300 border border-slate-800 cursor-help" title="${ach.desc}">
+                        <span>${ach.icon}</span>
+                        <span class="ml-1 hidden sm:inline">${ach.name}</span>
+                    </span>
+                `).join(' ');
+
+                const localShiftHours = formatMskRangeToLocal(todayShift);
+                const breakListHTML = person.breaks.map(br => {
+                    let displayRange = br;
+                    if (hasDelay) {
+                        const parts = br.split(/[-–—]/);
+                        const delayStart = new Date(parseMskTimeToLocal(parts[0].trim()).getTime() + 15 * 60000);
+                        const delayEnd = new Date(parseMskTimeToLocal(parts[1].trim()).getTime() + 15 * 60000);
+                        const formatTime = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                        displayRange = `${formatTime(delayStart)} – ${formatTime(delayEnd)}`;
+                    }
+
+                    const isCurrent = currentBreakRange && currentBreakRange.text === br;
+                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-300'} ${hasDelay ? 'border border-cyan-500/10' : ''}">${displayRange}</span>`;
+                }).join(' ');
+
+                activeTableMarkup += `
+                    <tr class="hover:bg-slate-900/30 transition">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                ${person.name}
+                                ${hasDelay ? '<span class="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-400 text-[9px] rounded-full border border-cyan-500/20">Задержка</span>' : ''}
+                                ${state.localOverrides[person.name] ? '<span class="px-1.5 py-0.2 bg-indigo-500/10 text-indigo-400 text-[9px] rounded-full border border-indigo-500/20">Ручной ввод</span>' : ''}
+                            </div>
+                            <div class="text-xs text-slate-500 mb-1.5">${person.login}</div>
+                            <div class="flex flex-wrap gap-1">${achievementsHTML || ''}</div>
+                            
+                            <!-- Peer-to-Peer Interaction Buttons -->
+                            <div class="flex items-center gap-2 mt-2">
+                                <button onclick="sendPeerGift('${person.name}', 'coffee')" class="px-2 py-1 rounded-md bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-300 transition-all flex items-center gap-1" title="Отправить виртуальный кофе коллеге">
+                                    <span>☕</span> Кофе
+                                </button>
+                                <button onclick="sendPeerGift('${person.name}', 'highfive')" class="px-2 py-1 rounded-md bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-300 transition-all flex items-center gap-1" title="Дать пять коллеге">
+                                    <span>✋</span> Дай пять
+                                </button>
+                            </div>
+
+                            ${tlControlsHTML}
+                        </td>
+                        <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4"><div class="flex flex-wrap gap-1.5">${breakListHTML || '<span class="text-slate-600 text-xs">Нет перерывов</span>'}</div></td>
+                    </tr>
+                `;
+
+                if (status === 'Перерыв' && currentBreakRange) {
+                    const totalDuration = currentBreakRange.end - currentBreakRange.start;
+                    const elapsed = now - currentBreakRange.start;
+                    const percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                    const remainingMins = Math.ceil((currentBreakRange.end - now) / 60000);
+
+                    activeBreaksMarkup += `
+                        <div class="bg-slate-950/80 p-4 rounded-lg border border-slate-800">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-semibold text-slate-200 text-sm">${person.name}</h4>
+                                    <p class="text-xs text-slate-400 font-mono">${formatMskRangeToLocal(currentBreakRange.text)}</p>
+                                </div>
+                                <span class="text-xs text-amber-400 font-medium">Осталось ~${remainingMins}м</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">
+                                <div class="bg-amber-500 h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                            </div>
+                            
+                            <!-- Ambient waves synthesizer trigger inside active break card -->
+                            <button onclick="triggerOceanToggle()" class="ambient-relax-btn inline-flex items-center gap-1 px-2.5 py-1 ${state.isWavePlaying ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-slate-900 hover:bg-slate-850 border border-slate-800'} rounded-md text-[10px] text-slate-400 border transition-all">
+                                <i data-lucide="${state.isWavePlaying ? 'volume-2' : 'music'}" class="w-3 h-3 inline"></i>
+                                <span>${state.isWavePlaying ? 'Играет море...' : 'Шум моря (Lofi)'}</span>
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('stat-active').innerText = stats.active;
+            document.getElementById('stat-break').innerText = stats.onBreak;
+            document.getElementById('stat-offline').innerText = stats.offline;
+
+            const activeBreaksBox = document.getElementById('active-breaks-box');
+            if (activeBreaksBox) {
+                if (activeBreaksMarkup === '') {
+                    activeBreaksBox.classList.add('hidden');
+                    if (state.isWavePlaying) toggleOceanWaves(false);
+                } else {
+                    activeBreaksBox.classList.remove('hidden');
+                    const abList = document.getElementById('active-breaks-list');
+                    if (abList) abList.innerHTML = activeBreaksMarkup;
+                }
+            }
+
+            queueBreaks.sort((a, b) => a.start - b.start);
+            const limitedQueue = queueBreaks.slice(0, 4); 
+
+            let queueMarkup = '';
+            limitedQueue.forEach(item => {
+                const badgeStyle = item.isCurrent 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' 
+                    : 'bg-slate-950 text-slate-400 border-slate-800';
+
+                queueMarkup += `
+                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${badgeStyle}">
+                        <div class="flex items-center space-x-2 truncate">
+                            ${item.isCurrent ? '<span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block"></span>' : ''}
+                            <span class="font-medium truncate">${item.name}</span>
+                        </div>
+                        <span class="font-mono text-[10px] whitespace-nowrap">${formatMskRangeToLocal(item.rangeText)}</span>
+                    </div>
+                `;
+            });
+            const timelineQueue = document.getElementById('breaks-timeline-queue');
+            if (timelineQueue) {
+                timelineQueue.innerHTML = queueMarkup || `<div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>`;
+            }
+
+            const statusTable = document.getElementById('status-table-body');
+            if (statusTable) {
+                statusTable.innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
+            }
+            const weekendTable = document.getElementById('weekend-table-body');
+            if (weekendTable) {
+                weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
+            }
+
+            runPredictiveUnderstaffingScanner(hourlyCoverage);
+            drawHeatmapAndOptions(stats, hourlyCoverage);
+        }
+
+        function drawHeatmapAndOptions(stats, hourlyCoverage) {
+            const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
+            const kpiCov = document.getElementById('kpi-coverage');
+            if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
+
+            const maxCoverage = Math.max(...hourlyCoverage);
+            const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
+            const kpiPeak = document.getElementById('kpi-peak-hour');
+            if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
+
+            let heatgridHTML = '';
+            for (let h = 0; h < 24; h++) {
+                const count = hourlyCoverage[h];
+                let colorClass = 'bg-slate-900 border-slate-800'; 
+                if (count > 0) {
+                    if (count <= 1) colorClass = 'bg-emerald-900/50 border-emerald-800/20 text-emerald-400';
+                    else if (count <= 3) colorClass = 'bg-emerald-700/60 border-emerald-600/30 text-emerald-100';
+                    else colorClass = 'bg-emerald-500 border-emerald-400 text-slate-950';
+                }
+
+                heatgridHTML += `
+                    <div class="flex-1 aspect-square rounded-md border flex items-center justify-center font-mono text-[10px] font-bold group relative cursor-help transition-all duration-150 ${colorClass}">
+                        ${count > 0 ? count : ''}
+                        <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                            <span class="bg-slate-950 border border-slate-800 text-[9px] text-slate-300 font-sans px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
+                                Час: ${String(h).padStart(2, '0')}:00 • Операторов: ${count}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            const heatmapRow = document.getElementById('coverage-heatmap-row');
+            if (heatmapRow) heatmapRow.innerHTML = heatgridHTML;
+        }
+
+        // --- 6. Specialized UI Layout Generators ---
+
+        function populateAgentDropdowns() {
+            const plannerAgentSelect = document.getElementById('planner-agent-select');
+            if (!plannerAgentSelect || state.statusData.length === 0) return;
+
+            const currentPlannerVal = plannerAgentSelect.value;
+
+            plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+            state.statusData.forEach(p => {
+                plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+
+            if (currentPlannerVal) {
+                plannerAgentSelect.value = currentPlannerVal;
+                populatePlannerBreaks();
+            } else {
+                populatePlannerBreaks();
+            }
+        }
+
+        function renderUI() {
+            evaluateRealtimeStatus();
+            renderMonthlySchedule();
+            renderSpecialistsAndBirthdays();
+            populateAgentDropdowns(); 
+            calculateMoodUI();
+            renderActivityFeed();
+            renderSwapOffersList();
+            updateCheatSheetUI();
+        }
+
+        function renderMonthlySchedule() {
+            if (state.scheduleHeader.length === 0) return;
+
+            let tableHeader = `<tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">`;
+            tableHeader += `<th class="px-4 py-3 sticky left-0 bg-slate-900/90 min-w-[150px]">Специалист</th>`;
+            
+            state.scheduleHeader.forEach(day => {
+                const cleanDay = day.split('.')[0] || day;
+                tableHeader += `<th class="px-3 py-3 text-center min-w-[80px] font-mono">${cleanDay}</th>`;
+            });
+            tableHeader += `</tr>`;
+
+            let tableBody = `<tbody class="divide-y divide-slate-850 text-xs">`;
+            state.scheduleData.forEach(person => {
+                tableBody += `<tr class="hover:bg-slate-900/20 transition">`;
+                tableBody += `<td class="px-4 py-3 sticky left-0 bg-slate-900/90 font-medium text-slate-300 border-r border-slate-800/80">${person.name}</td>`;
+                
+                person.shifts.forEach(shift => {
+                    const isOff = !shift || shift.trim() === "" || shift.includes("Вых");
+                    const displayShift = isOff ? 'Вых' : shift;
+                    tableBody += `
+                        <td class="px-2 py-3 text-center font-mono ${isOff ? 'text-slate-600 bg-slate-950/20' : 'text-emerald-400 bg-emerald-500/5'}">
+                            ${displayShift}
+                        </td>`;
+                });
+                tableBody += `</tr>`;
+            });
+            tableBody += `</tbody>`;
+
+            const schedTable = document.getElementById('schedule-table');
+            if (schedTable) {
+                schedTable.innerHTML = tableHeader + tableBody;
+            }
+
+            if (state.scheduleHeader[0]) {
+                const parts = state.scheduleHeader[0].split('.');
+                if (parts[1]) {
+                    const monthMap = {
+                        '01': 'Январь', '02': 'Февраль', '03': 'Март', '04': 'Апрель',
+                        '05': 'Май', '06': 'Июнь', '07': 'Июль', '08': 'Август',
+                        '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
+                    };
+                    const label = document.getElementById('current-month-label');
+                    if (label) {
+                        label.innerText = `${monthMap[parts[1]] || ''} ${parts[2] || ''}`;
+                    }
+                }
+            }
+        }
+
+        function renderSpecialistsAndBirthdays() {
+            const groups = {};
+            state.specsData.forEach(spec => {
+                const groupKey = spec.group.trim();
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                }
+                if (!groups[groupKey].some(item => item.name === spec.name)) {
+                    groups[groupKey].push(spec);
+                }
+            });
+
+            let groupsMarkup = '';
+            const sortedKeys = Object.keys(groups).sort((a, b) => {
+                const aNum = parseInt(a, 10);
+                const bNum = parseInt(b, 10);
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return aNum - bNum;
+                }
+                if (a === 'TL') return 1;
+                if (b === 'TL') return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedKeys.forEach(gKey => {
+                groupsMarkup += `
+                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 shadow-inner">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Группа ${gKey}
+                        </h4>
+                        <div class="space-y-1.5">
+                `;
+                groups[gKey].forEach(p => {
+                    groupsMarkup += `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-200 font-medium">${p.name}</span>
+                            <span class="text-slate-500 font-mono">${p.login}</span>
+                        </div>
+                    `;
+                });
+                groupsMarkup += `</div></div>`;
+            });
+            const specsGroups = document.getElementById('specialists-groups');
+            if (specsGroups) {
+                specsGroups.innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const specialistsWithBdayTime = [];
+
+            state.specsData.forEach(spec => {
+                if (!spec.birthday) return;
+                const bparts = spec.birthday.split('.');
+                const bDay = parseInt(bparts[0], 10);
+                const bMonth = parseInt(bparts[1], 10);
+
+                if (isNaN(bDay) || isNaN(bMonth)) return;
+
+                let nextBday = new Date(today.getFullYear(), bMonth - 1, bDay);
+                if (nextBday < today) {
+                    nextBday.setFullYear(today.getFullYear() + 1);
+                }
+
+                const diffTime = nextBday - today;
+                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                specialistsWithBdayTime.push({
+                    spec: spec,
+                    daysUntil: daysUntil,
+                    isToday: (bDay === today.getDate() && bMonth === (today.getMonth() + 1))
+                });
+            });
+
+            specialistsWithBdayTime.sort((a, b) => a.daysUntil - b.daysUntil);
+
+            let bdayMarkup = '';
+            specialistsWithBdayTime.forEach(item => {
+                bdayMarkup += `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-900/60'}">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="cake" class="w-4 h-4 ${item.isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
+                            <span class="text-xs font-medium ${item.isToday ? 'text-rose-200 font-semibold' : 'text-slate-300'}">${item.spec.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-mono font-bold ${item.isToday ? 'text-rose-400' : 'text-slate-500'}">${item.spec.birthday}</span>
+                            <span class="text-[10px] text-slate-400 block">${item.isToday ? '(Сегодня!)' : `осталось дней: ${item.daysUntil}`}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            const bdaysList = document.getElementById('birthdays-list');
+            if (bdaysList) {
+                bdaysList.innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            }
+            lucide.createIcons();
+        }
+
+        // --- 7. Interactive Features, Coordination, Swaps, SLA and Tools ---
+
+        window.openAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            const input = document.getElementById('agent-login-input');
+            if (modal && input) {
+                input.value = '';
+                modal.classList.remove('hidden');
+                input.focus();
+            }
+        };
+
+        window.closeAgentLoginModal = function() {
+            const modal = document.getElementById('agent-login-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.submitAgentLogin = function() {
+            const input = document.getElementById('agent-login-input');
+            if (!input) return;
+
+            const typedLogin = input.value.trim().toLowerCase();
+            const person = state.statusData.find(p => p.login.toLowerCase() === typedLogin);
+
+            if (person) {
+                state.currentUser = {
+                    name: person.name,
+                    login: person.login
+                };
+                localStorage.setItem('shiftflow_current_user', JSON.stringify(state.currentUser));
+                closeAgentLoginModal();
+                evaluateRealtimeStatus();
+                speak(`Добро пожаловать в систему, ${person.name.split(' ')[0]}! Смена активирована.`);
+                addActivityEvent(`🔑 ${person.name.split(' ')[0]} авторизовался в системе.`, 'info');
+            } else {
+                alert("Ошибка авторизации: специалист с таким логином Telegram не найден на сегодняшней смене!");
+                input.value = '';
+            }
+        };
+
+        window.logoutAgent = function() {
+            if (state.currentUser) {
+                addActivityEvent(`🚪 ${state.currentUser.name.split(' ')[0]} вышел из системы.`, 'info');
+                state.currentUser = null;
+                localStorage.removeItem('shiftflow_current_user');
+                evaluateRealtimeStatus();
+            }
+        };
+
+        window.setSlaStatus = function(status) {
+            if (!state.currentUser) {
+                alert("Ошибка: Для отправки сигналов нагрузки вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            const name = state.currentUser.name;
+            state.slaLoadSignals[name] = status;
+
+            if (state.bc) {
+                state.bc.postMessage({ type: 'sla_sync', signals: state.slaLoadSignals });
+            }
+            evaluateSlaStorm();
+        };
+
+        window.openHelperEditor = function() {
+            const modal = document.getElementById('tl-helper-editor-modal');
+            const promoIn = document.getElementById('editor-promo-input');
+            const scriptIn = document.getElementById('editor-script-input');
+
+            if (modal && promoIn && scriptIn) {
+                promoIn.value = state.dayPromo;
+                scriptIn.value = state.dayAnnounce;
+                modal.classList.remove('hidden');
+            }
+        };
+
+        window.closeHelperEditor = function() {
+            const modal = document.getElementById('tl-helper-editor-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.saveAndBroadcastHelper = function() {
+            const promoIn = document.getElementById('editor-promo-input');
+            const scriptIn = document.getElementById('editor-script-input');
+
+            if (promoIn && scriptIn) {
+                state.dayPromo = promoIn.value.trim() || "—";
+                state.dayAnnounce = scriptIn.value.trim() || "—";
+
+                if (state.bc) {
+                    state.bc.postMessage({
+                        type: 'cheat_sync',
+                        promo: state.dayPromo,
+                        announce: state.dayAnnounce
+                    });
+                }
+                updateCheatSheetUI();
+                closeHelperEditor();
+                addActivityEvent("📝 Шпаргалка дня обновлена супервайзером.", "user-cog");
+            }
+        };
+
+        function updateCheatSheetUI() {
+            const pr = document.getElementById('cheat-promo-text');
+            const sc = document.getElementById('cheat-script-text');
+            if (pr) pr.innerText = state.dayPromo;
+            if (sc) sc.innerText = state.dayAnnounce;
+        }
+
+        window.requestAgentDelay = function() {
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            executeDelay(state.currentUser.name);
+        };
+
+        window.requestCancelDelay = function() {
+            if (!state.currentUser) {
+                alert("Для выполнения этого действия вы должны авторизоваться в профиле слева!");
+                return;
+            }
+            executeCancel(state.currentUser.name);
+        };
+
+        function executeDelay(agentName) {
+            state.delayedAgents[agentName] = {
+                delayMins: 15,
+                timestamp: Date.now()
+            };
+            broadcastSync();
+            evaluateRealtimeStatus();
+            speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. Смена перерывов скорректирована.`);
+            addActivityEvent(`📞 ${agentName.split(' ')[0]} задержался на звонке. График смещен на 15м.`, 'coffee');
+        }
+
+        function executeCancel(agentName) {
+            delete state.delayedAgents[agentName];
+            broadcastSync();
+            evaluateRealtimeStatus();
+            addActivityEvent(`🔄 ${agentName.split(' ')[0]} вернулся к исходному графику перерывов.`, 'info');
+        }
+
+        window.startBoxBreathing = function() {
+            const btnStart = document.getElementById('breath-start-btn');
+            const btnStop = document.getElementById('breath-stop-btn');
+            const sphere = document.getElementById('breath-circle');
+            const phaseText = document.getElementById('breath-phase-text');
+
+            if (!sphere || !phaseText) return;
+
+            btnStart.classList.add('hidden');
+            btnStop.classList.remove('hidden');
+            sphere.className = "w-20 h-20 rounded-full breathing-sphere flex items-center justify-center mb-4";
+            
+            let second = 0;
+            function updateBreathPhase() {
+                const cycleSecond = second % 16;
+                if (cycleSecond === 0) {
+                    phaseText.innerText = "Вдох";
+                    phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
+                } else if (cycleSecond === 4) {
+                    phaseText.innerText = "Задержка";
+                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
+                } else if (cycleSecond === 8) {
+                    phaseText.innerText = "Выдох";
+                    phaseText.className = "text-[10px] uppercase font-bold text-teal-400 tracking-wider";
+                } else if (cycleSecond === 12) {
+                    phaseText.innerText = "Задержка";
+                    phaseText.className = "text-[10px] uppercase font-bold text-indigo-400 tracking-wider animate-pulse";
+                }
+                second++;
+            }
+
+            updateBreathPhase();
+            state.breathInterval = setInterval(updateBreathPhase, 1000);
+            addActivityEvent("🧘 Кто-то запустил антистресс-тренировку дыхания.", 'info');
+        };
+
+        window.stopBoxBreathing = function() {
+            const btnStart = document.getElementById('breath-start-btn');
+            const btnStop = document.getElementById('breath-stop-btn');
+            const sphere = document.getElementById('breath-circle');
+            const phaseText = document.getElementById('breath-phase-text');
+
+            clearInterval(state.breathInterval);
+            state.breathInterval = null;
+
+            if (btnStart) btnStart.classList.remove('hidden');
+            if (btnStop) btnStop.classList.add('hidden');
+            if (sphere) {
+                sphere.className = "w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4 transition-all duration-1000";
+            }
+            if (phaseText) {
+                phaseText.innerText = "Вдох";
+                phaseText.className = "text-[10px] uppercase font-bold text-emerald-400 tracking-wider";
+            }
+        };
+
+        window.incrementCallCount = function() {
+            state.callsCount++;
+            localStorage.setItem('shiftflow_calls_today', state.callsCount);
+            
+            if (state.bc) {
+                state.bc.postMessage({ type: 'calls', count: state.callsCount });
+            }
+            updateCallsCounterUI();
+            playSyntheticChime();
+
+            addActivityEvent(`📞 Команда завершила звонок! Всего: ${state.callsCount}`, 'phone');
+
+            if (state.callsCount === state.callsGoal) {
+                speak("Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!");
+                addActivityEvent("🏆 Поздравляем! Команда достигла дневной цели в 300 вызовов!", 'award');
+            }
+        };
+
+        window.submitMoodVote = function(emoji) {
+            if (sessionStorage.getItem('shiftflow_my_mood')) return;
+
+            if (!state.moodVotes[emoji]) state.moodVotes[emoji] = 0;
+            state.moodVotes[emoji]++;
+
+            sessionStorage.setItem('shiftflow_my_mood', emoji);
+            const widget = document.getElementById('mood-vote-section');
+            if (widget) widget.classList.add('hidden');
+
+            if (state.bc) {
+                state.bc.postMessage({
+                    type: 'mood',
+                    moodVotes: state.moodVotes
+                });
+            }
+            calculateMoodUI();
+            addActivityEvent("🚀 Кто-то обновил статус своего настроения!", 'smile');
+        };
+
+        window.populateStaticSwapSelects = function() {
+            const selectTarget = document.getElementById('swap-target-break-select');
+            if (!selectTarget) return;
+
+            const slots = [
+                "09:45 – 10:00", "12:00 – 12:30", "15:15 – 15:30", "17:00 – 17:15", "19:00 – 19:30",
+                "10:45 – 11:00", "13:00 – 13:30", "16:15 – 16:30", "18:00 – 18:15", "20:00 – 20:30"
+            ];
+            selectTarget.innerHTML = '';
+            slots.forEach(slot => {
+                selectTarget.innerHTML += `<option value="${slot}">${slot}</option>`;
+            });
+        };
+
+        window.populateSwapAgentBreaks = function() {
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            if (!selectMyBreak || !state.currentUser) return;
+
+            const person = state.statusData.find(p => p.name === state.currentUser.name);
+            selectMyBreak.innerHTML = '';
+
+            if (person && person.breaks.length > 0) {
+                person.breaks.forEach((br, idx) => {
+                    selectMyBreak.innerHTML += `<option value="${idx}">${br}</option>`;
+                });
+            } else {
+                selectMyBreak.innerHTML = `<option value="">Перерывов нет</option>`;
+            }
+        };
+
+        window.postSwapOffer = function() {
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            const selectTarget = document.getElementById('swap-target-break-select');
+
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле слева!");
+                return;
+            }
+
+            if (!selectMyBreak || selectMyBreak.value === "") {
+                alert("Пожалуйста, выберите перерыв, который вы хотите отдать!");
+                return;
+            }
+
+            const offer = {
+                id: 'swap-' + Date.now(),
+                sender: state.currentUser.name,
+                senderBreakIdx: parseInt(selectMyBreak.value, 10),
+                senderBreakText: selectMyBreak.options[selectMyBreak.selectedIndex].text,
+                targetBreakText: selectTarget.value
+            };
+
+            if (state.swapOffers.some(o => o.sender === offer.sender && o.senderBreakText === offer.senderBreakText)) {
+                alert("Вы уже создали аналогичный запрос на обмен для этого перерыва.");
+                return;
+            }
+
+            state.swapOffers.push(offer);
+            
+            if (state.bc) {
+                state.bc.postMessage({ type: 'swap_offers_sync', offers: state.swapOffers });
+            }
+            renderSwapOffersList();
+            addActivityEvent(`🔁 ${offer.sender.split(' ')[0]} выставил на обмен перерыв ${offer.senderBreakText}`, 'swap');
+        };
+
+        window.acceptSwapOffer = function(offerId) {
+            if (!state.currentUser) {
+                alert("Пожалуйста, сначала авторизуйтесь в вашем профиле в сайдбаре слева!");
+                return;
+            }
+            const acceptorName = state.currentUser.name;
+            const offer = state.swapOffers.find(o => o.id === offerId);
+            if (!offer) return;
+
+            if (offer.sender === acceptorName) {
+                alert("Вы не можете принять свое собственное предложение!");
+                return;
+            }
+
+            const acceptorPerson = state.statusData.find(p => p.name === acceptorName);
+            if (!acceptorPerson) return;
+
+            const hasTargetBreak = acceptorPerson.breaks.includes(offer.targetBreakText);
+            const targetBreakIdxInAcceptor = acceptorPerson.breaks.indexOf(offer.targetBreakText);
+
+            if (!hasTargetBreak) {
+                alert(`У вас нет перерыва ${offer.targetBreakText} для проведения обмена!`);
+                return;
+            }
+
+            const senderPerson = state.statusData.find(p => p.name === offer.sender);
+            if (!senderPerson) return;
+
+            senderPerson.breaks[offer.senderBreakIdx] = offer.targetBreakText;
+            acceptorPerson.breaks[targetBreakIdxInAcceptor] = offer.senderBreakText;
+
+            state.swapOffers = state.swapOffers.filter(o => o.id !== offerId);
+
+            if (state.bc) {
+                state.bc.postMessage({ 
+                    type: 'swap_offers_sync', 
+                    offers: state.swapOffers 
+                });
+                state.bc.postMessage({
+                    type: 'forced_break_array_mutation',
+                    statusData: state.statusData
+                });
+            }
+
+            renderSwapOffersList();
+            evaluateRealtimeStatus();
+
+            triggerNotification(
+                "Обмен перерывами совершен!",
+                `Успешный обмен между ${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]}.`,
+                `${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]} поменялись перерывами.`
+            );
+            addActivityEvent(`🤝 Обмен совершен: ${offer.sender.split(' ')[0]} (${offer.senderBreakText}) ⇄ ${acceptorName.split(' ')[0]} (${offer.targetBreakText})`, 'swap');
+        };
+
+        // --- TL admin endpoints ---
+        
+        window.openTLAuthModal = function() {
+            const modal = document.getElementById('tl-auth-modal');
+            const pinInput = document.getElementById('tl-pin-input');
+            if (modal && pinInput) {
+                pinInput.value = '';
+                modal.classList.remove('hidden');
+                pinInput.focus();
+            }
+        };
+
+        window.closeTLAuthModal = function() {
+            const modal = document.getElementById('tl-auth-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.submitTLAuth = function() {
+            const input = document.getElementById('tl-pin-input');
+            if (input && input.value === state.tlPinHash) {
+                toggleTLMode(true);
+                closeTLAuthModal();
+            } else {
+                alert("Неверный пин-код доступа супервайзера!");
+                if (input) input.value = '';
+            }
+        };
+
+        window.logoutTL = function() {
+            toggleTLMode(false);
+        };
+
+        // --- 8. Core Initialization Event Handler (DOMContentLoaded) ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Launch Dual Clock Mechanism: prevents "1970" background tab freezes
+            initBackgroundWorker();
+            setInterval(updateClock, 1000); 
+
+            initBroadcastChannel();
+            checkPregrantedPermissions();
+
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = selectBestRussianVoice;
+            } else {
+                selectBestRussianVoice();
+            }
+
+            const audioBtn = document.getElementById('audio-toggle');
+            if (audioBtn) {
+                audioBtn.addEventListener('click', async () => {
+                    await requestNotifications();
+                    toggleAudioState();
+                });
+            }
+
+            document.body.addEventListener('click', () => {
+                if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
+                    if (!state.isAudioEnabled) {
+                        toggleAudioState(true);
+                    }
+                }
+            }, { once: true });
+
+            const testBtn = document.getElementById('test-alert-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', () => {
+                    if (!state.isAudioEnabled) {
+                        alert("Пожалуйста, сначала включите оповещения кнопкой в шапке.");
+                        return;
+                    }
+                    triggerNotification(
+                        "Система оповещений ShiftFlow",
+                        "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
+                        "Проверка звука завершена успешно"
+                    );
+                });
+            }
+
+            const tlToggleBtn = document.getElementById('tl-mode-toggle');
+            if (tlToggleBtn) {
+                tlToggleBtn.addEventListener('click', () => {
+                    if (state.isTLMode) {
+                        logoutTL();
+                    } else {
+                        openTLAuthModal();
+                    }
+                });
+            }
+
+            document.getElementById('tl-pin-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitTLAuth();
+            });
+            document.getElementById('agent-login-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitAgentLogin();
+            });
+
+            // Restore calls counter safely from localStorage, defaults to 0
+            const savedCalls = localStorage.getItem('shiftflow_calls_today');
+            state.callsCount = savedCalls ? parseInt(savedCalls, 10) : 0;
+            updateCallsCounterUI();
+
+            const savedMood = sessionStorage.getItem('shiftflow_my_mood');
+            if (savedMood) {
+                const voteSec = document.getElementById('mood-vote-section');
+                if (voteSec) voteSec.classList.add('hidden');
+            }
+
+            populateStaticSwapSelects();
+
+            // Restore persistent Specialist Session if exists
+            const savedUser = localStorage.getItem('shiftflow_current_user');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+            }
+
+            fetchData();
+            setInterval(fetchData, 30000);
+        });
+
+    </script>
+</body>
+</html>
