@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
@@ -135,7 +135,7 @@
                                 <tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
                                     <th class="px-6 py-4">Сотрудник</th>
                                     <th class="px-6 py-4">Логин</th>
-                                    <th class="px-6 py-4">График по умолчанию</th>
+                                    <th class="px-6 py-4">Статус</th>
                                 </tr>
                             </thead>
                             <tbody id="weekend-table-body" class="divide-y divide-slate-800/50 text-sm">
@@ -245,7 +245,6 @@
             }
         }
 
-        // Helper to interpret MSK time (UTC+3) string and convert to local PC Date object
         function parseMskTimeToLocal(timeStr) {
             if (!timeStr) return null;
             const cleanTime = timeStr.trim();
@@ -253,11 +252,9 @@
             if (parts.length < 2) return null;
             
             const now = new Date();
-            // Get current year, month, date in Moscow context
             const mskFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
             const [{ value: month },,{ value: day },,{ value: year }] = mskFormatter.formatToParts(now);
 
-            // Construct ISO-8601 representation with MSK Offset (+03:00)
             const isoStr = `${year}-${month}-${day}T${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00+03:00`;
             return new Date(isoStr);
         }
@@ -375,8 +372,8 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        function checkWorkingToday(personName) {
-            // Get today's date formatted to match headers "DD.MM.YYYY" in MSK
+        // Returns today's shift range string from calendar. If day off, returns null.
+        function getTodayShiftHours(personName, fallbackHours) {
             const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
                 timeZone: 'Europe/Moscow',
                 day: '2-digit',
@@ -385,13 +382,16 @@
             }).format(new Date());
 
             const scheduleIdx = state.scheduleHeader.indexOf(mskTodayStr);
-            if (scheduleIdx === -1) return true; // Fallback if column not found
+            if (scheduleIdx === -1) return fallbackHours;
 
             const personSched = state.scheduleData.find(p => p.name === personName);
-            if (!personSched) return false;
+            if (!personSched) return fallbackHours;
 
             const shiftToday = personSched.shifts[scheduleIdx];
-            return shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых");
+            if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
+                return shiftToday.trim();
+            }
+            return null; // Day off or not scheduled
         }
 
         function evaluateRealtimeStatus() {
@@ -402,10 +402,11 @@
             let weekendTableMarkup = '';
 
             state.statusData.forEach(person => {
-                const isScheduledToday = checkWorkingToday(person.name);
+                // Get dynamic hours for today from calendar
+                const todayShift = getTodayShiftHours(person.name, person.hours);
+                const isScheduledToday = todayShift !== null;
 
                 if (!isScheduledToday) {
-                    // Populate off-duty (weekend) tab
                     weekendTableMarkup += `
                         <tr class="hover:bg-slate-900/10 transition">
                             <td class="px-6 py-4 font-semibold text-slate-400">${person.name}</td>
@@ -413,7 +414,7 @@
                             <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-slate-900 text-slate-500 border border-slate-800">Выходной</span></td>
                         </tr>
                     `;
-                    return; // Skip from active calculations
+                    return;
                 }
 
                 let status = 'Офлайн';
@@ -421,9 +422,9 @@
                 let worksToday = false;
                 let startWork = null, endWork = null;
 
-                if (person.hours && (person.hours.includes('–') || person.hours.includes('-'))) {
+                if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
                     worksToday = true;
-                    const hoursParts = person.hours.split(/[-–—]/);
+                    const hoursParts = todayShift.split(/[-–—]/);
                     startWork = parseMskTimeToLocal(hoursParts[0].trim());
                     endWork = parseMskTimeToLocal(hoursParts[1].trim());
                     
@@ -432,7 +433,7 @@
                     }
                 }
 
-                // Check active status
+                // Check if active right now
                 if (worksToday && now >= startWork && now <= endWork) {
                     status = 'В строю';
                 }
@@ -450,7 +451,6 @@
                         currentBreakRange = { start: brStart, end: brEnd, text: br };
                     }
 
-                    // Voice triggers
                     const startDiff = Math.abs(now - brStart);
                     const endDiff = Math.abs(now - brEnd);
                     const breakStartKey = `${person.name}-start-${brParts[0].trim()}`;
@@ -477,7 +477,7 @@
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
                 }
 
-                const localShiftHours = formatMskRangeToLocal(person.hours);
+                const localShiftHours = formatMskRangeToLocal(todayShift);
                 const breakListHTML = person.breaks.map(br => {
                     const localBreakRange = formatMskRangeToLocal(br);
                     const isCurrent = currentBreakRange && currentBreakRange.text === br;
@@ -519,12 +519,10 @@
                 }
             });
 
-            // Populate side panel counter
             document.getElementById('stat-active').innerText = stats.active;
             document.getElementById('stat-break').innerText = stats.onBreak;
             document.getElementById('stat-offline').innerText = stats.offline;
 
-            // Render Break Progress Cards
             const activeListContainer = document.getElementById('active-breaks-list');
             if (activeBreaksMarkup === '') {
                 activeListContainer.innerHTML = `
@@ -538,7 +536,6 @@
                 activeListContainer.innerHTML = activeBreaksMarkup;
             }
 
-            // Fill Tables
             document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
             document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
         }
@@ -594,21 +591,18 @@
         }
 
         function renderSpecialistsAndBirthdays() {
-            // Group specialists cleanly (avoiding duplications)
             const groups = {};
             state.specsData.forEach(spec => {
                 const groupKey = spec.group.trim();
                 if (!groups[groupKey]) {
                     groups[groupKey] = [];
                 }
-                // Avoid redundant additions of the same name and login
                 if (!groups[groupKey].some(item => item.name === spec.name)) {
                     groups[groupKey].push(spec);
                 }
             });
 
             let groupsMarkup = '';
-            // Sort keys so Group 1, 2, 3, TL appear sequentially
             const sortedKeys = Object.keys(groups).sort((a, b) => {
                 if (a === 'TL') return 1;
                 if (b === 'TL') return -1;
@@ -633,7 +627,6 @@
             });
             document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
 
-            // Render upcoming birthdays
             let bdayMarkup = '';
             const today = new Date();
             const currentDay = today.getDate();
