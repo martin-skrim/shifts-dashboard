@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
@@ -250,7 +250,7 @@
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
                     text.innerText = 'Оповещения включены';
-                    speak("Оповещения активированы. Премиум голос настроен.");
+                    speak("Оповещения активированы.");
                 } else {
                     icon.setAttribute('data-lucide', 'volume-x');
                     icon.className = 'w-4 h-4 text-rose-400';
@@ -266,7 +266,8 @@
                 }
                 triggerNotification(
                     "Система оповещений ShiftFlow",
-                    "Тест пройден. Канал звука и пуш-уведомлений работает стабильно."
+                    "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
+                    "Проверка звука завершена успешно"
                 );
             });
 
@@ -302,8 +303,8 @@
             state.cachedVoice = premiumVoice || ruVoices[0];
         }
 
-        function triggerNotification(title, text) {
-            speak(text);
+        function triggerNotification(title, text, spokenText) {
+            speak(spokenText || text);
 
             if ("Notification" in window && Notification.permission === "granted") {
                 try {
@@ -395,3 +396,196 @@
             try {
                 const [statusRes, specsRes] = await Promise.all([
                     fetch(URL_STATUS).then(r => r.text()),
+                    fetch(URL_SPECS).then(r => r.text())
+                ]);
+
+                processStatusSheet(parseCSV(statusRes));
+                processSpecsSheet(parseCSV(specsRes));
+
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
+                renderUI();
+            } catch (err) {
+                console.error(err);
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
+            }
+        }
+
+        function processStatusSheet(grid) {
+            let parsedStatus = [];
+            for (let r = 3; r <= 10; r++) {
+                if (!grid[r] || !grid[r][5]) continue; 
+                let name = grid[r][5].trim();
+                let login = grid[r][6] ? grid[r][6].trim() : '';
+                let hours = grid[r][8] ? grid[r][8].trim() : '';
+                
+                let breaks = [];
+                for (let c = 9; c <= 13; c++) {
+                    if (grid[r][c] && (grid[r][c].includes('–') || grid[r][c].includes('-'))) {
+                        breaks.push(grid[r][c].trim());
+                    }
+                }
+                parsedStatus.push({ name, login, hours, breaks });
+            }
+            state.statusData = parsedStatus;
+
+            if (grid[2]) {
+                state.scheduleHeader = grid[2].slice(19, 50).map(d => d.trim()).filter(Boolean);
+                let schedList = [];
+                for (let r = 3; r <= 10; r++) {
+                    if (!grid[r] || !grid[r][18]) continue;
+                    let name = grid[r][18].trim();
+                    let shifts = grid[r].slice(19, 50).map(s => s.trim());
+                    schedList.push({ name, shifts });
+                }
+                state.scheduleData = schedList;
+            }
+        }
+
+        function processSpecsSheet(grid) {
+            let specs = [];
+            let currentGroup = 'Без группы';
+
+            for (let r = 1; r < grid.length; r++) {
+                if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
+                
+                let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
+                if (rawGroup !== '') {
+                    currentGroup = rawGroup;
+                }
+                
+                specs.push({
+                    group: currentGroup,
+                    name: grid[r][1].trim(),
+                    login: grid[r][2] ? grid[r][2].trim() : '',
+                    type: grid[r][3] ? grid[r][3].trim() : '',
+                    hours: grid[r][4] ? grid[r][4].trim() : '',
+                    birthday: grid[r][5] ? grid[r][5].trim() : ''
+                });
+            }
+            state.specsData = specs;
+        }
+
+        function getTodayShiftHours(personName, fallbackHours) {
+            const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(new Date());
+
+            const scheduleIdx = state.scheduleHeader.indexOf(mskTodayStr);
+            if (scheduleIdx === -1) return fallbackHours;
+
+            const personSched = state.scheduleData.find(p => p.name === personName);
+            if (!personSched) return fallbackHours;
+
+            const shiftToday = personSched.shifts[scheduleIdx];
+            if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
+                return shiftToday.trim();
+            }
+            return null;
+        }
+
+        function evaluateRealtimeStatus() {
+            const now = new Date();
+            let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
+            
+            let activeBreaksMarkup = '';
+            let activeTableMarkup = '';
+            let weekendTableMarkup = '';
+            let queueBreaks = [];
+
+            state.statusData.forEach(person => {
+                const todayShift = getTodayShiftHours(person.name, person.hours);
+                const isScheduledToday = todayShift !== null;
+
+                if (!isScheduledToday) {
+                    weekendTableMarkup += `
+                        <tr class="hover:bg-slate-900/10 transition">
+                            <td class="px-6 py-4 font-semibold text-slate-400">${person.name}</td>
+                            <td class="px-6 py-4 text-slate-500 text-xs">${person.login}</td>
+                            <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-slate-900 text-slate-500 border border-slate-800">Выходной</span></td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                stats.scheduledTotal++;
+                let status = 'Офлайн';
+                let currentBreakRange = null;
+                let worksToday = false;
+                let startWork = null, endWork = null;
+
+                if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
+                    worksToday = true;
+                    const hoursParts = todayShift.split(/[-–—]/);
+                    startWork = parseMskTimeToLocal(hoursParts[0].trim());
+                    endWork = parseMskTimeToLocal(hoursParts[1].trim());
+                    
+                    if (endWork < startWork) {
+                        endWork.setDate(endWork.getDate() + 1);
+                    }
+                }
+
+                if (worksToday && now >= startWork && now <= endWork) {
+                    status = 'В строю';
+                }
+
+                // Split full name to read only the first name
+                const firstName = person.name.split(' ')[0] || person.name;
+
+                // -------------------------------------------------------------
+                // 1. Shift Start / End notifications
+                // -------------------------------------------------------------
+                if (worksToday && startWork && endWork) {
+                    if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
+                        const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
+                        if (!state.announcedEvents.has(shiftStartKey)) {
+                            state.announcedEvents.add(shiftStartKey);
+                            triggerNotification(
+                                `Смена началась: ${person.name}`,
+                                `${person.name} заступил на рабочую смену.`,
+                                `${firstName} начинает рабочую смену. Приветствуем на линии!`
+                            );
+                        }
+                    }
+
+                    if (now.getHours() === endWork.getHours() && now.getMinutes() === endWork.getMinutes()) {
+                        const shiftEndKey = `${person.name}-shift-end-${endWork.getHours()}:${endWork.getMinutes()}`;
+                        if (!state.announcedEvents.has(shiftEndKey)) {
+                            state.announcedEvents.add(shiftEndKey);
+                            triggerNotification(
+                                `Смена окончена: ${person.name}`,
+                                `${person.name} закончил рабочую смену.`,
+                                `${firstName} завершает рабочую смену. Спасибо за работу!`
+                            );
+                        }
+                    }
+                }
+
+                person.breaks.forEach(br => {
+                    const brParts = br.split(/[-–—]/);
+                    const brStart = parseMskTimeToLocal(brParts[0].trim());
+                    const brEnd = parseMskTimeToLocal(brParts[1].trim());
+
+                    if (!brStart || !brEnd) return;
+
+                    if (now >= brStart && now <= brEnd) {
+                        status = 'Перерыв';
+                        currentBreakRange = { start: brStart, end: brEnd, text: br };
+                    }
+
+                    if (now <= brEnd) {
+                        queueBreaks.push({
+                            name: person.name,
+                            start: brStart,
+                            end: brEnd,
+                            rangeText: br,
+                            isCurrent: now >= brStart && now <= brEnd
+                        });
+                    }
+
+                    // -------------------------------------------------------------
+                    // 2. Break Start / End notifications
+                    // -------------------------------------------------------------
+                    if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getM
