@@ -35,18 +35,24 @@
                 </div>
             </div>
 
-            <!-- Live Clock -->
-            <div class="flex items-center space-x-6">
-                <div class="text-right">
+            <!-- Controls and Clock -->
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Test Alerts Button -->
+                <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 transition px-3 py-2 rounded-lg border border-slate-800 text-xs font-semibold">
+                    <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>Тест уведомлений</span>
+                </button>
+
+                <!-- Audio & Push Toggle -->
+                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-850 hover:bg-slate-700 transition px-4 py-2 rounded-lg border border-slate-700 text-sm font-medium">
+                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
+                    <span id="audio-status-text">Включить оповещения</span>
+                </button>
+
+                <div class="text-right border-l border-slate-800 pl-4 hidden sm:block">
                     <div id="live-time" class="text-xl font-mono font-bold text-slate-100">00:00:00</div>
                     <div id="live-date" class="text-xs text-slate-400">1 января 1970</div>
                 </div>
-                
-                <!-- Audio Toggle -->
-                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg border border-slate-700 text-sm font-medium">
-                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
-                    <span id="audio-status-text">Звук выключен</span>
-                </button>
             </div>
         </div>
     </header>
@@ -212,8 +218,14 @@
             updateClock();
             setInterval(updateClock, 1000);
             
+            // Audio & Notification activation button
             const audioBtn = document.getElementById('audio-toggle');
-            audioBtn.addEventListener('click', () => {
+            audioBtn.addEventListener('click', async () => {
+                // Request Push Notification permission
+                if ("Notification" in window) {
+                    await Notification.requestPermission();
+                }
+
                 state.isAudioEnabled = !state.isAudioEnabled;
                 const icon = document.getElementById('audio-icon');
                 const text = document.getElementById('audio-status-text');
@@ -221,14 +233,26 @@
                 if (state.isAudioEnabled) {
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
-                    text.innerText = 'Звук включен';
-                    speak("Звуковое оповещение активировано", true);
+                    text.innerText = 'Оповещения включены';
+                    speak("Оповещения активированы. Система готова к работе.");
                 } else {
                     icon.setAttribute('data-lucide', 'volume-x');
                     icon.className = 'w-4 h-4 text-rose-400';
-                    text.innerText = 'Звук выключен';
+                    text.innerText = 'Включить оповещения';
                 }
                 lucide.createIcons();
+            });
+
+            // "Test Alerts" Button Event
+            document.getElementById('test-alert-btn').addEventListener('click', () => {
+                if (!state.isAudioEnabled) {
+                    alert("Пожалуйста, сначала включите оповещения кнопкой справа, чтобы активировать звук и системные права.");
+                    return;
+                }
+                triggerNotification(
+                    "Тестовое уведомление",
+                    "Проверка звука и push-уведомлений завершена успешно!"
+                );
             });
 
             fetchData();
@@ -242,6 +266,41 @@
 
             if (state.statusData.length > 0) {
                 evaluateRealtimeStatus();
+            }
+        }
+
+        // System notification trigger (Push + Speech)
+        function triggerNotification(title, text) {
+            // 1. Voice Synthesis
+            speak(text);
+
+            // 2. Desktop Push Notification
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    new Notification(title, {
+                        body: text,
+                        icon: 'https://img.icons8.com/color/96/000000/clock.png'
+                    });
+                } catch (e) {
+                    console.error("Ошибка push-уведомления:", e);
+                }
+            }
+        }
+
+        // TTS engine handler with Chrome-stuck fix
+        function speak(text) {
+            if (!state.isAudioEnabled) return;
+            try {
+                // Stop previous queues (crucial Chrome unsticking logic)
+                window.speechSynthesis.cancel(); 
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ru-RU';
+                utterance.volume = 1;
+                utterance.rate = 1;
+                window.speechSynthesis.speak(utterance);
+            } catch (err) {
+                console.error("Сбой синтеза речи:", err);
             }
         }
 
@@ -355,7 +414,6 @@
             for (let r = 1; r < grid.length; r++) {
                 if (!grid[r] || grid[r].length < 2 || !grid[r][1]) continue;
                 
-                // Fill-down merged cell logic for group column
                 let rawGroup = grid[r][0] ? grid[r][0].trim() : '';
                 if (rawGroup !== '') {
                     currentGroup = rawGroup;
@@ -371,14 +429,6 @@
                 });
             }
             state.specsData = specs;
-        }
-
-        function speak(text, silent = false) {
-            if (!state.isAudioEnabled) return;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ru-RU';
-            if (silent) utterance.volume = 0;
-            window.speechSynthesis.speak(utterance);
         }
 
         function getTodayShiftHours(personName, fallbackHours) {
@@ -456,18 +506,27 @@
                         currentBreakRange = { start: brStart, end: brEnd, text: br };
                     }
 
-                    const startDiff = Math.abs(now - brStart);
-                    const endDiff = Math.abs(now - brEnd);
-                    const breakStartKey = `${person.name}-start-${brParts[0].trim()}`;
-                    const breakEndKey = `${person.name}-end-${brParts[1].trim()}`;
-
-                    if (startDiff < 30000 && !state.announcedBreaks.has(breakStartKey)) {
-                        state.announcedBreaks.add(breakStartKey);
-                        speak(`${person.name}, время начала вашего перерыва.`);
+                    // Strict minute equality triggers (exactly fires once at target minute)
+                    if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
+                        const breakStartKey = `${person.name}-start-${brParts[0].trim()}`;
+                        if (!state.announcedBreaks.has(breakStartKey)) {
+                            state.announcedBreaks.add(breakStartKey);
+                            triggerNotification(
+                                `Перерыв у сотрудника ${person.name}`,
+                                `${person.name}, начался ваш перерыв.`
+                            );
+                        }
                     }
-                    if (endDiff < 30000 && !state.announcedBreaks.has(breakEndKey)) {
-                        state.announcedBreaks.add(breakEndKey);
-                        speak(`${person.name}, перерыв завершён. Ожидаем вас на линии.`);
+
+                    if (now.getHours() === brEnd.getHours() && now.getMinutes() === brEnd.getMinutes()) {
+                        const breakEndKey = `${person.name}-end-${brParts[1].trim()}`;
+                        if (!state.announcedBreaks.has(breakEndKey)) {
+                            state.announcedBreaks.add(breakEndKey);
+                            triggerNotification(
+                                `Перерыв завершён: ${person.name}`,
+                                `${person.name}, ваш перерыв окончен. Пора на линию.`
+                            );
+                        }
                     }
                 });
 
@@ -637,7 +696,7 @@
             });
             document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
 
-            // Chronological Birthday sorting (nearest to today first)
+            // Chronological Birthday sorting
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -651,7 +710,6 @@
 
                 if (isNaN(bDay) || isNaN(bMonth)) return;
 
-                // Calculate next occurrence of this birthday
                 let nextBday = new Date(today.getFullYear(), bMonth - 1, bDay);
                 if (nextBday < today) {
                     nextBday.setFullYear(today.getFullYear() + 1);
@@ -667,7 +725,6 @@
                 });
             });
 
-            // Sort ascending by remaining days
             specialistsWithBdayTime.sort((a, b) => a.daysUntil - b.daysUntil);
 
             let bdayMarkup = '';
