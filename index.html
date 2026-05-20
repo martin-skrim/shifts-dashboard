@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #020617;
@@ -17,15 +17,21 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
         .glass-panel {
             background: rgba(15, 23, 42, 0.4);
-            border: 1px border-color: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.3);
             backdrop-filter: blur(8px);
         }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
 
+    <!-- Offline Indicator Banner -->
+    <div id="offline-banner" class="hidden bg-rose-600/90 text-white text-center py-2 px-4 text-xs font-semibold backdrop-blur-sm sticky top-0 z-50 flex items-center justify-center gap-2">
+        <i data-lucide="wifi-off" class="w-4 h-4"></i>
+        <span>Автономный режим: загружена локальная копия графика. Проверьте подключение к сети.</span>
+    </div>
+
     <!-- Header -->
-    <header class="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50 px-6 py-3.5">
+    <header class="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-40 px-6 py-3.5">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
                 <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
@@ -35,13 +41,20 @@
                     <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">ShiftFlow</h1>
                     <p class="text-[11px] text-slate-400 flex items-center gap-1.5">
                         <span class="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Мониторинг поддержки
+                        Мониторинг смен голосовой поддержки
                     </p>
                 </div>
             </div>
 
             <!-- Controls and Clock -->
             <div class="flex flex-wrap items-center gap-3">
+                
+                <!-- TL Mode Switch -->
+                <button id="tl-mode-toggle" class="flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
+                    <i data-lucide="user-cog" class="w-3.5 h-3.5"></i>
+                    <span id="tl-mode-text">Режим Team Lead</span>
+                </button>
+
                 <!-- Test Alerts Button -->
                 <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
                     <i data-lucide="bell" class="w-3.5 h-3.5 text-emerald-400"></i>
@@ -50,8 +63,8 @@
 
                 <!-- Audio & Push Toggle -->
                 <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 transition-all duration-200 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs font-semibold shadow-sm">
-                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400 animate-pulse"></i>
-                    <span id="audio-status-text">Активировать уведомления</span>
+                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
+                    <span id="audio-status-text">Включить оповещения</span>
                 </button>
 
                 <div class="text-right border-l border-slate-800/80 pl-4 hidden sm:block">
@@ -65,7 +78,7 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats & Immediate Statuses (4 Cols) -->
+        <!-- Left Panel: Stats, Active & Queue (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- Quick Stats Card -->
@@ -78,11 +91,11 @@
                         <span class="text-[10px] text-slate-400 block mb-0.5">В строю</span>
                         <span id="stat-active" class="text-lg font-bold text-emerald-400">0</span>
                     </div>
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+                    <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/50 text-center">
                         <span class="text-[10px] text-slate-400 block mb-0.5">Перерыв</span>
                         <span id="stat-break" class="text-lg font-bold text-amber-400">0</span>
                     </div>
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+                    <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/50 text-center">
                         <span class="text-[10px] text-slate-400 block mb-0.5">Офлайн</span>
                         <span id="stat-offline" class="text-lg font-bold text-slate-500">0</span>
                     </div>
@@ -121,7 +134,7 @@
             <!-- Tab Controls -->
             <div class="bg-slate-950 p-1 rounded-xl border border-slate-800/80 flex gap-1 overflow-x-auto custom-scrollbar">
                 <button onclick="switchTab('tab-status')" id="btn-tab-status" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap bg-slate-900 text-slate-100 shadow-sm border border-slate-800/50">На смене сегодня</button>
-                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">📊 Аналитика линии</button>
+                <button onclick="switchTab('tab-coordination')" id="btn-tab-coordination" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">🛰️ Координация & Помощник</button>
                 <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Сегодня выходной</button>
                 <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">График на месяц</button>
                 <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Список специалистов</button>
@@ -129,6 +142,12 @@
 
             <!-- Tab: Statuses (Active Shift) -->
             <div id="tab-status" class="tab-content block">
+                <!-- TL Mode Info Banner -->
+                <div id="tl-banner" class="hidden mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3.5 text-xs text-indigo-300 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4"></i> Вы вошли как Team Lead. Доступно принудительное управление с сменами.</span>
+                    <button onclick="toggleTLMode(false)" class="underline hover:text-indigo-200">Выйти</button>
+                </div>
+
                 <div class="glass-panel border border-slate-800/60 rounded-2xl overflow-hidden shadow-sm">
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse">
@@ -148,41 +167,79 @@
                 </div>
             </div>
 
-            <!-- Tab: Sleek Analytics Tab (NEW) -->
-            <div id="tab-analytics" class="tab-content hidden flex flex-col gap-6">
-                <!-- KPI Widgets Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Занятость линии</span>
-                        <div class="flex justify-between items-baseline">
-                            <span id="kpi-coverage" class="text-2xl font-bold text-emerald-400">0%</span>
-                            <span class="text-[10px] text-slate-500">операторов в сети</span>
-                        </div>
-                    </div>
-                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Баланс перерывов</span>
-                        <div class="flex justify-between items-baseline">
-                            <span id="kpi-breaks-used" class="text-2xl font-bold text-amber-400">0%</span>
-                            <span class="text-[10px] text-slate-500">лимита использовано</span>
-                        </div>
-                    </div>
-                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Пиковое время</span>
-                        <div class="flex justify-between items-baseline">
-                            <span id="kpi-peak-hour" class="text-2xl font-bold text-indigo-400">—</span>
-                            <span class="text-[10px] text-slate-500">макс. присутствие</span>
-                        </div>
+            <!-- Tab: Coordination / Break Planner (NEW) -->
+            <div id="tab-coordination" class="tab-content hidden flex flex-col gap-6">
+                <!-- Self-Service Panel: Delay Break ("Я на звонке") -->
+                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
+                        <i data-lucide="phone-forwarded" class="w-4 h-4 text-emerald-400"></i>
+                        Самообслуживание оператора
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Если ваш текущий звонок затянулся и вы не можете вовремя уйти на перерыв, выберите себя и нажмите кнопку задержки.</p>
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <select id="coordination-agent-select" class="bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 min-w-[200px]">
+                            <!-- Options populated dynamically -->
+                        </select>
+                        <button onclick="signalDelayOnCall()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i data-lucide="clock-alert" class="w-4 h-4"></i>
+                            Задерживаюсь на звонке (на 15 минут)
+                        </button>
+                        <button onclick="cancelActiveDelay()" class="bg-slate-900 hover:bg-slate-800 text-slate-400 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold">
+                            Вернуть график по умолчанию
+                        </button>
                     </div>
                 </div>
 
-                <!-- Minimalist 24h Presence Heatmap Row -->
+                <!-- Break Window Planner -->
+                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
+                        <i data-lucide="shuffle" class="w-4 h-4 text-indigo-400"></i>
+                        Умный планировщик «Break Window»
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Хотите поменяться перерывами или сдвинуть время? Выберите параметры, чтобы алгоритм оценил плотность покрытия линии.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1.5">Сотрудник</label>
+                            <select id="planner-agent-select" onchange="populatePlannerBreaks()" class="w-full bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700"></select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1.5">Выбор перерыва</label>
+                            <select id="planner-break-select" class="w-full bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700"></select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1.5">Направление сдвига</label>
+                            <select id="planner-offset-select" class="w-full bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700">
+                                <option value="-15">Раньше на 15 минут (-15м)</option>
+                                <option value="-30">Раньше на 30 минут (-30м)</option>
+                                <option value="15" selected>Позже на 15 минут (+15м)</option>
+                                <option value="30">Позже на 30 минут (+30м)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="calculateProposedBreakMove()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
+                                <i data-lucide="check-square" class="w-4 h-4"></i>
+                                Оценить безопасность
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Estimation Result Panel -->
+                    <div id="planner-result-box" class="hidden p-4 rounded-xl border text-xs flex justify-between items-center">
+                        <div>
+                            <h4 id="planner-result-title" class="font-semibold mb-1 text-slate-100">Результат оценки</h4>
+                            <p id="planner-result-desc" class="text-slate-400"></p>
+                        </div>
+                        <span id="planner-result-badge" class="px-3 py-1.5 rounded-full font-bold">Укомплектовано</span>
+                    </div>
+                </div>
+
+                <!-- Minimalist 24h Presence Heatgrid -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
                         <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
-                        График покрытия линии по часам (Загрузка в течение суток)
+                        Сетка покрытия линии по часам (Загрузка в течение суток)
                     </h3>
                     <div class="flex justify-between gap-1 p-2 bg-slate-950/60 rounded-xl" id="coverage-heatmap-row">
-                        <!-- 24 hourly heat blocks populated dynamically -->
+                        <!-- 24 blocks populated by JS -->
                     </div>
                     <div class="flex justify-between mt-2 text-[9px] text-slate-500 px-1 font-mono">
                         <span>00:00</span>
@@ -190,17 +247,6 @@
                         <span>12:00</span>
                         <span>18:00</span>
                         <span>23:00</span>
-                    </div>
-                </div>
-
-                <!-- Break adherence budget tracker -->
-                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
-                        <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
-                        Индивидуальное использование лимита перерывов за сегодня
-                    </h3>
-                    <div id="breaks-budget-tracker" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Progress bars for each agent working today -->
                     </div>
                 </div>
             </div>
@@ -273,7 +319,7 @@
     </footer>
 
     <script>
-        // --- Global Tab Switching Logic ---
+        // --- 1. Global Navigation and System State ---
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
@@ -285,7 +331,7 @@
                 target.classList.add('block');
             }
 
-            const tabs = ['tab-status', 'tab-analytics', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
+            const tabs = ['tab-status', 'tab-coordination', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`btn-${t}`);
                 if (btn) {
@@ -312,14 +358,19 @@
             specsData: [],
             isAudioEnabled: false,
             announcedEvents: new Set(),
-            cachedVoice: null
+            cachedVoice: null,
+            
+            // New local synchronization & simulation parameters
+            isTLMode: false,
+            localOverrides: {}, // Format: { "Agent Name": { status: "В строю"/"Перерыв"/"Офлайн", expires: ts } }
+            delayedAgents: {},   // Format: { "Agent Name": { delayMins: 15, timestamp: ts } }
+            bc: null             // BroadcastChannel
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initBackgroundWorker();
-
-            // Handle pre-granted permissions gracefully
+            initBroadcastChannel();
             checkPregrantedPermissions();
 
             if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
@@ -336,7 +387,7 @@
                 });
             }
 
-            // Fallback: If localStorage saved state as enabled and permission is granted, activate AudioContext on first body click
+            // Click listener to restore audio smoothly on first interaction
             document.body.addEventListener('click', () => {
                 if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
                     if (!state.isAudioEnabled) {
@@ -360,11 +411,204 @@
                 });
             }
 
+            const tlToggleBtn = document.getElementById('tl-mode-toggle');
+            if (tlToggleBtn) {
+                tlToggleBtn.addEventListener('click', () => {
+                    toggleTLMode(!state.isTLMode);
+                });
+            }
+
             fetchData();
             setInterval(fetchData, 30000);
         });
 
-        // Fast check on reload to see if permission was already granted previously
+        // BroadcastChannel to synchronize team adjustments instantly across all browser instances
+        function initBroadcastChannel() {
+            if ('BroadcastChannel' in window) {
+                state.bc = new BroadcastChannel('shiftflow_coordination_channel');
+                state.bc.onmessage = (e) => {
+                    if (e.data && e.data.type === 'sync') {
+                        state.localOverrides = e.data.localOverrides;
+                        state.delayedAgents = e.data.delayedAgents;
+                        evaluateRealtimeStatus();
+                    }
+                };
+            }
+        }
+
+        function broadcastSync() {
+            if (state.bc) {
+                state.bc.postMessage({
+                    type: 'sync',
+                    localOverrides: state.localOverrides,
+                    delayedAgents: state.delayedAgents
+                });
+            }
+        }
+
+        // Team Lead Control Override API
+        window.toggleTLMode = function(forceState) {
+            state.isTLMode = forceState;
+            const btn = document.getElementById('tl-mode-toggle');
+            const banner = document.getElementById('tl-banner');
+            
+            if (btn) {
+                if (state.isTLMode) {
+                    btn.className = "flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 px-3 py-1.5 rounded-lg border border-indigo-500 text-xs font-medium";
+                    if (banner) banner.classList.remove('hidden');
+                } else {
+                    btn.className = "flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium";
+                    if (banner) banner.classList.add('hidden');
+                }
+            }
+            evaluateRealtimeStatus();
+        };
+
+        window.tlForceStatus = function(agentName, forcedStatus) {
+            if (!state.isTLMode) return;
+            if (forcedStatus === 'CLEAR') {
+                delete state.localOverrides[agentName];
+            } else {
+                state.localOverrides[agentName] = {
+                    status: forcedStatus,
+                    timestamp: Date.now()
+                };
+            }
+            broadcastSync();
+            evaluateRealtimeStatus();
+        };
+
+        // Self-Service Agent Delay API
+        window.signalDelayOnCall = function() {
+            const select = document.getElementById('coordination-agent-select');
+            if (!select || select.value === "") return;
+            
+            const agentName = select.value;
+            state.delayedAgents[agentName] = {
+                delayMins: 15,
+                timestamp: Date.now()
+            };
+            broadcastSync();
+            evaluateRealtimeStatus();
+            speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. График перерывов скорректирован.`);
+        };
+
+        window.cancelActiveDelay = function() {
+            const select = document.getElementById('coordination-agent-select');
+            if (!select || select.value === "") return;
+            const agentName = select.value;
+            delete state.delayedAgents[agentName];
+            broadcastSync();
+            evaluateRealtimeStatus();
+        };
+
+        // Break Window Planner algorithm
+        window.populatePlannerBreaks = function() {
+            const selectAgent = document.getElementById('planner-agent-select');
+            const selectBreak = document.getElementById('planner-break-select');
+            if (!selectAgent || !selectBreak) return;
+
+            const name = selectAgent.value;
+            const person = state.statusData.find(p => p.name === name);
+            
+            selectBreak.innerHTML = '';
+            if (person && person.breaks.length > 0) {
+                person.breaks.forEach((br, idx) => {
+                    selectBreak.innerHTML += `<option value="${idx}">${br}</option>`;
+                });
+            } else {
+                selectBreak.innerHTML = `<option value="">Перерывов нет</option>`;
+            }
+        };
+
+        window.calculateProposedBreakMove = function() {
+            const agentSelect = document.getElementById('planner-agent-select');
+            const breakSelect = document.getElementById('planner-break-select');
+            const offsetSelect = document.getElementById('planner-offset-select');
+            
+            if (!agentSelect || !breakSelect || !offsetSelect) return;
+            if (agentSelect.value === "" || breakSelect.value === "") return;
+
+            const name = agentSelect.value;
+            const breakIdx = parseInt(breakSelect.value, 10);
+            const offsetMins = parseInt(offsetSelect.value, 10);
+
+            const person = state.statusData.find(p => p.name === name);
+            if (!person) return;
+
+            const breakText = person.breaks[breakIdx];
+            const parts = breakText.split(/[-–—]/);
+            const originalStart = parseMskTimeToLocal(parts[0].trim());
+            const originalEnd = parseMskTimeToLocal(parts[1].trim());
+
+            // Project new simulated start & end
+            const simulatedStart = new Date(originalStart.getTime() + offsetMins * 60000);
+            const simulatedEnd = new Date(originalEnd.getTime() + offsetMins * 60000);
+
+            // Re-evaluate line coverage at simulated start to check impact
+            let otherActiveCoverage = 0;
+            state.statusData.forEach(p => {
+                if (p.name === name) return; // ignore targeted person
+
+                const todayShift = getTodayShiftHours(p.name, p.hours);
+                if (!todayShift) return;
+
+                const shiftParts = todayShift.split(/[-–—]/);
+                const pShiftStart = parseMskTimeToLocal(shiftParts[0].trim());
+                const pShiftEnd = parseMskTimeToLocal(shiftParts[1].trim());
+
+                if (pShiftEnd < pShiftStart) pShiftEnd.setDate(pShiftEnd.getDate() + 1);
+
+                // Verify if peer is online at simulated test timestamp
+                if (simulatedStart >= pShiftStart && simulatedStart <= pShiftEnd) {
+                    let insidePeerBreak = false;
+                    p.breaks.forEach(pBr => {
+                        const pBrParts = pBr.split(/[-–—]/);
+                        const pBrStart = parseMskTimeToLocal(pBrParts[0].trim());
+                        const pBrEnd = parseMskTimeToLocal(pBrParts[1].trim());
+                        if (simulatedStart >= pBrStart && simulatedStart <= pBrEnd) {
+                            insidePeerBreak = true;
+                        }
+                    });
+                    if (!insidePeerBreak) {
+                        otherActiveCoverage++;
+                    }
+                }
+            });
+
+            // Render modern planner result cards
+            const resultBox = document.getElementById('planner-result-box');
+            const resTitle = document.getElementById('planner-result-title');
+            const resDesc = document.getElementById('planner-result-desc');
+            const resBadge = document.getElementById('planner-result-badge');
+
+            if (resultBox && resTitle && resDesc && resBadge) {
+                resultBox.classList.remove('hidden');
+                
+                const formattedStartStr = String(simulatedStart.getHours()).padStart(2, '0') + ':' + String(simulatedStart.getMinutes()).padStart(2, '0');
+                const formattedEndStr = String(simulatedEnd.getHours()).padStart(2, '0') + ':' + String(simulatedEnd.getMinutes()).padStart(2, '0');
+
+                resTitle.innerText = `Новое время: ${formattedStartStr} – ${formattedEndStr}`;
+
+                if (otherActiveCoverage >= 2) {
+                    resultBox.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-xs flex justify-between items-center";
+                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400";
+                    resBadge.innerText = "🟢 Безопасно";
+                    resDesc.innerText = `Свободно на линии: ${otherActiveCoverage} оп. Отличное время для сдвига перерыва.`;
+                } else if (otherActiveCoverage === 1) {
+                    resultBox.className = "p-4 rounded-xl border bg-amber-500/10 border-amber-500/20 text-xs flex justify-between items-center";
+                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-amber-500/20 text-amber-400";
+                    resBadge.innerText = "🟡 Ослабление (1 оп.)";
+                    resDesc.innerText = `На линии останется только один оператор. Требуется согласование с TL.`;
+                } else {
+                    resultBox.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/20 text-xs flex justify-between items-center";
+                    resBadge.className = "px-3 py-1.5 rounded-full font-bold bg-rose-500/20 text-rose-400";
+                    resBadge.innerText = "🔴 Пустая линия (0 оп.)";
+                    resDesc.innerText = `Критическое провисание смены! Перенос создаст пустоту на линии. Сдвиг запрещен.`;
+                }
+            }
+        };
+
         function checkPregrantedPermissions() {
             if (window.Notification && Notification.permission === 'granted') {
                 const savedAudioPref = localStorage.getItem('shiftflow_audio_enabled');
@@ -372,7 +616,6 @@
                 const icon = document.getElementById('audio-icon');
                 
                 if (savedAudioPref === 'true' && text && icon) {
-                    // Pre-load visual active state, fully connects on first mouse click
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
                     text.innerText = 'Оповещения включены';
@@ -436,18 +679,6 @@
             }
         }
 
-        function updateClock() {
-            const now = new Date();
-            const timeEl = document.getElementById('live-time');
-            const dateEl = document.getElementById('live-date');
-            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
-            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            if (state.statusData.length > 0) {
-                evaluateRealtimeStatus();
-            }
-        }
-
         function selectBestRussianVoice() {
             if (typeof speechSynthesis === 'undefined') return;
             const voices = speechSynthesis.getVoices();
@@ -485,7 +716,6 @@
             if (!state.isAudioEnabled || typeof speechSynthesis === 'undefined') return;
             try {
                 speechSynthesis.cancel(); 
-                
                 const utterance = new SpeechSynthesisUtterance(text);
                 if (state.cachedVoice) {
                     utterance.voice = state.cachedVoice;
@@ -494,7 +724,6 @@
                 utterance.volume = 1.0;
                 utterance.rate = 0.95;  
                 utterance.pitch = 1.0;
-                
                 speechSynthesis.speak(utterance);
             } catch (err) {
                 console.error("Сбой синтеза речи:", err);
@@ -561,6 +790,8 @@
 
         async function fetchData() {
             const syncElement = document.getElementById('sync-status');
+            const offlineBanner = document.getElementById('offline-banner');
+
             if (syncElement) {
                 syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
             }
@@ -571,17 +802,34 @@
                     fetch(URL_SPECS).then(r => r.text())
                 ]);
 
+                // Store successful downloads to localStorage cache
+                localStorage.setItem('shiftflow_cache_status', statusRes);
+                localStorage.setItem('shiftflow_cache_specs', specsRes);
+
                 processStatusSheet(parseCSV(statusRes));
                 processSpecsSheet(parseCSV(specsRes));
 
+                if (offlineBanner) offlineBanner.classList.add('hidden');
                 if (syncElement) {
                     syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
                 }
                 renderUI();
             } catch (err) {
-                console.error(err);
-                if (syncElement) {
-                    syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
+                console.error("Предупреждение: Сбой соединения с сетью. Загрузка из кэша.", err);
+                
+                // Fallback to offline cache
+                const cachedStatus = localStorage.getItem('shiftflow_cache_status');
+                const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
+
+                if (cachedStatus && cachedSpecs) {
+                    processStatusSheet(parseCSV(cachedStatus));
+                    processSpecsSheet(parseCSV(cachedSpecs));
+                    if (offlineBanner) offlineBanner.classList.remove('hidden');
+                    renderUI();
+                } else {
+                    if (syncElement) {
+                        syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка сети`;
+                    }
                 }
             }
         }
@@ -705,9 +953,7 @@
             let weekendTableMarkup = '';
             let queueBreaks = [];
 
-            // Reset and build analytics arrays dynamically on each check loop
             let hourlyCoverage = Array(24).fill(0); 
-            let breaksBudgetList = [];
 
             state.statusData.forEach(person => {
                 const todayShift = getTodayShiftHours(person.name, person.hours);
@@ -747,7 +993,7 @@
 
                 const firstName = person.name.split(' ')[0] || person.name;
 
-                // Shift lifecycle sound alerts
+                // Shift starts and ends sound alerts
                 if (worksToday && startWork && endWork) {
                     if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
                         const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
@@ -774,27 +1020,25 @@
                     }
                 }
 
-                let totalAllocatedMins = 0;
-                let spentAllocatedMins = 0;
+                // Check active break delay triggers
+                const hasDelay = state.delayedAgents[person.name] !== undefined;
 
                 person.breaks.forEach(br => {
                     const brParts = br.split(/[-–—]/);
-                    const brStart = parseMskTimeToLocal(brParts[0].trim());
-                    const brEnd = parseMskTimeToLocal(brParts[1].trim());
+                    let brStart = parseMskTimeToLocal(brParts[0].trim());
+                    let brEnd = parseMskTimeToLocal(brParts[1].trim());
 
                     if (!brStart || !brEnd) return;
 
-                    const breakDurationMs = brEnd - brStart;
-                    const breakDurationMins = Math.round(breakDurationMs / 60000);
-                    totalAllocatedMins += breakDurationMins;
+                    // If agent signalized delay, offset break range by 15 mins
+                    if (hasDelay) {
+                        brStart = new Date(brStart.getTime() + 15 * 60000);
+                        brEnd = new Date(brEnd.getTime() + 15 * 60000);
+                    }
 
-                    if (now >= brEnd) {
-                        spentAllocatedMins += breakDurationMins;
-                    } else if (now >= brStart && now <= brEnd) {
+                    if (now >= brStart && now <= brEnd) {
                         status = 'Перерыв';
-                        currentBreakRange = { start: brStart, end: brEnd, text: br };
-                        const elapsedMins = Math.round((now - brStart) / 60000);
-                        spentAllocatedMins += elapsedMins;
+                        currentBreakRange = { start: brStart, end: brEnd, text: br, isDelayed: hasDelay };
                     }
 
                     if (now <= brEnd) {
@@ -803,13 +1047,14 @@
                             start: brStart,
                             end: brEnd,
                             rangeText: br,
-                            isCurrent: now >= brStart && now <= brEnd
+                            isCurrent: now >= brStart && now <= brEnd,
+                            isDelayed: hasDelay
                         });
                     }
 
-                    // Break sounds
+                    // Break alerts
                     if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
-                        const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}`;
+                        const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}-${hasDelay ? 'del' : 'std'}`;
                         if (!state.announcedEvents.has(breakStartKey)) {
                             state.announcedEvents.add(breakStartKey);
                             triggerNotification(
@@ -821,11 +1066,11 @@
                     }
 
                     if (now.getHours() === brEnd.getHours() && now.getMinutes() === brEnd.getMinutes()) {
-                        const breakEndKey = `${person.name}-break-end-${brParts[1].trim()}`;
+                        const breakEndKey = `${person.name}-break-end-${brParts[1].trim()}-${hasDelay ? 'del' : 'std'}`;
                         if (!state.announcedEvents.has(breakEndKey)) {
                             state.announcedEvents.add(breakEndKey);
                             triggerNotification(
-                                `Сотрудник вернулся на линию: ${person.name}`,
+                                `Сотрудник на линии: ${person.name}`,
                                 `${person.name} вернулся с перерыва.`,
                                 `${firstName} возвращается на линию. Перерыв окончен.`
                             );
@@ -833,7 +1078,12 @@
                     }
                 });
 
-                // Compute coverage over 24h
+                // Check and enforce local override by Team Lead
+                if (state.localOverrides[person.name]) {
+                    status = state.localOverrides[person.name].status;
+                }
+
+                // Calculate Hourly Coverage Values
                 if (worksToday) {
                     for (let h = 0; h < 24; h++) {
                         let checkTime = new Date(startWork);
@@ -843,35 +1093,62 @@
                             let onBreakAtCheck = false;
                             person.breaks.forEach(br => {
                                 const brParts = br.split(/[-–—]/);
-                                const brStart = parseMskTimeToLocal(brParts[0].trim());
-                                const brEnd = parseMskTimeToLocal(brParts[1].trim());
+                                let brStart = parseMskTimeToLocal(brParts[0].trim());
+                                let brEnd = parseMskTimeToLocal(brParts[1].trim());
+
+                                if (hasDelay && brStart && brEnd) {
+                                    brStart = new Date(brStart.getTime() + 15 * 60000);
+                                    brEnd = new Date(brEnd.getTime() + 15 * 60000);
+                                }
+
                                 if (brStart && brEnd && checkTime >= brStart && checkTime <= brEnd) {
                                     onBreakAtCheck = true;
                                 }
                             });
-                            if (!onBreakAtCheck) {
+                            // Take into account manual overrides in heat diagram
+                            let simulatedStatus = onBreakAtCheck ? 'Перерыв' : 'В строю';
+                            if (state.localOverrides[person.name]) {
+                                simulatedStatus = state.localOverrides[person.name].status;
+                            }
+
+                            if (simulatedStatus === 'В строю') {
                                 hourlyCoverage[h]++;
                             }
                         }
                     }
                 }
 
-                breaksBudgetList.push({
-                    name: person.name,
-                    total: totalAllocatedMins,
-                    spent: spentAllocatedMins,
-                    percent: totalAllocatedMins > 0 ? Math.round((spentAllocatedMins / totalAllocatedMins) * 100) : 0
-                });
-
                 if (status === 'В строю') stats.active++;
                 else if (status === 'Перерыв') stats.onBreak++;
                 else stats.offline++;
 
+                // Build status badges with delay and override indicators
                 let statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-900 text-slate-500 border border-slate-800">Офлайн</span>`;
                 if (status === 'В строю') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">В строю</span>`;
                 } else if (status === 'Перерыв') {
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
+                } else if (status === 'Занят звонком') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Занят звонком</span>`;
+                }
+
+                // Enforce "Занят звонком" status visual if they have active delay but aren't currently on the rescheduled break
+                if (hasDelay && status === 'В строю') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 animate-pulse">Занят звонком</span>`;
+                }
+
+                // If TL Mode is active, render override controls next to agent
+                let tlControlsHTML = '';
+                if (state.isTLMode) {
+                    tlControlsHTML = `
+                        <div class="mt-2 flex gap-1 items-center bg-slate-950/40 p-1.5 rounded-lg border border-slate-800/40 w-fit">
+                            <span class="text-[9px] text-slate-500 uppercase mr-1">TL:</span>
+                            <button onclick="tlForceStatus('${person.name}', 'В строю')" class="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded text-[10px]">В сеть</button>
+                            <button onclick="tlForceStatus('${person.name}', 'Перерыв')" class="px-1.5 py-0.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded text-[10px]">Перерыв</button>
+                            <button onclick="tlForceStatus('${person.name}', 'Офлайн')" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded text-[10px]">Офлайн</button>
+                            ${state.localOverrides[person.name] ? `<button onclick="tlForceStatus('${person.name}', 'CLEAR')" class="text-rose-400 hover:text-rose-300 text-[10px] ml-1">Сброс</button>` : ''}
+                        </div>
+                    `;
                 }
 
                 const achievements = getAchievements(person, todayShift);
@@ -884,17 +1161,30 @@
 
                 const localShiftHours = formatMskRangeToLocal(todayShift);
                 const breakListHTML = person.breaks.map(br => {
-                    const localBreakRange = formatMskRangeToLocal(br);
+                    let displayRange = br;
+                    if (hasDelay) {
+                        const parts = br.split(/[-–—]/);
+                        const delayStart = new Date(parseMskTimeToLocal(parts[0].trim()).getTime() + 15 * 60000);
+                        const delayEnd = new Date(parseMskTimeToLocal(parts[1].trim()).getTime() + 15 * 60000);
+                        const formatTime = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                        displayRange = `${formatTime(delayStart)} – ${formatTime(delayEnd)}`;
+                    }
+
                     const isCurrent = currentBreakRange && currentBreakRange.text === br;
-                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">${localBreakRange}</span>`;
+                    return `<span class="px-2 py-1 rounded text-xs font-mono ${isCurrent ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'} ${hasDelay ? 'border border-cyan-500/10' : ''}">${displayRange}</span>`;
                 }).join(' ');
 
                 activeTableMarkup += `
                     <tr class="hover:bg-slate-900/30 transition">
                         <td class="px-6 py-4">
-                            <div class="font-semibold text-slate-200">${person.name}</div>
+                            <div class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                ${person.name}
+                                ${hasDelay ? '<span class="px-1.5 py-0.2 bg-cyan-500/10 text-cyan-400 text-[9px] rounded-full border border-cyan-500/20">Задержка</span>' : ''}
+                                ${state.localOverrides[person.name] ? '<span class="px-1.5 py-0.2 bg-indigo-500/10 text-indigo-400 text-[9px] rounded-full border border-indigo-500/20">Ручной ввод</span>' : ''}
+                            </div>
                             <div class="text-xs text-slate-500 mb-1.5">${person.login}</div>
                             <div class="flex flex-wrap gap-1">${achievementsHTML || ''}</div>
+                            ${tlControlsHTML}
                         </td>
                         <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
                         <td class="px-6 py-4">${statusBadge}</td>
@@ -973,37 +1263,43 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
-            // Sync Analytics Dashboard
-            populateAnalyticsTab(stats, hourlyCoverage, breaksBudgetList);
+            // Redraw heatmap and update coordination selection options
+            drawHeatmapAndOptions(stats, hourlyCoverage);
         }
 
-        function populateAnalyticsTab(stats, hourlyCoverage, breaksBudgetList) {
-            // 1. KPI widgets
+        function drawHeatmapAndOptions(stats, hourlyCoverage) {
+            // Fill agent selection lists in Coordination tab
+            const agentSelect = document.getElementById('coordination-agent-select');
+            const plannerAgentSelect = document.getElementById('planner-agent-select');
+            
+            if (agentSelect && agentSelect.innerHTML === '') {
+                agentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+                state.statusData.forEach(p => {
+                    agentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                });
+            }
+            if (plannerAgentSelect && plannerAgentSelect.innerHTML === '') {
+                plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+                state.statusData.forEach(p => {
+                    plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                });
+            }
+
+            // Fill KPI Metrics Cards
             const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
             const kpiCov = document.getElementById('kpi-coverage');
             if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
-
-            let overallTotalBreak = 0;
-            let overallSpentBreak = 0;
-            breaksBudgetList.forEach(item => {
-                overallTotalBreak += item.total;
-                overallSpentBreak += item.spent;
-            });
-            const breakConsumption = overallTotalBreak > 0 ? Math.round((overallSpentBreak / overallTotalBreak) * 100) : 0;
-            const kpiBrk = document.getElementById('kpi-breaks-used');
-            if (kpiBrk) kpiBrk.innerText = `${breakConsumption}%`;
 
             const maxCoverage = Math.max(...hourlyCoverage);
             const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
             const kpiPeak = document.getElementById('kpi-peak-hour');
             if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
 
-            // 2. High-Aesthetic 24h Heatgrid strip
+            // Generate Heatmap row
             let heatgridHTML = '';
             for (let h = 0; h < 24; h++) {
                 const count = hourlyCoverage[h];
-                
-                let colorClass = 'bg-slate-900 border-slate-800'; // 0 agents online
+                let colorClass = 'bg-slate-900 border-slate-800'; 
                 if (count > 0) {
                     if (count <= 1) colorClass = 'bg-emerald-900/50 border-emerald-800/20 text-emerald-400';
                     else if (count <= 3) colorClass = 'bg-emerald-700/60 border-emerald-600/30 text-emerald-100';
@@ -1013,8 +1309,6 @@
                 heatgridHTML += `
                     <div class="flex-1 aspect-square rounded-md border flex items-center justify-center font-mono text-[10px] font-bold group relative cursor-help transition-all duration-150 ${colorClass}">
                         ${count > 0 ? count : ''}
-                        
-                        <!-- Floating modern tooltip -->
                         <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
                             <span class="bg-slate-950 border border-slate-800 text-[9px] text-slate-300 font-sans px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
                                 Час: ${String(h).padStart(2, '0')}:00 • Операторов: ${count}
@@ -1025,26 +1319,6 @@
             }
             const heatmapRow = document.getElementById('coverage-heatmap-row');
             if (heatmapRow) heatmapRow.innerHTML = heatgridHTML;
-
-            // 3. Compact budget progress bars
-            let budgetHTML = '';
-            breaksBudgetList.forEach(item => {
-                budgetHTML += `
-                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 flex flex-col justify-between">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-medium text-slate-300 text-xs">${item.name}</span>
-                            <span class="font-mono text-[10px] text-slate-500">${item.spent} / ${item.total} мин (${item.percent}%)</span>
-                        </div>
-                        <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: ${item.percent}%"></div>
-                        </div>
-                    </div>
-                `;
-            });
-            const budgetTracker = document.getElementById('breaks-budget-tracker');
-            if (budgetTracker) {
-                budgetTracker.innerHTML = budgetHTML || `<div class="col-span-2 text-center text-slate-600 py-6">Нет работающих специалистов</div>`;
-            }
         }
 
         function renderUI() {
