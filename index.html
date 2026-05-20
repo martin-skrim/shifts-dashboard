@@ -177,9 +177,7 @@
                     </h3>
                     <p class="text-xs text-slate-400 mb-4">Если ваш текущий звонок затянулся и вы не можете вовремя уйти на перерыв, выберите себя и нажмите кнопку задержки.</p>
                     <div class="flex flex-wrap gap-3 items-center">
-                        <select id="coordination-agent-select" class="bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 min-w-[200px]">
-                            <!-- Options populated dynamically -->
-                        </select>
+                        <select id="coordination-agent-select" class="bg-slate-950 border border-slate-850 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 min-w-[200px]"></select>
                         <button onclick="requestAgentDelay()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                             <i data-lucide="clock-alert" class="w-4 h-4"></i>
                             Задерживаюсь на звонке (на 15 минут)
@@ -331,7 +329,7 @@
             <h3 class="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-1.5">
                 <i data-lucide="key" class="w-4 h-4 text-amber-400"></i> Подтверждение личности
             </h3>
-            <p id="agent-auth-prompt" class="text-xs text-slate-400 mb-4">Введите ваш рабочий логин Telegram (начиная с @) для верификации действия.</p>
+            <p id="agent-auth-prompt" class="text-xs text-slate-400 mb-4 flex items-center gap-1">Введите ваш рабочий логин Telegram для верификации действия.</p>
             <input type="text" id="agent-login-input" placeholder="@login_1" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-slate-700 mb-4 text-center font-mono">
             <div class="flex gap-2">
                 <button onclick="closeAgentAuthModal()" class="flex-1 bg-slate-900 hover:bg-slate-850 text-slate-400 py-2 rounded-lg text-xs font-medium">Отмена</button>
@@ -340,7 +338,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <script>
         // --- 1. Global Navigation and System State ---
         window.switchTab = function(tabId) {
@@ -385,13 +382,11 @@
             
             // Protected Authorization & Coordination values
             isTLMode: false,
-            tlPinHash: "7777",   // Supervisor access key (changeable here)
+            tlPinHash: "7777",   
             localOverrides: {},  
             delayedAgents: {},   
             bc: null,
-            
-            // Temporary container for agent verification queue
-            pendingAction: null  // { type: 'DELAY'|'CANCEL', agentName: 'name' }
+            pendingAction: null  
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -448,7 +443,6 @@
                 });
             }
 
-            // Keyboard enter bindings for Auth Modals
             document.getElementById('tl-pin-input').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') submitTLAuth();
             });
@@ -459,6 +453,38 @@
             fetchData();
             setInterval(fetchData, 30000);
         });
+
+        // Safe dropdown populator (preserves active choices during intervals)
+        function populateAgentDropdowns() {
+            const agentSelect = document.getElementById('coordination-agent-select');
+            const plannerAgentSelect = document.getElementById('planner-agent-select');
+
+            if (!agentSelect || !plannerAgentSelect || state.statusData.length === 0) return;
+
+            const currentCoordVal = agentSelect.value;
+            const currentPlannerVal = plannerAgentSelect.value;
+
+            // Populating coordination-agent-select
+            agentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+            state.statusData.forEach(p => {
+                agentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+
+            // Populating planner-agent-select
+            plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
+            state.statusData.forEach(p => {
+                plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+
+            // Restore active selections safely
+            if (currentCoordVal) agentSelect.value = currentCoordVal;
+            if (currentPlannerVal) {
+                plannerAgentSelect.value = currentPlannerVal;
+                populatePlannerBreaks();
+            } else {
+                populatePlannerBreaks();
+            }
+        }
 
         // --- TL Mode Protection Logic ---
         function openTLAuthModal() {
@@ -518,7 +544,7 @@
             const input = document.getElementById('agent-login-input');
             if (modal && prompt && input) {
                 input.value = '';
-                prompt.innerText = `Введите ваш логин Telegram для подтверждения действия от имени ${agentName.split(' ')[0]}:`;
+                prompt.innerText = `Подтвердите действие: введите ваш логин Telegram от имени ${agentName.split(' ')[0]}:`;
                 modal.classList.remove('hidden');
                 input.focus();
             }
@@ -538,7 +564,6 @@
             const person = state.statusData.find(p => p.name === state.pendingAction.agentName);
             
             if (person && person.login && person.login.toLowerCase() === enteredLogin.toLowerCase()) {
-                // Success - authorize execution of pending action
                 if (state.pendingAction.type === 'DELAY') {
                     executeDelay(state.pendingAction.agentName);
                 } else if (state.pendingAction.type === 'CANCEL') {
@@ -724,6 +749,49 @@
             }
         };
 
+        function checkPregrantedPermissions() {
+            if (window.Notification && Notification.permission === 'granted') {
+                const savedAudioPref = localStorage.getItem('shiftflow_audio_enabled');
+                const text = document.getElementById('audio-status-text');
+                const icon = document.getElementById('audio-icon');
+                
+                if (savedAudioPref === 'true' && text && icon) {
+                    icon.setAttribute('data-lucide', 'volume-2');
+                    icon.className = 'w-4 h-4 text-emerald-400';
+                    text.innerText = 'Оповещения включены';
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function requestNotifications() {
+            if ("Notification" in window) {
+                await Notification.requestPermission();
+            }
+        }
+
+        function toggleAudioState(forceOn = false) {
+            state.isAudioEnabled = forceOn ? true : !state.isAudioEnabled;
+            localStorage.setItem('shiftflow_audio_enabled', state.isAudioEnabled ? 'true' : 'false');
+            
+            const icon = document.getElementById('audio-icon');
+            const text = document.getElementById('audio-status-text');
+            
+            if (text && icon) {
+                if (state.isAudioEnabled) {
+                    icon.setAttribute('data-lucide', 'volume-2');
+                    icon.className = 'w-4 h-4 text-emerald-400';
+                    text.innerText = 'Оповещения включены';
+                    speak("Оповещения активированы.");
+                } else {
+                    icon.setAttribute('data-lucide', 'volume-x');
+                    icon.className = 'w-4 h-4 text-rose-400';
+                    text.innerText = 'Включить оповещения';
+                }
+                lucide.createIcons();
+            }
+        }
+
         function initBackgroundWorker() {
             const workerCode = `
                 let intervalId;
@@ -748,18 +816,6 @@
                 worker.postMessage('start');
             } catch (e) {
                 setInterval(updateClock, 1000);
-            }
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const timeEl = document.getElementById('live-time');
-            const dateEl = document.getElementById('live-date');
-            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
-            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            if (state.statusData.length > 0) {
-                evaluateRealtimeStatus();
             }
         }
 
@@ -898,7 +954,7 @@
                 }
                 renderUI();
             } catch (err) {
-                console.error("Ошибка загрузки.", err);
+                console.error("Ошибка сети.", err);
                 
                 const cachedStatus = localStorage.getItem('shiftflow_cache_status');
                 const cachedSpecs = localStorage.getItem('shiftflow_cache_specs');
@@ -1341,22 +1397,6 @@
         }
 
         function drawHeatmapAndOptions(stats, hourlyCoverage) {
-            const agentSelect = document.getElementById('coordination-agent-select');
-            const plannerAgentSelect = document.getElementById('planner-agent-select');
-            
-            if (agentSelect && agentSelect.innerHTML === '') {
-                agentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
-                state.statusData.forEach(p => {
-                    agentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                });
-            }
-            if (plannerAgentSelect && plannerAgentSelect.innerHTML === '') {
-                plannerAgentSelect.innerHTML = `<option value="">-- Выберите оператора --</option>`;
-                state.statusData.forEach(p => {
-                    plannerAgentSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                });
-            }
-
             const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
             const kpiCov = document.getElementById('kpi-coverage');
             if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
@@ -1395,6 +1435,7 @@
             evaluateRealtimeStatus();
             renderMonthlySchedule();
             renderSpecialistsAndBirthdays();
+            populateAgentDropdowns(); // Populate selects only on network refresh
         }
 
         function renderMonthlySchedule() {
