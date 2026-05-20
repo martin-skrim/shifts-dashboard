@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #020617;
@@ -30,7 +30,7 @@
     <!-- Offline Indicator Banner -->
     <div id="offline-banner" class="hidden bg-rose-600/90 text-white text-center py-2 px-4 text-xs font-semibold backdrop-blur-sm sticky top-0 z-50 flex items-center justify-center gap-2">
         <i data-lucide="wifi-off" class="w-4 h-4"></i>
-        <span>Автономный режим: загружена локальная копия графика. Проверьте подключение к сети.</span>
+        <span>Автономный режим: загружена локальная копия графика.</span>
     </div>
 
     <!-- Header -->
@@ -55,7 +55,7 @@
                 <!-- TL Mode Switch -->
                 <button id="tl-mode-toggle" class="flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
                     <i data-lucide="user-cog" class="w-3.5 h-3.5"></i>
-                    <span id="tl-mode-text">Режим Team Lead</span>
+                    <span id="tl-mode-text">TL-режим</span>
                 </button>
 
                 <!-- Test Alerts Button -->
@@ -67,7 +67,7 @@
                 <!-- Audio & Push Toggle -->
                 <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 transition-all duration-200 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs font-semibold shadow-sm">
                     <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
-                    <span id="audio-status-text">Включить оповещения</span>
+                    <span id="audio-status-text">Включить звук</span>
                 </button>
 
                 <div class="text-right border-l border-slate-800/80 pl-4 hidden sm:block">
@@ -81,7 +81,7 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats, Active & Queue (4 Cols) -->
+        <!-- Left Panel: Stats, Active, Queue & Activity (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- Quick Stats Card -->
@@ -90,7 +90,7 @@
                     <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-slate-400"></i> Текущая смена
                 </h2>
                 <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800 text-center">
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
                         <span class="text-[10px] text-slate-400 block mb-0.5">В строю</span>
                         <span id="stat-active" class="text-lg font-bold text-emerald-400">0</span>
                     </div>
@@ -103,6 +103,20 @@
                         <span id="stat-offline" class="text-lg font-bold text-slate-500">0</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Collective Call Counter (NEW) -->
+            <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
+                <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i data-lucide="phone-call" class="w-3.5 h-3.5 text-slate-400"></i> Цель на сегодня</span>
+                    <span class="text-xs font-bold text-emerald-400" id="calls-progress-label">0 / 300</span>
+                </h2>
+                <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden mb-4 border border-slate-900/60">
+                    <div id="calls-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <button onclick="incrementCallCount()" class="w-full bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4 text-emerald-400"></i> Завершил звонок (+1)
+                </button>
             </div>
 
             <!-- Gamified Mood Check & Team Pulse Card -->
@@ -121,7 +135,7 @@
                 </div>
                 <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900/50">
                     <div class="flex justify-between items-center mb-1.5 text-xs">
-                        <span class="text-slate-400">Энергия смены:</span>
+                        <span class="text-slate-400 text-[11px]">Энергия смены:</span>
                         <span id="team-energy-percentage" class="font-bold text-emerald-400">50%</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
@@ -144,6 +158,17 @@
                 </div>
             </div>
 
+            <!-- Live Shift Activity Feed (NEW) -->
+            <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm flex flex-col min-h-[200px]">
+                <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
+                    <i data-lucide="rss" class="w-3.5 h-3.5 text-slate-400"></i>
+                    Лента активности смены
+                </h2>
+                <div id="live-activity-log" class="space-y-2.5 overflow-y-auto custom-scrollbar flex-grow pr-1 max-h-[220px]">
+                    <!-- Feed updates populated dynamically -->
+                </div>
+            </div>
+
             <!-- Next Breaks Queue -->
             <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm flex-grow flex flex-col min-h-[220px]">
                 <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
@@ -162,7 +187,7 @@
             <!-- Tab Controls -->
             <div class="bg-slate-950 p-1 rounded-xl border border-slate-800/80 flex gap-1 overflow-x-auto custom-scrollbar">
                 <button onclick="switchTab('tab-status')" id="btn-tab-status" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap bg-slate-900 text-slate-100 shadow-sm border border-slate-800/50">На смене сегодня</button>
-                <button onclick="switchTab('tab-coordination')" id="btn-tab-coordination" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">🛰️ Координация & Помощник</button>
+                <button onclick="switchTab('tab-coordination')" id="btn-tab-coordination" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">🛰️ Координация & Биржа</button>
                 <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Сегодня выходной</button>
                 <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">График на месяц</button>
                 <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Список специалистов</button>
@@ -170,7 +195,7 @@
 
             <!-- Tab: Statuses (Active Shift) -->
             <div id="tab-status" class="tab-content block">
-                <!-- Predictive Understaffing Alert Banner (NEW) -->
+                <!-- Predictive Understaffing Alert Banner -->
                 <div id="understaffing-banner" class="hidden mb-4 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-xs text-amber-300 flex items-center gap-2">
                     <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-amber-400 animate-bounce"></i>
                     <span id="understaffing-text">Покрытие линии стабильно на ближайший час.</span>
@@ -201,7 +226,7 @@
                 </div>
             </div>
 
-            <!-- Tab: Coordination / Break Planner -->
+            <!-- Tab: Coordination / Break Planner / Swap Marketplace -->
             <div id="tab-coordination" class="tab-content hidden flex flex-col gap-6">
                 <!-- Self-Service Panel: Delay Break ("Я на звонке") -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
@@ -222,13 +247,47 @@
                     </div>
                 </div>
 
+                <!-- Break Swap Marketplace Card (NEW) -->
+                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
+                        <i data-lucide="shuffle" class="w-4 h-4 text-emerald-400"></i>
+                        Биржа обмена перерывами
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Хотите поменяться перерывами? Опубликуйте предложение. Другой оператор сможет принять обмен в один клик.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-slate-950/40 p-4 rounded-xl border border-slate-900">
+                        <div>
+                            <label class="text-[9px] text-slate-500 uppercase block mb-1">Свой текущий перерыв</label>
+                            <select id="swap-my-break-select" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1.5 text-slate-300"></select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-500 uppercase block mb-1">Желаемый перерыв коллеги</label>
+                            <select id="swap-target-break-select" class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1.5 text-slate-300">
+                                <!-- Populated statically with standard break slots -->
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="postSwapOffer()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-lg text-xs font-semibold">Создать заявку на обмен</button>
+                        </div>
+                    </div>
+
+                    <!-- Active Offers Grid -->
+                    <div class="space-y-2 max-h-[180px] overflow-y-auto custom-scrollbar pr-1">
+                        <label class="text-[10px] text-slate-500 uppercase block mb-1 font-semibold">Активные предложения смены</label>
+                        <div id="swap-offers-list" class="space-y-2 text-xs">
+                            <!-- Populated dynamically -->
+                            <div class="text-slate-500 text-center py-4">Нет активных заявок на обмен</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Break Window Planner -->
                 <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
-                        <i data-lucide="shuffle" class="w-4 h-4 text-indigo-400"></i>
-                        Умный планировщик «Break Window»
+                        <i data-lucide="arrow-left-right" class="w-4 h-4 text-indigo-400"></i>
+                        Сдвиг перерыва (Моделирование)
                     </h3>
-                    <p class="text-xs text-slate-400 mb-4">Хотите поменяться перерывами или сдвинуть время? Выберите параметры, чтобы алгоритм оценил плотность покрытия линии.</p>
+                    <p class="text-xs text-slate-400 mb-4">Хотите временно сдвинуть время? Выберите параметры, чтобы алгоритм оценил плотность покрытия линии.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase block mb-1.5">Сотрудник</label>
@@ -250,7 +309,7 @@
                         <div class="flex items-end">
                             <button onclick="calculateProposedBreakMove()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
                                 <i data-lucide="check-square" class="w-4 h-4"></i>
-                                Оценить безопасность
+                                Оценить
                             </button>
                         </div>
                     </div>
@@ -260,7 +319,7 @@
                             <h4 id="planner-result-title" class="font-semibold mb-1 text-slate-100">Результат оценки</h4>
                             <p id="planner-result-desc" class="text-slate-400"></p>
                         </div>
-                        <span id="planner-result-badge" class="px-3 py-1.5 rounded-full font-bold">Укомплектовано</span>
+                        <span id="planner-result-badge" class="px-3 py-1.5 rounded-full font-bold font-mono">Укомплектовано</span>
                     </div>
                 </div>
 
@@ -414,6 +473,7 @@
             announcedEvents: new Set(),
             cachedVoice: null,
             
+            // Coordination & Overrides
             isTLMode: false,
             tlPinHash: "7777",   
             localOverrides: {},  
@@ -421,16 +481,26 @@
             bc: null,
             pendingAction: null,
             
-            // Mood and ocean wave synthesizer objects
+            // Mood / Waves
             moodVotes: {},
             waveNode: null,
             waveContext: null,
-            isWavePlaying: false
+            isWavePlaying: false,
+
+            // Call Counter, Shift Log & Swap Marketplace (NEW)
+            callsCount: 184, // Starts with simulated benchmark value for better visual look
+            callsGoal: 300,
+            activityLog: [],
+            swapOffers: [] // Array of { id, sender, senderBreakIdx, senderBreakText, targetBreakText }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            
+            // Run dual timing: both background Web Worker and main thread clock to prevent async "1970" freeze
             initBackgroundWorker();
+            setInterval(updateClock, 1000); // Main thread fallback (guarantees clock execution on any browser context)
+
             initBroadcastChannel();
             checkPregrantedPermissions();
 
@@ -489,17 +559,243 @@
                 if (e.key === 'Enter') submitAgentAuth();
             });
 
-            // Initialize Session Mood state (prevents multiple local votes)
+            // LocalStorage integration for the Call Counter
+            const savedCalls = localStorage.getItem('shiftflow_calls_today');
+            if (savedCalls) {
+                state.callsCount = parseInt(savedCalls, 10);
+            }
+            updateCallsCounterUI();
+
+            // Session Mood protection
             const savedMood = sessionStorage.getItem('shiftflow_my_mood');
             if (savedMood) {
-                document.getElementById('mood-vote-section').classList.add('hidden');
+                const voteSec = document.getElementById('mood-vote-section');
+                if (voteSec) voteSec.classList.add('hidden');
             }
+
+            // Populate static break option dropdowns for swapping
+            populateStaticSwapSelects();
 
             fetchData();
             setInterval(fetchData, 30000);
         });
 
-        // --- BroadcastChannel Coordination Sync ---
+        // --- Live Activity Feed logger (NEW) ---
+        function addActivityEvent(text, icon = 'info') {
+            const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            state.activityLog.unshift({ time: timeStr, text, icon });
+            if (state.activityLog.length > 8) state.activityLog.pop();
+            renderActivityFeed();
+        }
+
+        function renderActivityFeed() {
+            const feedContainer = document.getElementById('live-activity-log');
+            if (!feedContainer) return;
+
+            let markup = '';
+            state.activityLog.forEach(log => {
+                let iconClass = 'text-slate-400';
+                if (log.icon === 'coffee') iconClass = 'text-amber-400';
+                else if (log.icon === 'bell') iconClass = 'text-rose-400';
+                else if (log.icon === 'gift') iconClass = 'text-teal-400 animate-bounce';
+                else if (log.icon === 'swap') iconClass = 'text-indigo-400';
+
+                markup += `
+                    <div class="flex items-start gap-2 text-[11px] leading-relaxed select-none">
+                        <span class="font-mono text-slate-500 whitespace-nowrap">${log.time}</span>
+                        <span class="text-slate-300 break-words">${log.text}</span>
+                    </div>
+                `;
+            });
+            feedContainer.innerHTML = markup || `<div class="text-slate-600 text-center py-8">Лента событий пуста</div>`;
+        }
+
+        // --- Collective Call Counter Logic (NEW) ---
+        window.incrementCallCount = function() {
+            state.callsCount++;
+            localStorage.setItem('shiftflow_calls_today', state.callsCount);
+            
+            // Broadcast increment event
+            if (state.bc) {
+                state.bc.postMessage({ type: 'calls', count: state.callsCount });
+            }
+            updateCallsCounterUI();
+            playSyntheticChime();
+
+            // Log activity
+            addActivityEvent(`📞 Команда завершила еще один звонок! Всего: ${state.callsCount}`, 'phone');
+
+            // Celebration voice alert on hitting goal target
+            if (state.callsCount === state.callsGoal) {
+                speak(`Внимание команда! Мы достигли нашей сегодняшней цели в триста звонков! Потрясающий результат!`);
+                addActivityEvent(`🏆 Поздравляем! Команда достигла дневной цели в 300 вызовов!`, 'award');
+            }
+        };
+
+        function updateCallsCounterUI() {
+            const label = document.getElementById('calls-progress-label');
+            const bar = document.getElementById('calls-progress-bar');
+            if (label && bar) {
+                label.innerText = `${state.callsCount} / ${state.callsGoal}`;
+                const pct = Math.min(100, Math.round((state.callsCount / state.callsGoal) * 100));
+                bar.style.width = `${pct}%`;
+            }
+        }
+
+        // --- Interactive Break Swap Marketplace Logic (NEW) ---
+        function populateStaticSwapSelects() {
+            const selectTarget = document.getElementById('swap-target-break-select');
+            if (!selectTarget) return;
+
+            // Generate standard intervals
+            const slots = [
+                "09:45 – 10:00", "12:00 – 12:30", "15:15 – 15:30", "17:00 – 17:15", "19:00 – 19:30",
+                "10:45 – 11:00", "13:00 – 13:30", "16:15 – 16:30", "18:00 – 18:15", "20:00 – 20:30"
+            ];
+            selectTarget.innerHTML = '';
+            slots.forEach(slot => {
+                selectTarget.innerHTML += `<option value="${slot}">${slot}</option>`;
+            });
+        }
+
+        window.populateSwapAgentBreaks = function() {
+            const selectAgent = document.getElementById('coordination-agent-select');
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            if (!selectAgent || !selectMyBreak) return;
+
+            const name = selectAgent.value;
+            const person = state.statusData.find(p => p.name === name);
+            selectMyBreak.innerHTML = '';
+
+            if (person && person.breaks.length > 0) {
+                person.breaks.forEach((br, idx) => {
+                    selectMyBreak.innerHTML += `<option value="${idx}">${br}</option>`;
+                });
+            } else {
+                selectMyBreak.innerHTML = `<option value="">Перерывов нет</option>`;
+            }
+        };
+
+        window.postSwapOffer = function() {
+            const selectAgent = document.getElementById('coordination-agent-select');
+            const selectMyBreak = document.getElementById('swap-my-break-select');
+            const selectTarget = document.getElementById('swap-target-break-select');
+
+            if (!selectAgent || selectAgent.value === "" || !selectMyBreak || selectMyBreak.value === "") {
+                alert("Пожалуйста, сначала выберите ваш профиль и перерыв, который вы хотите отдать!");
+                return;
+            }
+
+            const offer = {
+                id: 'swap-' + Date.now(),
+                sender: selectAgent.value,
+                senderBreakIdx: parseInt(selectMyBreak.value, 10),
+                senderBreakText: selectMyBreak.options[selectMyBreak.selectedIndex].text,
+                targetBreakText: selectTarget.value
+            };
+
+            // Prevent duplicating same offer
+            if (state.swapOffers.some(o => o.sender === offer.sender && o.senderBreakText === offer.senderBreakText)) {
+                alert("Вы уже создали аналогичный запрос на обмен для этого перерыва.");
+                return;
+            }
+
+            state.swapOffers.push(offer);
+            
+            if (state.bc) {
+                state.bc.postMessage({ type: 'swap_offers_sync', offers: state.swapOffers });
+            }
+            renderSwapOffersList();
+            addActivityEvent(`🔁 ${offer.sender.split(' ')[0]} выставил на обмен перерыв ${offer.senderBreakText}`, 'swap');
+        };
+
+        window.acceptSwapOffer = function(offerId) {
+            // Find accepting user by looking at active selected dropdown profile
+            const selectAgent = document.getElementById('coordination-agent-select');
+            if (!selectAgent || selectAgent.value === "") {
+                alert("Пожалуйста, сначала выберите ваш профиль в выпадающем списке самообслуживания вверху этой вкладки!");
+                return;
+            }
+            const acceptorName = selectAgent.value;
+            const offer = state.swapOffers.find(o => o.id === offerId);
+            if (!offer) return;
+
+            if (offer.sender === acceptorName) {
+                alert("Вы не можете принять свое собственное предложение!");
+                return;
+            }
+
+            // Verify if acceptor actually possesses the desired target break time
+            const acceptorPerson = state.statusData.find(p => p.name === acceptorName);
+            if (!acceptorPerson) return;
+
+            const hasTargetBreak = acceptorPerson.breaks.includes(offer.targetBreakText);
+            const targetBreakIdxInAcceptor = acceptorPerson.breaks.indexOf(offer.targetBreakText);
+
+            if (!hasTargetBreak) {
+                alert(`У вас нет перерыва ${offer.targetBreakText} для проведения обмена!`);
+                return;
+            }
+
+            const senderPerson = state.statusData.find(p => p.name === offer.sender);
+            if (!senderPerson) return;
+
+            // Execute mutual array values swap in memory
+            senderPerson.breaks[offer.senderBreakIdx] = offer.targetBreakText;
+            acceptorPerson.breaks[targetBreakIdxInAcceptor] = offer.senderBreakText;
+
+            // Delete completed offer
+            state.swapOffers = state.swapOffers.filter(o => o.id !== offerId);
+
+            // Sync database states and broadcast
+            if (state.bc) {
+                state.bc.postMessage({ 
+                    type: 'swap_offers_sync', 
+                    offers: state.swapOffers 
+                });
+                state.bc.postMessage({
+                    type: 'forced_break_array_mutation',
+                    statusData: state.statusData
+                });
+            }
+
+            renderSwapOffersList();
+            evaluateRealtimeStatus();
+
+            triggerNotification(
+                "Обмен перерывами совершен!",
+                `Успешный обмен между ${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]}.`,
+                `${offer.sender.split(' ')[0]} и ${acceptorName.split(' ')[0]} поменялись перерывами.`
+            );
+            addActivityEvent(`🤝 Обмен совершен: ${offer.sender.split(' ')[0]} (${offer.senderBreakText}) ⇄ ${acceptorName.split(' ')[0]} (${offer.targetBreakText})`, 'swap');
+        };
+
+        function renderSwapOffersList() {
+            const listEl = document.getElementById('swap-offers-list');
+            if (!listEl) return;
+
+            if (state.swapOffers.length === 0) {
+                listEl.innerHTML = `<div class="text-slate-500 text-center py-4">Нет активных заявок на обмен</div>`;
+                return;
+            }
+
+            let markup = '';
+            state.swapOffers.forEach(offer => {
+                markup += `
+                    <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-200 block">${offer.sender.split(' ')[0]}</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">Отдает: <span class="font-mono font-semibold text-amber-400">${offer.senderBreakText}</span></span>
+                            <span class="text-[10px] text-slate-400 block">Желает взамен: <span class="font-mono font-semibold text-indigo-400">${offer.targetBreakText}</span></span>
+                        </div>
+                        <button onclick="acceptSwapOffer('${offer.id}')" class="bg-indigo-500/15 hover:bg-indigo-500 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg border border-indigo-500/20 transition-all font-semibold">Обменяться</button>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = markup;
+        }
+
+        // --- System Broadcast Messages Handlers ---
         function initBroadcastChannel() {
             if ('BroadcastChannel' in window) {
                 state.bc = new BroadcastChannel('shiftflow_coordination_channel');
@@ -514,6 +810,15 @@
                         calculateMoodUI();
                     } else if (e.data.type === 'gift') {
                         handleIncomingGift(e.data);
+                    } else if (e.data.type === 'calls') {
+                        state.callsCount = e.data.count;
+                        updateCallsCounterUI();
+                    } else if (e.data.type === 'swap_offers_sync') {
+                        state.swapOffers = e.data.offers;
+                        renderSwapOffersList();
+                    } else if (e.data.type === 'forced_break_array_mutation') {
+                        state.statusData = e.data.statusData;
+                        evaluateRealtimeStatus();
                     }
                 };
             }
@@ -529,9 +834,7 @@
             }
         }
 
-        // --- Gamified Peer-to-Peer Gift / Thank You Logic ---
         window.sendPeerGift = function(receiverName, giftType) {
-            // Find who is sending this gift by looking at selected dropdown agent
             const select = document.getElementById('coordination-agent-select');
             if (!select || select.value === "") {
                 alert("Пожалуйста, сначала выберите ваш собственный профиль в выпадающем списке на вкладке '🛰️ Координация', чтобы отправить подарок!");
@@ -554,11 +857,10 @@
             if (state.bc) {
                 state.bc.postMessage(payload);
             }
-            handleIncomingGift(payload); // Also render locally instantly
+            handleIncomingGift(payload);
         };
 
         function handleIncomingGift(data) {
-            // Render beautiful visual Toast Notification
             const container = document.getElementById('toast-container');
             if (!container) return;
 
@@ -569,9 +871,8 @@
             };
 
             const isMe = state.statusData.some(p => p.name === data.receiver);
-            if (!isMe) return; // ignore if this notification belongs to another browser node
+            if (!isMe) return; 
 
-            // Soft browser synthetic chime (Web Audio API)
             playSyntheticChime();
 
             const toast = document.createElement('div');
@@ -585,19 +886,19 @@
             `;
             container.appendChild(toast);
 
-            // Trigger enter animation
             setTimeout(() => {
                 toast.classList.remove('translate-y-4', 'opacity-0');
             }, 10);
 
-            // Destroy toast after 6 seconds
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => { toast.remove(); }, 300);
             }, 6000);
+
+            // Log peer interaction to activity list
+            addActivityEvent(`🎁 ${data.sender} отправил подарок ${iconMap[data.gift]} для ${data.receiver.split(' ')[0]}`, 'gift');
         }
 
-        // Beautiful pure synthetic chime sound (solves missing mp3 files / CORS)
         function playSyntheticChime() {
             if (!state.isAudioEnabled) return;
             try {
@@ -606,8 +907,8 @@
                 const gain = ctx.createGain();
                 
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); 
                 
                 gain.gain.setValueAtTime(0.15, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
@@ -617,11 +918,10 @@
                 osc.start();
                 osc.stop(ctx.currentTime + 0.8);
             } catch (e) {
-                console.warn("Сбой синтеза системного звука:", e);
+                console.warn(e);
             }
         }
 
-        // --- Ambient Ocean Wave Synthesizer (Lofi Rest Timer) ---
         window.toggleOceanWaves = function(on) {
             const btns = document.querySelectorAll('.ambient-relax-btn');
             if (!on) {
@@ -639,10 +939,8 @@
             }
 
             try {
-                // Initialize context
                 state.waveContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Generate 2 seconds of Pink-Brown noise buffer
                 const bufferSize = 2 * state.waveContext.sampleRate;
                 const noiseBuffer = state.waveContext.createBuffer(1, bufferSize, state.waveContext.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -663,9 +961,8 @@
                 filter.type = 'lowpass';
                 filter.Q.value = 1.2;
 
-                // Modulate lowpass frequency using a slow LFO (to simulate rhythmic ocean tides)
                 const lfo = state.waveContext.createOscillator();
-                lfo.frequency.value = 0.12; // 8.3s sweep
+                lfo.frequency.value = 0.12; 
                 const lfoGain = state.waveContext.createGain();
                 lfoGain.gain.value = 350; 
 
@@ -674,7 +971,7 @@
                 filter.frequency.value = 450; 
 
                 const gainNode = state.waveContext.createGain();
-                gainNode.gain.value = 0.12; // soft volume
+                gainNode.gain.value = 0.12; 
 
                 noise.connect(filter);
                 filter.connect(gainNode);
@@ -693,12 +990,12 @@
                 state.isWavePlaying = true;
                 
                 btns.forEach(b => {
-                    b.innerHTML = `<i data-lucide="volume-2" class="w-3 h-3 inline animate-pulse text-emerald-400"></i> <span class="text-emerald-400">Играет море...</span>`;
+                    b.innerHTML = `<i data-lucide="volume-2" class="w-3 h-3 inline animate-pulse text-emerald-400"></i> <span class="text-emerald-400 font-semibold">Играет море...</span>`;
                     b.className = "ambient-relax-btn mt-2 inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border-emerald-500/20 rounded-md text-[10px] transition-all";
                 });
                 lucide.createIcons();
             } catch(e) {
-                console.error("Сбой аудио-релаксации:", e);
+                console.error(e);
             }
         };
 
@@ -710,7 +1007,6 @@
             }
         };
 
-        // --- Gamified Mood Board Tracker ---
         window.submitMoodVote = function(emoji) {
             if (sessionStorage.getItem('shiftflow_my_mood')) return;
 
@@ -718,7 +1014,8 @@
             state.moodVotes[emoji]++;
 
             sessionStorage.setItem('shiftflow_my_mood', emoji);
-            document.getElementById('mood-vote-section').classList.add('hidden');
+            const widget = document.getElementById('mood-vote-section');
+            if (widget) widget.classList.add('hidden');
 
             if (state.bc) {
                 state.bc.postMessage({
@@ -727,12 +1024,12 @@
                 });
             }
             calculateMoodUI();
+            addActivityEvent(`🚀 Кто-то обновил статус своего настроения!`, 'smile');
         };
 
         function calculateMoodUI() {
             let total = 0;
             let scoreSum = 0;
-            
             const weights = { '🚀': 100, '☕': 80, '😴': 50, '🤯': 30 };
 
             Object.keys(weights).forEach(em => {
@@ -741,9 +1038,7 @@
                 scoreSum += count * weights[em];
             });
 
-            // Default fallback to 75% energy if no votes yet
             const scorePercent = total > 0 ? Math.round(scoreSum / total) : 75;
-
             const percentageText = document.getElementById('team-energy-percentage');
             const bar = document.getElementById('team-energy-bar');
 
@@ -751,7 +1046,6 @@
                 percentageText.innerText = `${scorePercent}%`;
                 bar.style.width = `${scorePercent}%`;
                 
-                // Color grading based on team mood score
                 if (scorePercent >= 80) {
                     bar.className = "bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500";
                 } else if (scorePercent >= 50) {
@@ -762,14 +1056,12 @@
             }
         }
 
-        // --- Predictive Understaffing Alert Logic ---
         function runPredictiveUnderstaffingScanner(hourlyCoverage) {
             const now = new Date();
             let alertActive = false;
             let earliestUnderstaffedTime = null;
             let minimumUnderstaffedHeadcount = 2;
 
-            // Scan the next 60 minutes in 5-minute steps
             for (let offset = 5; offset <= 60; offset += 5) {
                 const checkTime = new Date(now.getTime() + offset * 60000);
                 let projectedActive = 0;
@@ -784,7 +1076,6 @@
 
                     if (endWork < startWork) endWork.setDate(endWork.getDate() + 1);
 
-                    // Check if person works at this simulated timestamp
                     if (checkTime >= startWork && checkTime <= endWork) {
                         let onBreak = false;
                         const hasDelay = state.delayedAgents[person.name] !== undefined;
@@ -804,7 +1095,6 @@
                             }
                         });
 
-                        // Factor in manual Team Lead status overrides
                         let finalStatus = onBreak ? 'Перерыв' : 'В строю';
                         if (state.localOverrides[person.name]) {
                             finalStatus = state.localOverrides[person.name].status;
@@ -816,16 +1106,14 @@
                     }
                 });
 
-                // Understaffed condition triggered if projected headcount falls below 2 operators
                 if (projectedActive < 2) {
                     alertActive = true;
                     earliestUnderstaffedTime = checkTime;
                     minimumUnderstaffedHeadcount = projectedActive;
-                    break; // stop scanning on first failure
+                    break; 
                 }
             }
 
-            // Display / render the banner alert
             const banner = document.getElementById('understaffing-banner');
             const textEl = document.getElementById('understaffing-text');
 
@@ -840,7 +1128,6 @@
             }
         }
 
-        // --- Safe Dropdowns & UI Synchronization ---
         function populateAgentDropdowns() {
             const agentSelect = document.getElementById('coordination-agent-select');
             const plannerAgentSelect = document.getElementById('planner-agent-select');
@@ -967,12 +1254,14 @@
             broadcastSync();
             evaluateRealtimeStatus();
             speak(`Оператор ${agentName.split(' ')[0]} задерживается на звонке. Смена перерывов скорректирована.`);
+            addActivityEvent(`📞 ${agentName.split(' ')[0]} задержался на звонке. График смещен на 15м.`, 'coffee');
         }
 
         function executeCancel(agentName) {
             delete state.delayedAgents[agentName];
             broadcastSync();
             evaluateRealtimeStatus();
+            addActivityEvent(`🔄 ${agentName.split(' ')[0]} вернулся к исходному графику перерывов.`, 'info');
         }
 
         // --- System Core Logic ---
@@ -997,11 +1286,13 @@
             if (!state.isTLMode) return;
             if (forcedStatus === 'CLEAR') {
                 delete state.localOverrides[agentName];
+                addActivityEvent(`🛡️ TL: Сброс принудительного статуса для ${agentName.split(' ')[0]}`, 'info');
             } else {
                 state.localOverrides[agentName] = {
                     status: forcedStatus,
                     timestamp: Date.now()
                 };
+                addActivityEvent(`🛡️ TL: Статус для ${agentName.split(' ')[0]} изменен на "${forcedStatus}"`, 'user-cog');
             }
             broadcastSync();
             evaluateRealtimeStatus();
@@ -1108,6 +1399,57 @@
                 }
             }
         };
+
+        function selectBestRussianVoice() {
+            if (typeof speechSynthesis === 'undefined') return;
+            const voices = speechSynthesis.getVoices();
+            const ruVoices = voices.filter(v => v.lang.startsWith('ru'));
+            
+            if (ruVoices.length === 0) return;
+
+            const premiumVoice = ruVoices.find(v => 
+                v.name.includes('Google') || 
+                v.name.includes('Neural') || 
+                v.name.includes('Irina') || 
+                v.name.includes('Pavel') || 
+                v.name.includes('Premium')
+            );
+
+            state.cachedVoice = premiumVoice || ruVoices[0];
+        }
+
+        function triggerNotification(title, text, spokenText) {
+            speak(spokenText || text);
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    new Notification(title, {
+                        body: text,
+                        icon: 'https://img.icons8.com/color/96/000000/clock.png'
+                    });
+                } catch (e) {
+                    console.error("Ошибка push-уведомления:", e);
+                }
+            }
+        }
+
+        function speak(text) {
+            if (!state.isAudioEnabled || typeof speechSynthesis === 'undefined') return;
+            try {
+                speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (state.cachedVoice) {
+                    utterance.voice = state.cachedVoice;
+                }
+                utterance.lang = 'ru-RU';
+                utterance.volume = 1.0;
+                utterance.rate = 0.95;  
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
+            } catch (err) {
+                console.error("Сбой синтеза речи:", err);
+            }
+        }
 
         function parseMskTimeToLocal(timeStr) {
             if (!timeStr) return null;
@@ -1266,61 +1608,6 @@
             state.specsData = specs;
         }
 
-        function getTodayShiftHours(personName, fallbackHours) {
-            const mskTodayStr = new Intl.DateTimeFormat('ru-RU', {
-                timeZone: 'Europe/Moscow',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            }).format(new Date());
-
-            const scheduleIdx = state.scheduleHeader.indexOf(mskTodayStr);
-            if (scheduleIdx === -1) return fallbackHours;
-
-            const personSched = state.scheduleData.find(p => p.name === personName);
-            if (!personSched) return fallbackHours;
-
-            const shiftToday = personSched.shifts[scheduleIdx];
-            if (shiftToday && shiftToday.trim() !== "" && !shiftToday.includes("Вых")) {
-                return shiftToday.trim();
-            }
-            return null;
-        }
-
-        function getAchievements(person, todayShift) {
-            let achievements = [];
-            const today = new Date();
-            
-            if (person.birthday) {
-                const bparts = person.birthday.split('.');
-                if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
-                    achievements.push({ icon: '🎂', name: 'Именинник', desc: 'С днем рождения!' });
-                }
-            }
-            
-            if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
-                const parts = todayShift.split(/[-–—]/);
-                const startLocal = parseMskTimeToLocal(parts[0].trim());
-                const endLocal = parseMskTimeToLocal(parts[1].trim());
-                if (startLocal && endLocal) {
-                    if (startLocal.getHours() < 9) {
-                        achievements.push({ icon: '🌅', name: 'Ранняя пташка', desc: 'Смена началась раньше 9:00' });
-                    }
-                    
-                    const durationMins = Math.round((endLocal - startLocal) / 60000);
-                    if (durationMins >= 720) {
-                        achievements.push({ icon: '🔋', name: 'Энерджайзер', desc: 'Рабочая смена 12 часов и более' });
-                    }
-                }
-            }
-
-            if (person.breaks && person.breaks.length >= 4) {
-                achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
-            }
-
-            return achievements;
-        }
-
         function evaluateRealtimeStatus() {
             const now = new Date();
             let stats = { active: 0, onBreak: 0, offline: 0, scheduledTotal: 0 };
@@ -1381,6 +1668,7 @@
                                 `${person.name} заступил на рабочую смену.`,
                                 `${firstName} начинает рабочую смену. Приветствуем на линии!`
                             );
+                            addActivityEvent(`🌅 ${firstName} заступил на рабочую смену.`, 'info');
                         }
                     }
 
@@ -1393,6 +1681,7 @@
                                 `${person.name} закончил рабочую смену.`,
                                 `${firstName} завершает рабочую смену. Спасибо за работу!`
                             );
+                            addActivityEvent(`🏁 ${firstName} завершил рабочую смену.`, 'info');
                         }
                     }
                 }
@@ -1422,8 +1711,8 @@
                             start: brStart,
                             end: brEnd,
                             rangeText: br,
-                            isCurrent: now >= brStart && now <= brEnd,
-                            isDelayed: hasDelay
+                            isDelayed: hasDelay,
+                            isCurrent: now >= brStart && now <= brEnd
                         });
                     }
 
@@ -1437,6 +1726,7 @@
                                 `${person.name} уходит на перерыв.`,
                                 `${firstName} уходит на перерыв. Хорошего отдыха!`
                             );
+                            addActivityEvent(`☕ ${firstName} ушел на плановый перерыв.`, 'coffee');
                         }
                     }
 
@@ -1449,6 +1739,7 @@
                                 `${person.name} вернулся с перерыва.`,
                                 `${firstName} возвращается на линию. Перерыв окончен.`
                             );
+                            addActivityEvent(`🟢 ${firstName} вернулся с перерыва на линию.`, 'info');
                         }
                     }
                 });
@@ -1554,7 +1845,7 @@
                             <div class="text-xs text-slate-500 mb-1.5">${person.login}</div>
                             <div class="flex flex-wrap gap-1">${achievementsHTML || ''}</div>
                             
-                            <!-- Peer-to-Peer Interaction Buttons (NEW) -->
+                            <!-- Peer-to-Peer Interaction Buttons -->
                             <div class="flex items-center gap-2 mt-2">
                                 <button onclick="sendPeerGift('${person.name}', 'coffee')" class="px-2 py-1 rounded-md bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-300 transition-all flex items-center gap-1" title="Отправить виртуальный кофе коллеге">
                                     <span>☕</span> Кофе
@@ -1591,7 +1882,7 @@
                                 <div class="bg-amber-500 h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
                             </div>
                             
-                            <!-- Ambient waves synthesizer trigger inside active break card (NEW) -->
+                            <!-- Ambient waves synthesizer trigger inside active break card -->
                             <button onclick="triggerOceanToggle()" class="ambient-relax-btn inline-flex items-center gap-1 px-2.5 py-1 ${state.isWavePlaying ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-slate-900 hover:bg-slate-850 border border-slate-800'} rounded-md text-[10px] text-slate-400 border transition-all">
                                 <i data-lucide="${state.isWavePlaying ? 'volume-2' : 'music'}" class="w-3 h-3 inline"></i>
                                 <span>${state.isWavePlaying ? 'Играет море...' : 'Шум моря (Lofi)'}</span>
@@ -1609,7 +1900,6 @@
             if (activeBreaksBox) {
                 if (activeBreaksMarkup === '') {
                     activeBreaksBox.classList.add('hidden');
-                    // auto turn off wave synth if no one is on break to save resources
                     if (state.isWavePlaying) toggleOceanWaves(false);
                 } else {
                     activeBreaksBox.classList.remove('hidden');
@@ -1651,7 +1941,7 @@
                 weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
             }
 
-            // Run Predictive Understaffing Alert System (NEW)
+            // Run Predictive Understaffing Alert System
             runPredictiveUnderstaffingScanner(hourlyCoverage);
 
             drawHeatmapAndOptions(stats, hourlyCoverage);
@@ -1698,6 +1988,8 @@
             renderSpecialistsAndBirthdays();
             populateAgentDropdowns(); 
             calculateMoodUI();
+            renderActivityFeed();
+            renderSwapOffersList();
         }
 
         function renderMonthlySchedule() {
