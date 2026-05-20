@@ -130,7 +130,7 @@
                 </div>
             </div>
 
-            <!-- Tab: Analytics & Coverage (NEW) -->
+            <!-- Tab: Analytics & Coverage -->
             <div id="tab-analytics" class="tab-content hidden flex flex-col gap-6">
                 <!-- Analytics KPI Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -280,7 +280,8 @@
             scheduleData: [],
             specsData: [],
             isAudioEnabled: false,
-            announcedBreaks: new Set()
+            announcedEvents: new Set(), // Replaces announcedBreaks to support multi-event logging
+            cachedVoice: null
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -288,6 +289,14 @@
             updateClock();
             setInterval(updateClock, 1000);
             
+            // Populate/choose the best voice when available
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = selectBestRussianVoice;
+            } else {
+                selectBestRussianVoice();
+            }
+
+            // Audio & Notification activation button
             const audioBtn = document.getElementById('audio-toggle');
             audioBtn.addEventListener('click', async () => {
                 if ("Notification" in window) {
@@ -302,7 +311,7 @@
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
                     text.innerText = 'Оповещения включены';
-                    speak("Оповещения активированы. Система готова к работе.");
+                    speak("Оповещения активированы. Премиум голос настроен.");
                 } else {
                     icon.setAttribute('data-lucide', 'volume-x');
                     icon.className = 'w-4 h-4 text-rose-400';
@@ -311,14 +320,16 @@
                 lucide.createIcons();
             });
 
+            // "Test Alerts" Button Event
             document.getElementById('test-alert-btn').addEventListener('click', () => {
                 if (!state.isAudioEnabled) {
                     alert("Пожалуйста, сначала включите оповещения кнопкой справа, чтобы активировать звук и системные права.");
                     return;
                 }
+                // Fires a demo cascade to preview quality
                 triggerNotification(
-                    "Тестовое уведомление",
-                    "Проверка звука и push-уведомлений завершена успешно!"
+                    "Система оповещений ShiftFlow",
+                    "Тест пройден. Канал звука и пуш-уведомлений работает стабильно."
                 );
             });
 
@@ -336,8 +347,29 @@
             }
         }
 
+        // Voice scanning logic: chooses the most human-like Neural or Google/Microsoft Premium voices
+        function selectBestRussianVoice() {
+            if (typeof speechSynthesis === 'undefined') return;
+            const voices = speechSynthesis.getVoices();
+            const ruVoices = voices.filter(v => v.lang.startsWith('ru'));
+            
+            if (ruVoices.length === 0) return;
+
+            // Prioritize best cloud / high-definition voices
+            const premiumVoice = ruVoices.find(v => 
+                v.name.includes('Google') || 
+                v.name.includes('Neural') || 
+                v.name.includes('Irina') || 
+                v.name.includes('Pavel') || 
+                v.name.includes('Premium')
+            );
+
+            state.cachedVoice = premiumVoice || ruVoices[0];
+        }
+
         function triggerNotification(title, text) {
             speak(text);
+
             if ("Notification" in window && Notification.permission === "granted") {
                 try {
                     new Notification(title, {
@@ -351,14 +383,21 @@
         }
 
         function speak(text) {
-            if (!state.isAudioEnabled) return;
+            if (!state.isAudioEnabled || typeof speechSynthesis === 'undefined') return;
             try {
-                window.speechSynthesis.cancel(); 
+                // Instantly wipe previous speech queue to solve stuck browser thread issues
+                speechSynthesis.cancel(); 
+                
                 const utterance = new SpeechSynthesisUtterance(text);
+                if (state.cachedVoice) {
+                    utterance.voice = state.cachedVoice;
+                }
                 utterance.lang = 'ru-RU';
-                utterance.volume = 1;
-                utterance.rate = 1;
-                window.speechSynthesis.speak(utterance);
+                utterance.volume = 1.0;
+                utterance.rate = 0.95;  // Tiny scale-down for a more relaxed, natural pace
+                utterance.pitch = 1.0;
+                
+                speechSynthesis.speak(utterance);
             } catch (err) {
                 console.error("Сбой синтеза речи:", err);
             }
@@ -520,7 +559,6 @@
             let activeTableMarkup = '';
             let weekendTableMarkup = '';
 
-            // Datasets for Analytics
             let hourlyCoverage = Array(24).fill(0); 
             let queueBreaks = [];
             let breaksBudgetList = [];
@@ -561,7 +599,35 @@
                     status = 'В строю';
                 }
 
-                // Analytical Break Budget Variables
+                // -------------------------------------------------------------
+                // 1. Shift Lifecycle sound alerts (Start / End Shift)
+                // -------------------------------------------------------------
+                if (worksToday && startWork && endWork) {
+                    // Start Shift Alert (within exact target minute)
+                    if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
+                        const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
+                        if (!state.announcedEvents.has(shiftStartKey)) {
+                            state.announcedEvents.add(shiftStartKey);
+                            triggerNotification(
+                                `Смена началась: ${person.name}`,
+                                `${person.name} заступил на рабочую смену. Приветствуем на линии!`
+                            );
+                        }
+                    }
+
+                    // End Shift Alert (within exact target minute)
+                    if (now.getHours() === endWork.getHours() && now.getMinutes() === endWork.getMinutes()) {
+                        const shiftEndKey = `${person.name}-shift-end-${endWork.getHours()}:${endWork.getMinutes()}`;
+                        if (!state.announcedEvents.has(shiftEndKey)) {
+                            state.announcedEvents.add(shiftEndKey);
+                            triggerNotification(
+                                `Смена окончена: ${person.name}`,
+                                `${person.name} закончил рабочую смену. Спасибо за работу!`
+                            );
+                        }
+                    }
+                }
+
                 let totalAllocatedMins = 0;
                 let spentAllocatedMins = 0;
 
@@ -582,12 +648,10 @@
                         status = 'Перерыв';
                         currentBreakRange = { start: brStart, end: brEnd, text: br };
                         
-                        // Portion of current break elapsed
                         const elapsedMins = Math.round((now - brStart) / 60000);
                         spentAllocatedMins += elapsedMins;
                     }
 
-                    // Feed queue list
                     queueBreaks.push({
                         name: person.name,
                         start: brStart,
@@ -597,38 +661,37 @@
                         isPassed: now > brEnd
                     });
 
-                    // Match exact time for sound alert triggers
+                    // -------------------------------------------------------------
+                    // 2. Break Lifecycle sound alerts (Start / End Break)
+                    // -------------------------------------------------------------
                     if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
-                        const breakStartKey = `${person.name}-start-${brParts[0].trim()}`;
-                        if (!state.announcedBreaks.has(breakStartKey)) {
-                            state.announcedBreaks.add(breakStartKey);
+                        const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}`;
+                        if (!state.announcedEvents.has(breakStartKey)) {
+                            state.announcedEvents.add(breakStartKey);
                             triggerNotification(
-                                `Перерыв у сотрудника ${person.name}`,
-                                `${person.name}, начался ваш перерыв.`
+                                `Сотрудник уходит на перерыв: ${person.name}`,
+                                `${person.name} уходит на перерыв. Отличного отдыха!`
                             );
                         }
                     }
 
                     if (now.getHours() === brEnd.getHours() && now.getMinutes() === brEnd.getMinutes()) {
-                        const breakEndKey = `${person.name}-end-${brParts[1].trim()}`;
-                        if (!state.announcedBreaks.has(breakEndKey)) {
-                            state.announcedBreaks.add(breakEndKey);
+                        const breakEndKey = `${person.name}-break-end-${brParts[1].trim()}`;
+                        if (!state.announcedEvents.has(breakEndKey)) {
+                            state.announcedEvents.add(breakEndKey);
                             triggerNotification(
-                                `Перерыв завершён: ${person.name}`,
-                                `${person.name}, ваш перерыв окончен. Пора на линию.`
+                                `Сотрудник вернулся на линию: ${person.name}`,
+                                `${person.name}, ваш перерыв окончен. Пора возвращаться на линию.`
                             );
                         }
                     }
                 });
 
-                // Calculate hourly coverage values across all 24 hours of the day
                 if (worksToday) {
                     for (let h = 0; h < 24; h++) {
-                        // Check availability at the midpoint (H:30) of each hour
                         let checkTime = new Date(startWork);
                         checkTime.setHours(h, 30, 0, 0);
 
-                        // If checkTime falls inside shift, and NOT inside any break range, increment coverage
                         if (checkTime >= startWork && checkTime <= endWork) {
                             let onBreakAtCheck = false;
                             person.breaks.forEach(br => {
@@ -646,7 +709,6 @@
                     }
                 }
 
-                // Add to budget dataset
                 breaksBudgetList.push({
                     name: person.name,
                     total: totalAllocatedMins,
@@ -707,7 +769,6 @@
                 }
             });
 
-            // Populate Counter Badges
             document.getElementById('stat-active').innerText = stats.active;
             document.getElementById('stat-break').innerText = stats.onBreak;
             document.getElementById('stat-offline').innerText = stats.offline;
@@ -728,12 +789,10 @@
             document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
             document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
 
-            // Calculate & Populate Analytical components
             calculateAnalyticsUI(stats, hourlyCoverage, queueBreaks, breaksBudgetList);
         }
 
         function calculateAnalyticsUI(stats, hourlyCoverage, queueBreaks, breaksBudgetList) {
-            // 1. KPI Cards
             const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
             document.getElementById('kpi-coverage').innerText = `${coverageRate}%`;
 
@@ -750,13 +809,11 @@
             const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
             document.getElementById('kpi-peak-hour').innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
 
-            // 2. Interactive Coverage Heatmap Bars
             let chartMarkup = '';
             for (let h = 0; h < 24; h++) {
                 const count = hourlyCoverage[h];
                 const heightPercent = maxCoverage > 0 ? Math.round((count / maxCoverage) * 90) + 10 : 10;
                 
-                // Set color intensity depending on coverage strength
                 let colorClass = 'bg-slate-800';
                 if (count > 0) {
                     if (count <= 1) colorClass = 'bg-emerald-800 text-emerald-100';
@@ -766,13 +823,11 @@
 
                 chartMarkup += `
                     <div class="flex flex-col items-center justify-end h-32 group relative">
-                        <!-- Tooltip -->
                         <div class="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
                             <span class="bg-slate-900 border border-slate-700 text-[10px] text-slate-200 px-2 py-1 rounded shadow-lg whitespace-nowrap">
                                 Час: ${String(h).padStart(2, '0')}:00 • Оп: ${count}
                             </span>
                         </div>
-                        <!-- Bar -->
                         <div class="w-full ${colorClass} rounded-t transition-all duration-300 flex items-center justify-center font-mono text-[9px] font-bold" style="height: ${heightPercent}%">
                             ${count > 0 ? count : ''}
                         </div>
@@ -782,7 +837,6 @@
             }
             document.getElementById('coverage-chart-container').innerHTML = chartMarkup;
 
-            // 3. Chronological Break Queue View
             queueBreaks.sort((a, b) => a.start - b.start);
             let queueMarkup = '';
             queueBreaks.forEach(item => {
@@ -807,7 +861,6 @@
             });
             document.getElementById('breaks-timeline-queue').innerHTML = queueMarkup || `<div class="text-center text-slate-600 py-8">Очередь пуста</div>`;
 
-            // 4. Break Adherence Budget Tracker List
             let budgetMarkup = '';
             breaksBudgetList.forEach(item => {
                 budgetMarkup += `
