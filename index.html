@@ -3,55 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления сменами</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ShiftFlow — Панель управления сменами</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #020617;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px border-color: rgba(51, 65, 85, 0.5);
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+<body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
 
     <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+    <header class="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50 px-6 py-3.5">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
-                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                    <i data-lucide="activity" class="w-6 h-6"></i>
+                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                    <i data-lucide="shield" class="w-5.5 h-5.5"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight">ShiftFlow</h1>
-                    <p class="text-xs text-slate-400 flex items-center gap-1">
-                        Голосовая поддержка • 
-                        <span class="text-emerald-400 font-medium flex items-center gap-0.5" title="Полноценная фоновая работа через Web Worker">
-                            <i data-lucide="globe" class="w-3 h-3 inline animate-spin-slow"></i> 
-                            Фоновый тайминг активен
-                        </span>
+                    <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">ShiftFlow</h1>
+                    <p class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <span class="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Мониторинг поддержки
                     </p>
                 </div>
             </div>
 
             <!-- Controls and Clock -->
-            <div class="flex flex-wrap items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3">
                 <!-- Test Alerts Button -->
-                <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 transition px-3 py-2 rounded-lg border border-slate-800 text-xs font-semibold">
-                    <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-emerald-400"></i>
-                    <span>Тест уведомлений</span>
+                <button id="test-alert-btn" class="flex items-center space-x-1.5 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 transition-all duration-200 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
+                    <i data-lucide="bell" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>Тест</span>
                 </button>
 
                 <!-- Audio & Push Toggle -->
-                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-850 hover:bg-slate-700 transition px-4 py-2 rounded-lg border border-slate-700 text-sm font-medium">
-                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>
-                    <span id="audio-status-text">Включить оповещения</span>
+                <button id="audio-toggle" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 transition-all duration-200 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs font-semibold shadow-sm">
+                    <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4 text-rose-400 animate-pulse"></i>
+                    <span id="audio-status-text">Активировать уведомления</span>
                 </button>
 
-                <div class="text-right border-l border-slate-800 pl-4 hidden sm:block">
-                    <div id="live-time" class="text-xl font-mono font-bold text-slate-100">00:00:00</div>
-                    <div id="live-date" class="text-xs text-slate-400">1 января 1970</div>
+                <div class="text-right border-l border-slate-800/80 pl-4 hidden sm:block">
+                    <div id="live-time" class="text-lg font-mono font-bold text-slate-200 tracking-wide">00:00:00</div>
+                    <div id="live-date" class="text-[10px] text-slate-500 font-medium">1 января 1970</div>
                 </div>
             </div>
         </div>
@@ -60,32 +65,34 @@
     <!-- Main Dashboard -->
     <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Panel: Stats & Break Queue (4 Cols) -->
+        <!-- Left Panel: Stats & Immediate Statuses (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- Quick Stats Card -->
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Статистика смены</h2>
+            <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
+                <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3.5 flex items-center gap-1.5">
+                    <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-slate-400"></i> Текущая смена
+                </h2>
                 <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-center">
-                        <span class="text-xs text-slate-400 block mb-1">В строю</span>
-                        <span id="stat-active" class="text-xl font-bold text-emerald-400">0</span>
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+                        <span class="text-[10px] text-slate-400 block mb-0.5">В строю</span>
+                        <span id="stat-active" class="text-lg font-bold text-emerald-400">0</span>
                     </div>
-                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-center">
-                        <span class="text-xs text-slate-400 block mb-1">Перерыв</span>
-                        <span id="stat-break" class="text-xl font-bold text-amber-400">0</span>
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+                        <span class="text-[10px] text-slate-400 block mb-0.5">Перерыв</span>
+                        <span id="stat-break" class="text-lg font-bold text-amber-400">0</span>
                     </div>
-                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-center">
-                        <span class="text-xs text-slate-400 block mb-1">Офлайн</span>
-                        <span id="stat-offline" class="text-xl font-bold text-slate-500">0</span>
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-900 text-center">
+                        <span class="text-[10px] text-slate-400 block mb-0.5">Офлайн</span>
+                        <span id="stat-offline" class="text-lg font-bold text-slate-500">0</span>
                     </div>
                 </div>
             </div>
 
             <!-- Active Break Status -->
-            <div id="active-breaks-box" class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm flex flex-col min-h-[140px] hidden">
+            <div id="active-breaks-box" class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm flex flex-col min-h-[140px] hidden">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Сейчас на перерыве</h2>
+                    <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Сейчас на перерыве</h2>
                     <span class="flex h-2 w-2 relative">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -97,12 +104,12 @@
             </div>
 
             <!-- Next Breaks Queue -->
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm flex-grow flex flex-col min-h-[220px]">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
-                    <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+            <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm flex-grow flex flex-col min-h-[220px]">
+                <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
                     Ближайшие перерывы сегодня
                 </h2>
-                <div id="breaks-timeline-queue" class="space-y-2 overflow-y-auto custom-scrollbar flex-grow text-xs">
+                <div id="breaks-timeline-queue" class="space-y-2.5 overflow-y-auto custom-scrollbar flex-grow text-xs">
                     <div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>
                 </div>
             </div>
@@ -112,27 +119,28 @@
         <div class="lg:col-span-8 flex flex-col gap-6">
             
             <!-- Tab Controls -->
-            <div class="flex border-b border-slate-800 gap-2 overflow-x-auto custom-scrollbar">
-                <button onclick="switchTab('tab-status')" id="btn-tab-status" class="px-4 py-2 text-sm font-medium border-b-2 border-emerald-500 text-emerald-400 transition whitespace-nowrap">На смене сегодня</button>
-                <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Сегодня выходной</button>
-                <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">График на месяц</button>
-                <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Список специалистов</button>
+            <div class="bg-slate-950 p-1 rounded-xl border border-slate-800/80 flex gap-1 overflow-x-auto custom-scrollbar">
+                <button onclick="switchTab('tab-status')" id="btn-tab-status" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap bg-slate-900 text-slate-100 shadow-sm border border-slate-800/50">На смене сегодня</button>
+                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">📊 Аналитика линии</button>
+                <button onclick="switchTab('tab-weekend')" id="btn-tab-weekend" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Сегодня выходной</button>
+                <button onclick="switchTab('tab-schedule')" id="btn-tab-schedule" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">График на месяц</button>
+                <button onclick="switchTab('tab-specialists')" id="btn-tab-specialists" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200">Список специалистов</button>
             </div>
 
             <!-- Tab: Statuses (Active Shift) -->
             <div id="tab-status" class="tab-content block">
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden backdrop-blur-sm">
+                <div class="glass-panel border border-slate-800/60 rounded-2xl overflow-hidden shadow-sm">
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                    <th class="px-6 py-4">Сотрудник</th>
-                                    <th class="px-6 py-4">Часы работы (местные)</th>
-                                    <th class="px-6 py-4">Статус</th>
-                                    <th class="px-6 py-4">Перерывы (местные)</th>
+                                <tr class="border-b border-slate-800 bg-slate-900/30 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <th class="px-6 py-3.5">Сотрудник</th>
+                                    <th class="px-6 py-3.5">Часы работы (местные)</th>
+                                    <th class="px-6 py-3.5">Статус</th>
+                                    <th class="px-6 py-3.5">Перерывы (местные)</th>
                                 </tr>
                             </thead>
-                            <tbody id="status-table-body" class="divide-y divide-slate-800/50 text-sm">
+                            <tbody id="status-table-body" class="divide-y divide-slate-850 text-xs">
                                 <!-- Dynamic rows -->
                             </tbody>
                         </table>
@@ -140,22 +148,79 @@
                 </div>
             </div>
 
+            <!-- Tab: Sleek Analytics Tab (NEW) -->
+            <div id="tab-analytics" class="tab-content hidden flex flex-col gap-6">
+                <!-- KPI Widgets Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Занятость линии</span>
+                        <div class="flex justify-between items-baseline">
+                            <span id="kpi-coverage" class="text-2xl font-bold text-emerald-400">0%</span>
+                            <span class="text-[10px] text-slate-500">операторов в сети</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Баланс перерывов</span>
+                        <div class="flex justify-between items-baseline">
+                            <span id="kpi-breaks-used" class="text-2xl font-bold text-amber-400">0%</span>
+                            <span class="text-[10px] text-slate-500">лимита использовано</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel border border-slate-800/50 rounded-2xl p-4 flex flex-col justify-between h-24">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Пиковое время</span>
+                        <div class="flex justify-between items-baseline">
+                            <span id="kpi-peak-hour" class="text-2xl font-bold text-indigo-400">—</span>
+                            <span class="text-[10px] text-slate-500">макс. присутствие</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Minimalist 24h Presence Heatmap Row -->
+                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
+                        График покрытия линии по часам (Загрузка в течение суток)
+                    </h3>
+                    <div class="flex justify-between gap-1 p-2 bg-slate-950/60 rounded-xl" id="coverage-heatmap-row">
+                        <!-- 24 hourly heat blocks populated dynamically -->
+                    </div>
+                    <div class="flex justify-between mt-2 text-[9px] text-slate-500 px-1 font-mono">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>23:00</span>
+                    </div>
+                </div>
+
+                <!-- Break adherence budget tracker -->
+                <div class="glass-panel border border-slate-800/50 rounded-2xl p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+                        <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
+                        Индивидуальное использование лимита перерывов за сегодня
+                    </h3>
+                    <div id="breaks-budget-tracker" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Progress bars for each agent working today -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab: Weekend / Off-shift -->
             <div id="tab-weekend" class="tab-content hidden">
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl overflow-hidden backdrop-blur-sm">
+                <div class="glass-panel border border-slate-800/60 rounded-2xl overflow-hidden shadow-sm">
                     <div class="p-4 border-b border-slate-800 bg-slate-900/20">
                         <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Вне сегодняшней смены</h3>
                     </div>
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-800 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <tr class="border-b border-slate-800 bg-slate-900/60 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                     <th class="px-6 py-4">Сотрудник</th>
                                     <th class="px-6 py-4">Логин</th>
                                     <th class="px-6 py-4">Статус</th>
                                 </tr>
                             </thead>
-                            <tbody id="weekend-table-body" class="divide-y divide-slate-800/50 text-sm">
+                            <tbody id="weekend-table-body" class="divide-y divide-slate-850 text-sm">
                                 <!-- Dynamic rows -->
                             </tbody>
                         </table>
@@ -165,13 +230,13 @@
 
             <!-- Tab: Monthly Schedule -->
             <div id="tab-schedule" class="tab-content hidden">
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
+                <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-sm font-semibold text-slate-200">Смены по московскому времени (MSK)</h3>
-                        <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20" id="current-month-label">Загрузка...</span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Смены по московскому времени (MSK)</h3>
+                        <span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20" id="current-month-label">Загрузка...</span>
                     </div>
-                    <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-lg">
-                        <table class="w-full text-left border-collapse id-table" id="schedule-table">
+                    <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/40">
+                        <table class="w-full text-left border-collapse" id="schedule-table">
                             <!-- Populated by JS -->
                         </table>
                     </div>
@@ -181,14 +246,14 @@
             <!-- Tab: Specialists List -->
             <div id="tab-specialists" class="tab-content hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
-                        <h3 class="text-sm font-semibold text-slate-200 mb-4">Группы специалистов</h3>
+                    <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Группы специалистов</h3>
                         <div id="specialists-groups" class="space-y-4">
                             <!-- Dynamic Content -->
                         </div>
                     </div>
-                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 backdrop-blur-sm">
-                        <h3 class="text-sm font-semibold text-slate-200 mb-4">Предстоящие дни рождения (по порядку)</h3>
+                    <div class="glass-panel border border-slate-800/60 rounded-2xl p-5 shadow-sm">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Предстоящие дни рождения (по порядку)</h3>
                         <div id="birthdays-list" class="space-y-3">
                             <!-- Dynamic Content -->
                         </div>
@@ -208,6 +273,31 @@
     </footer>
 
     <script>
+        // --- Global Tab Switching Logic ---
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
+
+            const tabs = ['tab-status', 'tab-analytics', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (btn) {
+                    if (t === tabId) {
+                        btn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap bg-slate-900 text-slate-100 shadow-sm border border-slate-800/50";
+                    } else {
+                        btn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap text-slate-400 hover:text-slate-200";
+                    }
+                }
+            });
+        };
+
         const SHEET_ID = '1d9sLo8ct02xCBDxarE7Yj0okppZRChig5dYc_J99Vu8';
         const GID_STATUS = '1638344831';
         const SHEET_NAME_SPECS = 'СПЕЦИАЛИСТЫ';
@@ -227,9 +317,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            
-            // Web Worker to bypass inactive background tab limits
             initBackgroundWorker();
+
+            // Handle pre-granted permissions gracefully
+            checkPregrantedPermissions();
 
             if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
                 speechSynthesis.onvoiceschanged = selectBestRussianVoice;
@@ -238,15 +329,72 @@
             }
 
             const audioBtn = document.getElementById('audio-toggle');
-            audioBtn.addEventListener('click', async () => {
-                if ("Notification" in window) {
-                    await Notification.requestPermission();
-                }
+            if (audioBtn) {
+                audioBtn.addEventListener('click', async () => {
+                    await requestNotifications();
+                    toggleAudioState();
+                });
+            }
 
-                state.isAudioEnabled = !state.isAudioEnabled;
-                const icon = document.getElementById('audio-icon');
+            // Fallback: If localStorage saved state as enabled and permission is granted, activate AudioContext on first body click
+            document.body.addEventListener('click', () => {
+                if (window.Notification && Notification.permission === 'granted' && localStorage.getItem('shiftflow_audio_enabled') === 'true') {
+                    if (!state.isAudioEnabled) {
+                        toggleAudioState(true);
+                    }
+                }
+            }, { once: true });
+
+            const testBtn = document.getElementById('test-alert-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', () => {
+                    if (!state.isAudioEnabled) {
+                        alert("Пожалуйста, сначала включите оповещения кнопкой в шапке.");
+                        return;
+                    }
+                    triggerNotification(
+                        "Тестовое уведомление",
+                        "Проверка звука и push-уведомлений завершена успешно!",
+                        "Проверка звука завершена успешно"
+                    );
+                });
+            }
+
+            fetchData();
+            setInterval(fetchData, 30000);
+        });
+
+        // Fast check on reload to see if permission was already granted previously
+        function checkPregrantedPermissions() {
+            if (window.Notification && Notification.permission === 'granted') {
+                const savedAudioPref = localStorage.getItem('shiftflow_audio_enabled');
                 const text = document.getElementById('audio-status-text');
+                const icon = document.getElementById('audio-icon');
                 
+                if (savedAudioPref === 'true' && text && icon) {
+                    // Pre-load visual active state, fully connects on first mouse click
+                    icon.setAttribute('data-lucide', 'volume-2');
+                    icon.className = 'w-4 h-4 text-emerald-400';
+                    text.innerText = 'Оповещения включены';
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function requestNotifications() {
+            if ("Notification" in window) {
+                await Notification.requestPermission();
+            }
+        }
+
+        function toggleAudioState(forceOn = false) {
+            state.isAudioEnabled = forceOn ? true : !state.isAudioEnabled;
+            localStorage.setItem('shiftflow_audio_enabled', state.isAudioEnabled ? 'true' : 'false');
+            
+            const icon = document.getElementById('audio-icon');
+            const text = document.getElementById('audio-status-text');
+            
+            if (text && icon) {
                 if (state.isAudioEnabled) {
                     icon.setAttribute('data-lucide', 'volume-2');
                     icon.className = 'w-4 h-4 text-emerald-400';
@@ -258,25 +406,9 @@
                     text.innerText = 'Включить оповещения';
                 }
                 lucide.createIcons();
-            });
+            }
+        }
 
-            document.getElementById('test-alert-btn').addEventListener('click', () => {
-                if (!state.isAudioEnabled) {
-                    alert("Пожалуйста, сначала включите оповещения кнопкой справа, чтобы активировать звук и системные права.");
-                    return;
-                }
-                triggerNotification(
-                    "Система оповещений ShiftFlow",
-                    "Тест пройден. Канал звука и пуш-уведомлений работает стабильно.",
-                    "Проверка звука завершена успешно"
-                );
-            });
-
-            fetchData();
-            setInterval(fetchData, 30000);
-        });
-
-        // Creates an inline Web Worker via Blob to tick every 1000ms uninterrupted in background
         function initBackgroundWorker() {
             const workerCode = `
                 let intervalId;
@@ -300,15 +432,16 @@
                 };
                 worker.postMessage('start');
             } catch (e) {
-                console.warn("Фоновый Worker не поддерживается, запуск локального таймера.");
                 setInterval(updateClock, 1000);
             }
         }
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('live-time').innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
-            document.getElementById('live-date').innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            const timeEl = document.getElementById('live-time');
+            const dateEl = document.getElementById('live-date');
+            if (timeEl) timeEl.innerText = now.toLocaleTimeString('ru-RU', { hour12: false });
+            if (dateEl) dateEl.innerText = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
             if (state.statusData.length > 0) {
                 evaluateRealtimeStatus();
@@ -376,7 +509,14 @@
             
             const now = new Date();
             const mskFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
-            const [{ value: month },,{ value: day },,{ value: year }] = mskFormatter.formatToParts(now);
+            const formattingParts = mskFormatter.formatToParts(now);
+            
+            let month = '01', day = '01', year = '1970';
+            for (let part of formattingParts) {
+                if (part.type === 'month') month = part.value;
+                if (part.type === 'day') day = part.value;
+                if (part.type === 'year') year = part.value;
+            }
 
             const isoStr = `${year}-${month}-${day}T${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00+03:00`;
             return new Date(isoStr);
@@ -421,7 +561,9 @@
 
         async function fetchData() {
             const syncElement = document.getElementById('sync-status');
-            syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
+            if (syncElement) {
+                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse inline-block"></span> Синхронизация...`;
+            }
             
             try {
                 const [statusRes, specsRes] = await Promise.all([
@@ -432,11 +574,15 @@
                 processStatusSheet(parseCSV(statusRes));
                 processSpecsSheet(parseCSV(specsRes));
 
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
+                if (syncElement) {
+                    syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span> Обновлено в ${new Date().toLocaleTimeString('ru-RU', {hour12:false})}`;
+                }
                 renderUI();
             } catch (err) {
                 console.error(err);
-                syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
+                if (syncElement) {
+                    syncElement.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-500 inline-block"></span> Ошибка загрузки`;
+                }
             }
         }
 
@@ -516,12 +662,10 @@
             return null;
         }
 
-        // Calculates gamified achievements/badges based on the shift context & birthdays
         function getAchievements(person, todayShift) {
             let achievements = [];
             const today = new Date();
             
-            // 1. Birthday Badge
             if (person.birthday) {
                 const bparts = person.birthday.split('.');
                 if (parseInt(bparts[0], 10) === today.getDate() && parseInt(bparts[1], 10) === (today.getMonth() + 1)) {
@@ -529,7 +673,6 @@
                 }
             }
             
-            // 2. Shift Duration & Shift Start badges
             if (todayShift && (todayShift.includes('–') || todayShift.includes('-'))) {
                 const parts = todayShift.split(/[-–—]/);
                 const startLocal = parseMskTimeToLocal(parts[0].trim());
@@ -546,7 +689,6 @@
                 }
             }
 
-            // 3. Break density badge
             if (person.breaks && person.breaks.length >= 4) {
                 achievements.push({ icon: '⚡', name: 'Марафонец', desc: '4 или более перерывов в графике смены' });
             }
@@ -562,6 +704,10 @@
             let activeTableMarkup = '';
             let weekendTableMarkup = '';
             let queueBreaks = [];
+
+            // Reset and build analytics arrays dynamically on each check loop
+            let hourlyCoverage = Array(24).fill(0); 
+            let breaksBudgetList = [];
 
             state.statusData.forEach(person => {
                 const todayShift = getTodayShiftHours(person.name, person.hours);
@@ -601,7 +747,7 @@
 
                 const firstName = person.name.split(' ')[0] || person.name;
 
-                // Shift lifecycle sound & push alerts
+                // Shift lifecycle sound alerts
                 if (worksToday && startWork && endWork) {
                     if (now.getHours() === startWork.getHours() && now.getMinutes() === startWork.getMinutes()) {
                         const shiftStartKey = `${person.name}-shift-start-${startWork.getHours()}:${startWork.getMinutes()}`;
@@ -628,6 +774,9 @@
                     }
                 }
 
+                let totalAllocatedMins = 0;
+                let spentAllocatedMins = 0;
+
                 person.breaks.forEach(br => {
                     const brParts = br.split(/[-–—]/);
                     const brStart = parseMskTimeToLocal(brParts[0].trim());
@@ -635,9 +784,17 @@
 
                     if (!brStart || !brEnd) return;
 
-                    if (now >= brStart && now <= brEnd) {
+                    const breakDurationMs = brEnd - brStart;
+                    const breakDurationMins = Math.round(breakDurationMs / 60000);
+                    totalAllocatedMins += breakDurationMins;
+
+                    if (now >= brEnd) {
+                        spentAllocatedMins += breakDurationMins;
+                    } else if (now >= brStart && now <= brEnd) {
                         status = 'Перерыв';
                         currentBreakRange = { start: brStart, end: brEnd, text: br };
+                        const elapsedMins = Math.round((now - brStart) / 60000);
+                        spentAllocatedMins += elapsedMins;
                     }
 
                     if (now <= brEnd) {
@@ -650,7 +807,7 @@
                         });
                     }
 
-                    // Break lifecycle sound & push alerts
+                    // Break sounds
                     if (now.getHours() === brStart.getHours() && now.getMinutes() === brStart.getMinutes()) {
                         const breakStartKey = `${person.name}-break-start-${brParts[0].trim()}`;
                         if (!state.announcedEvents.has(breakStartKey)) {
@@ -668,12 +825,42 @@
                         if (!state.announcedEvents.has(breakEndKey)) {
                             state.announcedEvents.add(breakEndKey);
                             triggerNotification(
-                                `Сотрудник на линии: ${person.name}`,
+                                `Сотрудник вернулся на линию: ${person.name}`,
                                 `${person.name} вернулся с перерыва.`,
                                 `${firstName} возвращается на линию. Перерыв окончен.`
                             );
                         }
                     }
+                });
+
+                // Compute coverage over 24h
+                if (worksToday) {
+                    for (let h = 0; h < 24; h++) {
+                        let checkTime = new Date(startWork);
+                        checkTime.setHours(h, 30, 0, 0);
+
+                        if (checkTime >= startWork && checkTime <= endWork) {
+                            let onBreakAtCheck = false;
+                            person.breaks.forEach(br => {
+                                const brParts = br.split(/[-–—]/);
+                                const brStart = parseMskTimeToLocal(brParts[0].trim());
+                                const brEnd = parseMskTimeToLocal(brParts[1].trim());
+                                if (brStart && brEnd && checkTime >= brStart && checkTime <= brEnd) {
+                                    onBreakAtCheck = true;
+                                }
+                            });
+                            if (!onBreakAtCheck) {
+                                hourlyCoverage[h]++;
+                            }
+                        }
+                    }
+                }
+
+                breaksBudgetList.push({
+                    name: person.name,
+                    total: totalAllocatedMins,
+                    spent: spentAllocatedMins,
+                    percent: totalAllocatedMins > 0 ? Math.round((spentAllocatedMins / totalAllocatedMins) * 100) : 0
                 });
 
                 if (status === 'В строю') stats.active++;
@@ -687,7 +874,6 @@
                     statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Перерыв</span>`;
                 }
 
-                // Compile Achievements / Badges HTML
                 const achievements = getAchievements(person, todayShift);
                 const achievementsHTML = achievements.map(ach => `
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-900 text-slate-300 border border-slate-800 cursor-help" title="${ach.desc}">
@@ -708,7 +894,6 @@
                         <td class="px-6 py-4">
                             <div class="font-semibold text-slate-200">${person.name}</div>
                             <div class="text-xs text-slate-500 mb-1.5">${person.login}</div>
-                            <!-- Gamification Badges -->
                             <div class="flex flex-wrap gap-1">${achievementsHTML || ''}</div>
                         </td>
                         <td class="px-6 py-4 font-mono text-slate-300 text-xs">${localShiftHours}</td>
@@ -745,11 +930,14 @@
             document.getElementById('stat-offline').innerText = stats.offline;
 
             const activeBreaksBox = document.getElementById('active-breaks-box');
-            if (activeBreaksMarkup === '') {
-                activeBreaksBox.classList.add('hidden');
-            } else {
-                activeBreaksBox.classList.remove('hidden');
-                document.getElementById('active-breaks-list').innerHTML = activeBreaksMarkup;
+            if (activeBreaksBox) {
+                if (activeBreaksMarkup === '') {
+                    activeBreaksBox.classList.add('hidden');
+                } else {
+                    activeBreaksBox.classList.remove('hidden');
+                    const abList = document.getElementById('active-breaks-list');
+                    if (abList) abList.innerHTML = activeBreaksMarkup;
+                }
             }
 
             queueBreaks.sort((a, b) => a.start - b.start);
@@ -771,10 +959,92 @@
                     </div>
                 `;
             });
-            document.getElementById('breaks-timeline-queue').innerHTML = queueMarkup || `<div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>`;
+            const timelineQueue = document.getElementById('breaks-timeline-queue');
+            if (timelineQueue) {
+                timelineQueue.innerHTML = queueMarkup || `<div class="text-slate-500 text-center py-8">Перерывов не запланировано</div>`;
+            }
 
-            document.getElementById('status-table-body').innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
-            document.getElementById('weekend-table-body').innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
+            const statusTable = document.getElementById('status-table-body');
+            if (statusTable) {
+                statusTable.innerHTML = activeTableMarkup || `<tr><td colspan="4" class="text-center py-8 text-slate-500">Сегодня нет запланированных смен</td></tr>`;
+            }
+            const weekendTable = document.getElementById('weekend-table-body');
+            if (weekendTable) {
+                weekendTable.innerHTML = weekendTableMarkup || `<tr><td colspan="3" class="text-center py-8 text-slate-500">Сегодня все на смене</td></tr>`;
+            }
+
+            // Sync Analytics Dashboard
+            populateAnalyticsTab(stats, hourlyCoverage, breaksBudgetList);
+        }
+
+        function populateAnalyticsTab(stats, hourlyCoverage, breaksBudgetList) {
+            // 1. KPI widgets
+            const coverageRate = stats.scheduledTotal > 0 ? Math.round((stats.active / stats.scheduledTotal) * 100) : 0;
+            const kpiCov = document.getElementById('kpi-coverage');
+            if (kpiCov) kpiCov.innerText = `${coverageRate}%`;
+
+            let overallTotalBreak = 0;
+            let overallSpentBreak = 0;
+            breaksBudgetList.forEach(item => {
+                overallTotalBreak += item.total;
+                overallSpentBreak += item.spent;
+            });
+            const breakConsumption = overallTotalBreak > 0 ? Math.round((overallSpentBreak / overallTotalBreak) * 100) : 0;
+            const kpiBrk = document.getElementById('kpi-breaks-used');
+            if (kpiBrk) kpiBrk.innerText = `${breakConsumption}%`;
+
+            const maxCoverage = Math.max(...hourlyCoverage);
+            const peakHourIndex = hourlyCoverage.indexOf(maxCoverage);
+            const kpiPeak = document.getElementById('kpi-peak-hour');
+            if (kpiPeak) kpiPeak.innerText = maxCoverage > 0 ? `${String(peakHourIndex).padStart(2, '0')}:00` : '—';
+
+            // 2. High-Aesthetic 24h Heatgrid strip
+            let heatgridHTML = '';
+            for (let h = 0; h < 24; h++) {
+                const count = hourlyCoverage[h];
+                
+                let colorClass = 'bg-slate-900 border-slate-800'; // 0 agents online
+                if (count > 0) {
+                    if (count <= 1) colorClass = 'bg-emerald-900/50 border-emerald-800/20 text-emerald-400';
+                    else if (count <= 3) colorClass = 'bg-emerald-700/60 border-emerald-600/30 text-emerald-100';
+                    else colorClass = 'bg-emerald-500 border-emerald-400 text-slate-950';
+                }
+
+                heatgridHTML += `
+                    <div class="flex-1 aspect-square rounded-md border flex items-center justify-center font-mono text-[10px] font-bold group relative cursor-help transition-all duration-150 ${colorClass}">
+                        ${count > 0 ? count : ''}
+                        
+                        <!-- Floating modern tooltip -->
+                        <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                            <span class="bg-slate-950 border border-slate-800 text-[9px] text-slate-300 font-sans px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
+                                Час: ${String(h).padStart(2, '0')}:00 • Операторов: ${count}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            const heatmapRow = document.getElementById('coverage-heatmap-row');
+            if (heatmapRow) heatmapRow.innerHTML = heatgridHTML;
+
+            // 3. Compact budget progress bars
+            let budgetHTML = '';
+            breaksBudgetList.forEach(item => {
+                budgetHTML += `
+                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium text-slate-300 text-xs">${item.name}</span>
+                            <span class="font-mono text-[10px] text-slate-500">${item.spent} / ${item.total} мин (${item.percent}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: ${item.percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            const budgetTracker = document.getElementById('breaks-budget-tracker');
+            if (budgetTracker) {
+                budgetTracker.innerHTML = budgetHTML || `<div class="col-span-2 text-center text-slate-600 py-6">Нет работающих специалистов</div>`;
+            }
         }
 
         function renderUI() {
@@ -795,7 +1065,7 @@
             });
             tableHeader += `</tr>`;
 
-            let tableBody = `<tbody class="divide-y divide-slate-800/50 text-xs">`;
+            let tableBody = `<tbody class="divide-y divide-slate-850 text-xs">`;
             state.scheduleData.forEach(person => {
                 tableBody += `<tr class="hover:bg-slate-900/20 transition">`;
                 tableBody += `<td class="px-4 py-3 sticky left-0 bg-slate-900/90 font-medium text-slate-300 border-r border-slate-800/80">${person.name}</td>`;
@@ -812,7 +1082,10 @@
             });
             tableBody += `</tbody>`;
 
-            document.getElementById('schedule-table').innerHTML = tableHeader + tableBody;
+            const schedTable = document.getElementById('schedule-table');
+            if (schedTable) {
+                schedTable.innerHTML = tableHeader + tableBody;
+            }
 
             if (state.scheduleHeader[0]) {
                 const parts = state.scheduleHeader[0].split('.');
@@ -822,7 +1095,10 @@
                         '05': 'Май', '06': 'Июнь', '07': 'Июль', '08': 'Август',
                         '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
                     };
-                    document.getElementById('current-month-label').innerText = `${monthMap[parts[1]] || ''} ${parts[2] || ''}`;
+                    const label = document.getElementById('current-month-label');
+                    if (label) {
+                        label.innerText = `${monthMap[parts[1]] || ''} ${parts[2] || ''}`;
+                    }
                 }
             }
         }
@@ -853,21 +1129,26 @@
 
             sortedKeys.forEach(gKey => {
                 groupsMarkup += `
-                    <div class="bg-slate-950/40 p-3 rounded-lg border border-slate-800">
-                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Группа ${gKey}</h4>
+                    <div class="bg-slate-950/40 p-3.5 rounded-xl border border-slate-900 shadow-inner">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Группа ${gKey}
+                        </h4>
                         <div class="space-y-1.5">
                 `;
                 groups[gKey].forEach(p => {
                     groupsMarkup += `
                         <div class="flex justify-between items-center text-xs">
                             <span class="text-slate-200 font-medium">${p.name}</span>
-                            <span class="text-slate-500">${p.login}</span>
+                            <span class="text-slate-500 font-mono">${p.login}</span>
                         </div>
                     `;
                 });
                 groupsMarkup += `</div></div>`;
             });
-            document.getElementById('specialists-groups').innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            const specsGroups = document.getElementById('specialists-groups');
+            if (specsGroups) {
+                specsGroups.innerHTML = groupsMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            }
 
             // Birthday rendering
             const today = new Date();
@@ -902,7 +1183,7 @@
             let bdayMarkup = '';
             specialistsWithBdayTime.forEach(item => {
                 bdayMarkup += `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-800/80'}">
+                    <div class="flex items-center justify-between p-2.5 rounded-xl border ${item.isToday ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-950/40 border-slate-900/60'}">
                         <div class="flex items-center space-x-2">
                             <i data-lucide="cake" class="w-4 h-4 ${item.isToday ? 'text-rose-400 animate-bounce' : 'text-slate-500'}"></i>
                             <span class="text-xs font-medium ${item.isToday ? 'text-rose-200 font-semibold' : 'text-slate-300'}">${item.spec.name}</span>
@@ -914,29 +1195,11 @@
                     </div>
                 `;
             });
-            document.getElementById('birthdays-list').innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            const bdaysList = document.getElementById('birthdays-list');
+            if (bdaysList) {
+                bdaysList.innerHTML = bdayMarkup || `<div class="text-xs text-slate-500">Нет данных</div>`;
+            }
             lucide.createIcons();
-        }
-
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
-            });
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(tabId).classList.add('block');
-
-            const tabs = ['tab-status', 'tab-weekend', 'tab-schedule', 'tab-specialists'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                if (t === tabId) {
-                    btn.classList.add('border-emerald-500', 'text-emerald-400');
-                    btn.classList.remove('border-transparent', 'text-slate-400');
-                } else {
-                    btn.classList.remove('border-emerald-500', 'text-emerald-400');
-                    btn.classList.add('border-transparent', 'text-slate-400');
-                }
-            });
         }
     </script>
 </body>
